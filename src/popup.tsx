@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import "~style.css"
 
+import { pickOutsideBrowserColor } from "./features/pick-outside-browser-color"
+import { startPickPageColor } from "./features/pick-page-color"
 import {
   colorToHsv,
   getColorFromHsv,
   hsvToRgb,
   rgbToHsl
 } from "./popup/color-utils"
-import { pickColorInPage } from "./popup/pick-color"
 import type { ColorEntry, HSV } from "./popup/types"
 
 function IndexPopup() {
@@ -16,6 +17,7 @@ function IndexPopup() {
   const [currentColor, setCurrentColor] = useState<ColorEntry | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [hsv, setHsv] = useState<HSV>({ h: 220, s: 66, v: 16 })
+  const [outsidePickActive, setOutsidePickActive] = useState(false)
 
   const gradientRef = useRef<HTMLCanvasElement>(null)
   const hueRef = useRef<HTMLCanvasElement>(null)
@@ -170,19 +172,14 @@ function IndexPopup() {
   }, [isDraggingGradient, isDraggingHue])
 
   const activatePicker = () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs?.[0]
-      if (!tab?.id) return
+    startPickPageColor(() => window.close())
+  }
 
-      // Inject EyeDropper directly from the user gesture context
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: pickColorInPage
-      })
-
-      // Close popup so user can pick from the page
-      window.close()
-    })
+  const activateOutsidePicker = async () => {
+    setOutsidePickActive(true)
+    await pickOutsideBrowserColor()
+    setOutsidePickActive(false)
+    window.close()
   }
 
   const copyToClipboard = async (text: string, field: string) => {
@@ -211,6 +208,14 @@ function IndexPopup() {
   }
 
   const { r, g, b } = hsvToRgb(hsv.h, hsv.s, hsv.v)
+
+  if (outsidePickActive) {
+    return (
+      <div className="w-[220px] bg-gray-200 px-2 py-1 font-sans text-sm">
+        <div className="text-sm font-semibold">Pick colors from anywhere</div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-[460px] bg-gray-200 p-3 font-sans text-sm">
@@ -304,7 +309,12 @@ function IndexPopup() {
               <button
                 onClick={activatePicker}
                 className="w-full px-3 py-1 bg-white border border-gray-400 rounded text-xs cursor-pointer hover:bg-gray-50">
-                Pick Color
+                Pick Page Color
+              </button>
+              <button
+                onClick={activateOutsidePicker}
+                className="w-full px-3 py-1 bg-white border border-gray-400 rounded text-xs cursor-pointer hover:bg-gray-50">
+                Pick Outside Browser
               </button>
               <button
                 onClick={handleAddToHistory}
