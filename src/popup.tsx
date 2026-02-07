@@ -8,8 +8,10 @@ import {
   ChevronDown,
   ChevronRight,
   Disc,
+  Heart,
   History,
   NotepadText,
+  Palette,
   Pipette
 } from "lucide-react"
 
@@ -221,8 +223,10 @@ function IndexPopup() {
         expandedFeatures === "saved-webpage-colors" ? ChevronDown : ChevronRight
     },
     {
-      label: "Color Picker",
-      icon: expandedFeatures === "color-picker" ? ChevronDown : ChevronRight,
+      label: "Color Picker Panel",
+      icon: Palette,
+      secondaryIcon:
+        expandedFeatures === "color-picker" ? ChevronDown : ChevronRight,
       onClick: () => {
         setExpandedFeatures(
           expandedFeatures === "color-picker" ? null : "color-picker"
@@ -256,12 +260,15 @@ function IndexPopup() {
   }
 
   return (
-    <div className="w-[280px] bg-gray-200 font-sans py-3">
+    <div className="w-[300px] bg-gray-200 font-sans">
+      <div className="bg-sky-500 h-12 flex items-center">
+        <h1 className="text-white text-2xl font-bold px-3">Color Hub</h1>
+      </div>
       <div className="flex flex-col gap-4">
         <div className="flex-1 flex flex-col gap-3">
           {/* New / Current Color */}
           <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-1 w-full">
+            <div className="flex flex-col w-full">
               {FEATURES.map(
                 ({
                   label,
@@ -275,7 +282,7 @@ function IndexPopup() {
                     type="button"
                     onClick={onClick}
                     disabled={disabled}
-                    className="w-full px-3 py-1 text-sm cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-between gap-1">
+                    className="w-full px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-between gap-1 border-b border-dashed border-gray-300">
                     <span className="inline-flex items-center gap-1.5">
                       <Icon className="size-3" />
                       {label}
@@ -349,6 +356,17 @@ function IndexPopup() {
           copyToClipboard(color.hex, `saved-${key}`)
         }}
       />
+      {/* footer */}
+      <div className="h-8 text-xs text-gray-500 flex items-center justify-center gap-1">
+        <Heart className="size-3" fill="currentColor" /> by{" "}
+        <a
+          href="https://github.com/Sharif33"
+          className="text-sky-500 hover:underline underline-offset-2"
+          target="_blank"
+          rel="noopener noreferrer">
+          Sharif Rashed
+        </a>
+      </div>
     </div>
   )
 }
