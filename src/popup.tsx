@@ -8,6 +8,8 @@ import {
   ChevronDown,
   ChevronRight,
   Disc,
+  History,
+  NotepadText,
   Pipette
 } from "lucide-react"
 
@@ -193,6 +195,32 @@ function IndexPopup() {
       disabled: analyzer.isAnalyzing || pageRestricted
     },
     {
+      label: "Picked Color History",
+      icon: History,
+      onClick: () => {
+        setExpandedFeatures(
+          expandedFeatures === "color-history" ? null : "color-history"
+        )
+      },
+      disabled: false,
+      secondaryIcon:
+        expandedFeatures === "color-history" ? ChevronDown : ChevronRight
+    },
+    {
+      label: "Saved Webpage Colors",
+      icon: NotepadText,
+      onClick: () => {
+        setExpandedFeatures(
+          expandedFeatures === "saved-webpage-colors"
+            ? null
+            : "saved-webpage-colors"
+        )
+      },
+      disabled: Object.keys(analyzer.savedWebpageColors).length === 0,
+      secondaryIcon:
+        expandedFeatures === "saved-webpage-colors" ? ChevronDown : ChevronRight
+    },
+    {
       label: "Color Picker",
       icon: expandedFeatures === "color-picker" ? ChevronDown : ChevronRight,
       onClick: () => {
@@ -201,31 +229,6 @@ function IndexPopup() {
         )
       },
       disabled: false
-    },
-    {
-      label: "Picked Color History",
-      icon: expandedFeatures === "color-history" ? ChevronDown : ChevronRight,
-      onClick: () => {
-        setExpandedFeatures(
-          expandedFeatures === "color-history" ? null : "color-history"
-        )
-      },
-      disabled: false
-    },
-    {
-      label: "Saved Webpage Colors",
-      icon:
-        expandedFeatures === "saved-webpage-colors"
-          ? ChevronDown
-          : ChevronRight,
-      onClick: () => {
-        setExpandedFeatures(
-          expandedFeatures === "saved-webpage-colors"
-            ? null
-            : "saved-webpage-colors"
-        )
-      },
-      disabled: Object.keys(analyzer.savedWebpageColors).length === 0
     }
   ]
 
@@ -259,24 +262,34 @@ function IndexPopup() {
           {/* New / Current Color */}
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-1 w-full">
-              {FEATURES.map((feature) => (
-                <button
-                  key={feature.label}
-                  type="button"
-                  onClick={feature.onClick}
-                  disabled={feature.disabled}
-                  className="w-full px-3 py-1 text-sm cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-1">
-                  <span className="inline-flex items-center gap-1.5">
-                    <feature.icon className="size-3" />
-                    {feature.label}
-                  </span>
-                  {feature.disabled && <AlertTriangle className="size-3" />}
-                </button>
-              ))}
+              {FEATURES.map(
+                ({
+                  label,
+                  icon: Icon,
+                  onClick,
+                  disabled,
+                  secondaryIcon: SecondaryIcon
+                }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={onClick}
+                    disabled={disabled}
+                    className="w-full px-3 py-1 text-sm cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-between gap-1">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Icon className="size-3" />
+                      {label}
+                    </span>
+                    {disabled && <AlertTriangle className="size-3" />}
+                    {!disabled && SecondaryIcon && (
+                      <SecondaryIcon className="size-3" />
+                    )}
+                  </button>
+                )
+              )}
             </div>
           </div>
         </div>
-        {/* LEFT: Color Picker */}
 
         <div
           className={`flex flex-col items-center gap-2 px-3 ${expandedFeatures === "color-picker" ? "block" : "hidden"}`}>
@@ -294,34 +307,18 @@ function IndexPopup() {
               colorPicker.handleHueInteraction(e)
             }}
             onCopy={copyToClipboard}
+            onColorChange={colorPicker.setHsv}
+            onAddToHistory={handleAddToHistory}
+            firstHistoryColor={colorHistory[0] || null}
+            copiedField={copiedField}
             r={r}
             g={g}
             b={b}
           />
-          {copiedField && <span className="text-green-600 text-xs">✓</span>}
-          <div className="flex items-center w-full">
-            <button
-              type="button"
-              onClick={handleAddToHistory}
-              className="w-full h-10 cursor-pointer flex items-center justify-center"
-              style={{ backgroundColor: currentColor?.hex || "#000" }}
-              title={currentColor?.hex || ""}>
-              <span className="text-xs text-gray-500">new</span>
-            </button>
-
-            <button
-              type="button"
-              className="w-full h-10 cursor-default flex items-center justify-center"
-              style={{ backgroundColor: colorHistory[0]?.hex || "#333" }}
-              title={colorHistory[0]?.hex || ""}>
-              <span className="text-xs text-gray-500">current</span>
-            </button>
-          </div>
           {renderColorHistory()}
         </div>
-        {/* RIGHT: Color Info & History */}
       </div>
-      {/* Color History */}
+
       {expandedFeatures === "color-history" && renderColorHistory()}
       <AnalyzerPanel
         analyzedColors={analyzer.analyzedColors}
