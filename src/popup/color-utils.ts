@@ -141,7 +141,9 @@ export const colorToHsv = (color: ColorEntry): HSV | null => {
     return rgbToHsv(rgbFromHex.r, rgbFromHex.g, rgbFromHex.b)
   }
 
-  const match = color.rgb.match(/rgb\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)/i)
+  const match = color.rgb.match(
+    /rgb\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)/i
+  )
   if (!match) return null
   const r = parseInt(match[1], 10)
   const g = parseInt(match[2], 10)

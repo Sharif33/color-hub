@@ -1,6 +1,6 @@
-import type { ColorEntry } from "./types"
+import type { ColorEntry } from "../../popup/types"
 
-export const pickColorInPage = () => {
+const pickPageColorInPage = () => {
   const sendMessage = (payload: {
     type: string
     color?: ColorEntry
@@ -75,4 +75,18 @@ export const pickColorInPage = () => {
     console.error("EyeDropper failed:", error)
     sendMessage({ type: "COLOR_PICKED", error: "failed" })
   }
+}
+
+export const startPickPageColor = (onBeforePick?: () => void) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs?.[0]
+    if (!tab?.id) return
+
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: pickPageColorInPage
+    })
+
+    onBeforePick?.()
+  })
 }
