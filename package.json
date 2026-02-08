@@ -1,8 +1,8 @@
 {
-  "name": "easy-color-picker",
-  "displayName": "Easy color picker",
-  "version": "0.0.1",
-  "description": "Take any web page color",
+  "name": "Color Hub",
+  "displayName": "Color Hub",
+  "version": "1.0.0",
+  "description": "Extract colors, analyze palettes, and enhance your design workflow.",
   "author": "Sharif Rashed",
   "scripts": {
     "dev": "plasmo dev",

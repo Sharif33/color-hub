@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import "~style.css"
 
+import logo from "data-base64:~assets/color-hub-logo.png"
 import {
   AlertTriangle,
   BrushCleaning,
@@ -253,16 +254,19 @@ function IndexPopup() {
 
   if (outsidePickActive) {
     return (
-      <div className="w-[220px] bg-gray-200 px-2 py-1 font-sans text-sm">
+      <div className="w-[220px] bg-gray-100 px-2 py-1 font-sans text-sm">
         <div className="text-sm font-semibold">Pick colors from anywhere</div>
       </div>
     )
   }
 
   return (
-    <div className="w-[300px] bg-gray-200 font-sans">
-      <div className="bg-sky-500 h-12 flex items-center">
-        <h1 className="text-white text-2xl font-bold px-3">Color Hub</h1>
+    <div className="w-[300px] bg-gray-100 font-sans">
+      <div className="bg-gray-900 flex items-center gap-1 p-3">
+        <img src={logo} alt="Color Hub" className="size-6" />
+        <h1 className="text-white/90 text-lg font-mono tracking-wider">
+          color_hub
+        </h1>
       </div>
       <div className="flex flex-col gap-4">
         <div className="flex-1 flex flex-col gap-3">
