@@ -6,7 +6,7 @@
   "author": "Sharif Rashed",
   "scripts": {
     "dev": "plasmo dev",
-    "build": "plasmo build",
+    "build": "plasmo build --zip",
     "package": "plasmo package"
   },
   "dependencies": {
@@ -35,7 +35,9 @@
     "permissions": [
       "activeTab",
       "storage",
-      "scripting"
+      "unlimitedStorage",
+      "scripting",
+      "contextMenus"
     ]
   }
 }
