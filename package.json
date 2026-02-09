@@ -1,7 +1,7 @@
 {
   "name": "Color Hub",
   "displayName": "Color Hub",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Extract colors, analyze palettes, and enhance your design workflow.",
   "author": "Sharif Rashed",
   "scripts": {
