@@ -129,6 +129,8 @@ function IndexPopup() {
         tabId: tab.id
       })
     })
+    analyzer.cancel()
+    setExpandedFeatures("saved-webpage-colors")
   }
 
   const handleAnalyzerCancel = () => {
@@ -268,7 +270,7 @@ function IndexPopup() {
           color_hub
         </h1>
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div className="flex-1 flex flex-col gap-3">
           {/* New / Current Color */}
           <div className="flex flex-col gap-2">
@@ -328,40 +330,44 @@ function IndexPopup() {
           />
           {renderColorHistory()}
         </div>
-      </div>
 
-      {expandedFeatures === "color-history" && renderColorHistory()}
-      <AnalyzerPanel
-        analyzedColors={analyzer.analyzedColors}
-        selectedAnalyzedColor={analyzer.selectedAnalyzedColor}
-        isAnalyzing={analyzer.isAnalyzing}
-        isSaving={analyzer.isSaving}
-        savedWebpageColors={analyzer.savedWebpageColors}
-        showAnalyzeButton={false}
-        onAnalyze={analyzer.analyze}
-        onSelectColor={analyzer.selectColor}
-        onSave={handleAnalyzerSave}
-        onCancel={handleAnalyzerCancel}
-        onDeleteDomain={analyzer.deleteDomain}
-        onPickSaved={(color, key) => {
-          const nextHsv = colorToHsv({
-            hex: color.hex,
-            rgb: color.rgb,
-            hsl: undefined,
-            timestamp: Date.now()
-          })
-          if (nextHsv) colorPicker.setHsv(nextHsv)
-          setCurrentColor({
-            hex: color.hex,
-            rgb: color.rgb,
-            hsl: undefined,
-            timestamp: Date.now()
-          })
-          copyToClipboard(color.hex, `saved-${key}`)
-        }}
-      />
+        {expandedFeatures === "color-history" && (
+          <div className="px-3">{renderColorHistory()}</div>
+        )}
+
+        <AnalyzerPanel
+          showSavedWebpageColors={expandedFeatures === "saved-webpage-colors"}
+          analyzedColors={analyzer.analyzedColors}
+          selectedAnalyzedColor={analyzer.selectedAnalyzedColor}
+          isAnalyzing={analyzer.isAnalyzing}
+          isSaving={analyzer.isSaving}
+          savedWebpageColors={analyzer.savedWebpageColors}
+          showAnalyzeButton={false}
+          onAnalyze={analyzer.analyze}
+          onSelectColor={analyzer.selectColor}
+          onSave={handleAnalyzerSave}
+          onCancel={handleAnalyzerCancel}
+          onDeleteDomain={analyzer.deleteDomain}
+          onPickSaved={(color, key) => {
+            const nextHsv = colorToHsv({
+              hex: color.hex,
+              rgb: color.rgb,
+              hsl: undefined,
+              timestamp: Date.now()
+            })
+            if (nextHsv) colorPicker.setHsv(nextHsv)
+            setCurrentColor({
+              hex: color.hex,
+              rgb: color.rgb,
+              hsl: undefined,
+              timestamp: Date.now()
+            })
+            copyToClipboard(color.hex, `saved-${key}`)
+          }}
+        />
+      </div>
       {/* footer */}
-      <div className="h-8 text-xs text-gray-500 flex items-center justify-center gap-1">
+      <div className="p-3 text-xs text-gray-500 flex items-center justify-center gap-1">
         <Heart className="size-3" fill="currentColor" /> by{" "}
         <a
           href="https://github.com/Sharif33"
