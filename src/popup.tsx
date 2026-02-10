@@ -104,7 +104,6 @@ function IndexPopup() {
         hsl: undefined,
         timestamp: Date.now()
       })
-      copyToClipboard(color.hex, `analyzed-${color.hex}`)
     }
   })
 
@@ -371,6 +370,7 @@ function IndexPopup() {
           onSave={handleAnalyzerSave}
           onCancel={handleAnalyzerCancel}
           onDeleteDomain={analyzer.deleteDomain}
+          onCopy={copyToClipboard}
           onPickSaved={(color, key) => {
             const nextHsv = colorToHsv({
               hex: color.hex,
