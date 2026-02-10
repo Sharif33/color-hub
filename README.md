@@ -3,8 +3,9 @@
 Extract colors, analyze palettes, and enhance your design workflow.
 
 ## Features
-- Pick colors from any page (via context menu and popup)
-- Save and organize palettes
+- Pick colors from anywhere using `Pick Color` (EyeDropper)
+- Analyze webpage CSS colors and save palettes by domain
+- Keep a picked-color history and quick-copy values
 - Fast access in a compact popup UI
 
 ## Install (Development)

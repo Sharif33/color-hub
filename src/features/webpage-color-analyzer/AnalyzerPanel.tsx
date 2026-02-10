@@ -1,6 +1,7 @@
 import type { AnalyzedColor } from "./index"
 
 interface AnalyzerPanelProps {
+  showSavedWebpageColors: boolean
   analyzedColors: AnalyzedColor[]
   selectedAnalyzedColor: AnalyzedColor | null
   isAnalyzing: boolean
@@ -16,6 +17,7 @@ interface AnalyzerPanelProps {
 }
 
 export const AnalyzerPanel = ({
+  showSavedWebpageColors,
   analyzedColors,
   selectedAnalyzedColor,
   isAnalyzing,
@@ -30,7 +32,7 @@ export const AnalyzerPanel = ({
   onPickSaved
 }: AnalyzerPanelProps) => {
   return (
-    <>
+    <div className="px-3 flex flex-col gap-3">
       {showAnalyzeButton && (
         <button
           onClick={onAnalyze}
@@ -41,7 +43,7 @@ export const AnalyzerPanel = ({
       )}
 
       {analyzedColors.length > 0 && (
-        <div className="mt-2 rounded border border-gray-300 bg-white p-2">
+        <div className="rounded border border-gray-300 bg-white p-2">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">
             CSS Colors on This Page
           </div>
@@ -110,12 +112,12 @@ export const AnalyzerPanel = ({
         </div>
       )}
 
-      {Object.keys(savedWebpageColors).length > 0 && (
-        <div className="mt-2 rounded border border-gray-300 bg-white p-2">
+      {showSavedWebpageColors && Object.keys(savedWebpageColors).length > 0 && (
+        <div className="rounded border border-gray-300 bg-white p-2">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">
             Saved Webpage Colors
           </div>
-          <div className="space-y-2 max-h-32 overflow-auto pr-1">
+          <div className="space-y-2 max-h-32 overflow-auto">
             {Object.entries(savedWebpageColors).map(([domain, colors]) => (
               <div
                 key={domain}
@@ -148,6 +150,6 @@ export const AnalyzerPanel = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
