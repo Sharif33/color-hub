@@ -35,7 +35,7 @@ export const ColorHistoryPanel = ({
                 onClick={() => {
                   if (color) onPick(color, index)
                 }}
-                className={`h-12 border-r border-b border-gray-300 flex items-end justify-center ${color ? "cursor-pointer" : ""}`}
+                className={`h-12 border-[0.5px] border-gray-300 flex items-end justify-center ${color ? "cursor-pointer" : ""}`}
                 style={{ backgroundColor: color?.hex || "#f5f5f5" }}
                 title={color?.hex || ""}>
                 <span

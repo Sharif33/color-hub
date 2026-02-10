@@ -1,3 +1,5 @@
+import { getContrastTextColor } from "~utils/get-contrast-text-color"
+
 import type { AnalyzedColor } from "./index"
 
 interface AnalyzerPanelProps {
@@ -117,7 +119,7 @@ export const AnalyzerPanel = ({
           <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">
             Saved Webpage Colors
           </div>
-          <div className="space-y-2 max-h-32 overflow-auto">
+          <div className="space-y-2 max-h-40 overflow-auto">
             {Object.entries(savedWebpageColors).map(([domain, colors]) => (
               <div
                 key={domain}
@@ -133,16 +135,22 @@ export const AnalyzerPanel = ({
                     Delete
                   </button>
                 </div>
-                <div className="mt-2 grid grid-cols-10 gap-1">
-                  {colors.slice(0, 20).map((color, idx) => (
+                <div className="mt-2 grid grid-cols-4">
+                  {colors.map((color, idx) => (
                     <button
                       key={`${domain}-${color.hex}-${idx}`}
                       type="button"
                       onClick={() => onPickSaved(color, `${domain}-${idx}`)}
-                      title={`${color.hex} • ${color.count}`}
-                      className="h-4 w-full border border-gray-200"
-                      style={{ backgroundColor: color.hex }}
-                    />
+                      title={color.hex}
+                      className="h-10 border-gray-300 border-[0.5px] flex items-end justify-center"
+                      style={{
+                        backgroundColor: color.hex,
+                        color: getContrastTextColor(color.hex) || "#000"
+                      }}>
+                      <span className="text-[9px] font-mono font-medium w-full text-center">
+                        {color.hex}
+                      </span>
+                    </button>
                   ))}
                 </div>
               </div>
