@@ -1,5 +1,5 @@
-export const DEFAULT_FOREGROUND = "#111827"
-export const DEFAULT_BACKGROUND = "#f8fafc"
+export const DEFAULT_FOREGROUND = "#f8fafc"
+export const DEFAULT_BACKGROUND = "#111827"
 
 export const normalizeHex = (value: string, fallback: string): string => {
   const raw = value.trim()

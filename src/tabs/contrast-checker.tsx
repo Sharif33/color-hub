@@ -2,7 +2,7 @@ import { useState } from "react"
 
 import "~style.css"
 
-import { Info } from "lucide-react"
+import logo from "data-base64:~assets/color-hub-logo.png"
 
 import { ColorCard } from "~features/contrast-checker/ColorCard"
 import { ColorPreview } from "~features/contrast-checker/ColorPreview"
@@ -18,8 +18,8 @@ import { DEFAULT_BACKGROUND, DEFAULT_FOREGROUND } from "~utils/color-utils"
 function ContrastCheckerPage() {
   const [foregroundInput, setForegroundInput] = useState(DEFAULT_FOREGROUND)
   const [backgroundInput, setBackgroundInput] = useState(DEFAULT_BACKGROUND)
-  const [fontSize, setFontSize] = useState(22)
-  const [isBold, setIsBold] = useState(true)
+  const [fontSize, setFontSize] = useState(24)
+  const [isBold, setIsBold] = useState(false)
   const [paletteSource, setPaletteSource] =
     useState<PaletteSource>("color-history")
 
@@ -45,33 +45,20 @@ function ContrastCheckerPage() {
   return (
     <div
       className="min-h-screen w-full bg-[#f3f6fb] text-slate-900"
-      style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui" }}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.05),_transparent_55%),radial-gradient(circle_at_85%_20%,_rgba(59,130,246,0.08),_transparent_45%)]" />
-      <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-6 py-10">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              WCAG 2.2 Contrast
-            </span>
-            <h1 className="text-3xl font-semibold text-slate-900">
-              Color Contrast Checker
-            </h1>
-            <p className="text-sm text-slate-600">
-              Validate text contrast for AA/AAA compliance and preview the
-              pairing.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs text-slate-600 shadow-sm">
-            <Info className="size-4 text-slate-500" />
-            Ratio:{" "}
-            <span className="font-semibold text-slate-900">{ratioLabel}:1</span>
-          </div>
+      style={{ fontFamily: "'Inter', sans-serif" }}>
+      <nav className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-white h-16">
+        <div className="flex items-center gap-1 container mx-auto">
+          <img src={logo} alt="Color Hub" className="size-6" />
+          <h1 className="text-lg font-mono tracking-wider">color_hub</h1>
         </div>
-
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="flex flex-col gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_60px_-45px_rgba(15,23,42,0.35)]">
+      </nav>
+      <div className="container mx-auto flex flex-col gap-6 mt-6">
+        <div className="flex gap-6">
+          <div className="flex flex-col gap-6 bg-white p-6 w-3/4">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-slate-900">Colors</h2>
+              <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-slate-900">
+                Color Contrast Checker
+              </h2>
               <PaletteSelector
                 value={paletteSource}
                 onChange={setPaletteSource}
@@ -104,7 +91,21 @@ function ContrastCheckerPage() {
                 swatches={swatches}
               />
             </div>
+            <TypographyControls
+              fontSize={fontSize}
+              isBold={isBold}
+              largeText={largeText}
+              onFontSizeChange={setFontSize}
+              onBoldToggle={() => setIsBold((prev) => !prev)}
+            />
+          </div>
 
+          <div className="flex flex-col gap-6 w-full">
+            <WCAGCompliancePanel
+              ratio={ratio}
+              wcag={wcag}
+              largeText={largeText}
+            />
             <ColorPreview
               background={background}
               foreground={foreground}
@@ -114,17 +115,6 @@ function ContrastCheckerPage() {
               ratio={ratio}
               largeText={largeText}
             />
-          </div>
-
-          <div className="flex flex-col gap-6">
-            <TypographyControls
-              fontSize={fontSize}
-              isBold={isBold}
-              onFontSizeChange={setFontSize}
-              onBoldToggle={() => setIsBold((prev) => !prev)}
-            />
-
-            <WCAGCompliancePanel ratio={ratio} wcag={wcag} />
           </div>
         </div>
       </div>

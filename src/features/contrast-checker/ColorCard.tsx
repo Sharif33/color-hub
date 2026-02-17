@@ -57,7 +57,7 @@ export function ColorCard({
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="rounded-3xl border border-slate-400/70 p-5"
+        className="rounded-xl border p-4"
         style={{
           background: color,
           color: textColor
@@ -83,9 +83,9 @@ export function ColorCard({
         onPaste={handlePaste}
         placeholder="#000000"
         maxLength={7}
-        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none ring-2 ring-transparent transition focus:border-slate-400 focus:ring-slate-300"
+        className="w-full rounded-xl border bg-white px-3 py-1.5 text-sm text-slate-900 outline-none ring-2 ring-transparent transition focus:border-slate-400 focus:ring-slate-300"
       />
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
         {swatches.map((swatch) => (
           <button
             key={`${label.toLowerCase()}-${swatch}`}
