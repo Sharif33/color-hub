@@ -1,7 +1,7 @@
 import { Check, Copy } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { getContrastTextColor } from "~utils/get-contrast-text-color"
+import { getReadableTextColor } from "~utils/color-utils"
 
 import { hexToRgb, rgbToHsl, rgbToHsv } from "../../popup/color-utils"
 import type { ColorEntry, HSV } from "../../popup/types"
@@ -342,7 +342,7 @@ export const ColorPickerPanel = ({
             <span
               className="text-xs"
               style={{
-                color: getContrastTextColor(currentColor?.hex || "#000")
+                color: getReadableTextColor(currentColor?.hex || "#000")
               }}>
               new
             </span>
@@ -356,7 +356,7 @@ export const ColorPickerPanel = ({
             <span
               className="text-xs"
               style={{
-                color: getContrastTextColor(firstHistoryColor?.hex || "#000")
+                color: getReadableTextColor(firstHistoryColor?.hex || "#000")
               }}>
               current
             </span>

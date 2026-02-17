@@ -1,4 +1,4 @@
-import { getContrastTextColor } from "~utils/get-contrast-text-color"
+import { getReadableTextColor } from "~utils/color-utils"
 
 import type { ColorEntry } from "../../popup/types"
 
@@ -40,7 +40,7 @@ export const ColorHistoryPanel = ({
                 title={color?.hex || ""}>
                 <span
                   style={{
-                    color: color ? getContrastTextColor(color.hex) : "#000"
+                    color: color ? getReadableTextColor(color.hex) : "#000"
                   }}
                   className="text-[9px] font-mono font-medium">
                   {color?.hex}

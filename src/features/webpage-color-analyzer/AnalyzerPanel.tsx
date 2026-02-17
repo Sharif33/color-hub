@@ -1,4 +1,4 @@
-import { getContrastTextColor } from "~utils/get-contrast-text-color"
+import { getReadableTextColor } from "~utils/color-utils"
 
 import type { AnalyzedColor } from "./index"
 
@@ -157,7 +157,7 @@ export const AnalyzerPanel = ({
                       className="h-10 border-gray-300 border-[0.5px] flex items-end justify-center"
                       style={{
                         backgroundColor: color.hex,
-                        color: getContrastTextColor(color.hex) || "#000"
+                        color: getReadableTextColor(color.hex) || "#000"
                       }}>
                       <span className="text-[9px] font-mono font-medium w-full text-center">
                         {color.hex}
