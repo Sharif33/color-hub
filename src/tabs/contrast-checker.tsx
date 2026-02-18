@@ -46,19 +46,20 @@ function ContrastCheckerPage() {
     <div
       className="min-h-screen w-full bg-[#f3f6fb] text-slate-900"
       style={{ fontFamily: "'Inter', sans-serif" }}>
-      <nav className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-white h-16">
+      <nav className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16">
         <div className="flex items-center gap-1 container mx-auto">
           <img src={logo} alt="Color Hub" className="size-6" />
           <h1 className="text-lg font-mono tracking-wider">color_hub</h1>
         </div>
       </nav>
+
       <div className="container mx-auto flex flex-col gap-6 mt-6">
+        <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-slate-900">
+          Color Contrast Checker
+        </h2>
         <div className="flex gap-6">
           <div className="flex flex-col gap-6 bg-white p-6 w-3/4">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-slate-900">
-                Color Contrast Checker
-              </h2>
               <PaletteSelector
                 value={paletteSource}
                 onChange={setPaletteSource}
