@@ -1,10 +1,16 @@
 import { Check, Copy } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { getReadableTextColor } from "~utils/color-utils"
-
-import { hexToRgb, rgbToHsl, rgbToHsv } from "../../popup/color-utils"
-import type { ColorEntry, HSV } from "../../popup/types"
+import {
+  formatHsl,
+  getReadableTextColor,
+  hexToRgb,
+  hslToRgb,
+  parseColor,
+  rgbToHsv,
+  type ColorEntry,
+  type HSV
+} from "~utils/color-utils"
 
 interface ColorPickerPanelProps {
   hsv: HSV
@@ -58,7 +64,7 @@ export const ColorPickerPanel = ({
     setHexValue(currentColor?.hex || "")
 
     // Parse HSL from string
-    const hslString = currentColor?.hsl || rgbToHsl(r, g, b)
+    const hslString = currentColor?.hsl || formatHsl(r, g, b)
     const hslMatch = hslString.match(
       /hsl\s*\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*\)/i
     )
@@ -115,60 +121,18 @@ export const ColorPickerPanel = ({
       const newL = component === "l" ? numValue : parseInt(lValue, 10)
 
       if (!isNaN(newH) && !isNaN(newS) && !isNaN(newL)) {
-        // Convert HSL to RGB
-        const hNorm = newH / 360
-        const sNorm = newS / 100
-        const lNorm = newL / 100
-
-        const c = (1 - Math.abs(2 * lNorm - 1)) * sNorm
-        const x = c * (1 - Math.abs(((hNorm * 6) % 2) - 1))
-        const m = lNorm - c / 2
-
-        let r = 0,
-          g = 0,
-          b = 0
-        if (hNorm < 1 / 6) {
-          r = c
-          g = x
-          b = 0
-        } else if (hNorm < 2 / 6) {
-          r = x
-          g = c
-          b = 0
-        } else if (hNorm < 3 / 6) {
-          r = 0
-          g = c
-          b = x
-        } else if (hNorm < 4 / 6) {
-          r = 0
-          g = x
-          b = c
-        } else if (hNorm < 5 / 6) {
-          r = x
-          g = 0
-          b = c
-        } else {
-          r = c
-          g = 0
-          b = x
-        }
-
-        const rFinal = Math.round((r + m) * 255)
-        const gFinal = Math.round((g + m) * 255)
-        const bFinal = Math.round((b + m) * 255)
-
-        const newHsv = rgbToHsv(rFinal, gFinal, bFinal)
-        onColorChange(newHsv)
+        const { r: rC, g: gC, b: bC } = hslToRgb(newH, newS, newL)
+        onColorChange(rgbToHsv(rC, gC, bC))
       }
     }
   }
 
   const handleHexChange = (value: string) => {
     setHexValue(value)
-    const rgb = hexToRgb(value)
-    if (rgb) {
-      const newHsv = rgbToHsv(rgb.r, rgb.g, rgb.b)
-      onColorChange(newHsv)
+    const parsed = parseColor(value)
+    if (parsed) {
+      const { r, g, b } = hexToRgb(parsed)
+      onColorChange(rgbToHsv(r, g, b))
     }
   }
 
@@ -297,7 +261,7 @@ export const ColorPickerPanel = ({
           </div>
           <button
             type="button"
-            onClick={() => onCopy(rgbToHsl(r, g, b), "hsl-full")}
+            onClick={() => onCopy(formatHsl(r, g, b), "hsl-full")}
             className="p-1 hover:bg-gray-100 rounded">
             {copiedField === "hsl-full" ? (
               <Check className="w-3 h-3 text-green-600" />

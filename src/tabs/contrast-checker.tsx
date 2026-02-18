@@ -56,7 +56,7 @@ function ContrastCheckerPage() {
           Color Contrast Checker
         </h2>
         <div className="flex gap-6">
-          <div className="flex flex-col gap-6 bg-white p-6 w-3/4">
+          <div className="flex flex-col gap-4 bg-white p-6 w-2/3">
             <div className="flex items-center justify-between gap-3">
               <PaletteSelector
                 value={paletteSource}

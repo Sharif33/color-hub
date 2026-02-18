@@ -1,7 +1,7 @@
 import { Pipette } from "lucide-react"
 
 import { pickOutsideBrowserColor } from "~features/pick-outside-browser-color"
-import { isValidPartialHex } from "~utils/color-utils"
+import { isValidPartialHex, parseColor } from "~utils/color-utils"
 
 interface ColorCardProps {
   label: "Foreground" | "Background"
@@ -28,6 +28,12 @@ export function ColorCard({
       return
     }
 
+    const parsed = parseColor(value)
+    if (parsed) {
+      onInputChange(parsed)
+      return
+    }
+
     const next = value.startsWith("#") ? value : `#${value}`
     if (isValidPartialHex(next)) {
       onInputChange(next.toLowerCase())
@@ -38,12 +44,9 @@ export function ColorCard({
     event.preventDefault()
     const pasted = event.clipboardData.getData("text").trim()
 
-    // Extract hex color from pasted text
-    let hexColor = pasted.replace(/^(#|0x|\\x)/i, "")
-    hexColor = hexColor.replace(/[^0-9a-fA-F]/g, "").slice(0, 6)
-
-    if (hexColor.length > 0) {
-      onInputChange(`#${hexColor.toLowerCase()}`)
+    const parsed = parseColor(pasted)
+    if (parsed) {
+      onInputChange(parsed)
     }
   }
 
@@ -81,8 +84,7 @@ export function ColorCard({
         value={inputValue}
         onChange={(event) => handleInputChange(event.target.value)}
         onPaste={handlePaste}
-        placeholder="#000000"
-        maxLength={7}
+        placeholder="#000000 / rgb(0,0,0) / hsl(0,0%,0%)"
         className="w-full rounded-xl border bg-white px-3 py-1.5 text-sm text-slate-900 outline-none ring-2 ring-transparent transition focus:border-slate-400 focus:ring-slate-300"
       />
       <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">

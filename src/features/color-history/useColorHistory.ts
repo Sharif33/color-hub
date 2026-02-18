@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import type { ColorEntry } from "../../popup/types"
+import type { ColorEntry } from "~utils/color-utils"
 
 interface UseColorHistoryOptions {
   onPickedColor: (color: ColorEntry, source: "hydrate" | "storage") => void

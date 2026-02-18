@@ -25,8 +25,12 @@ import { useColorPicker } from "./features/color-picker/useColorPicker"
 import { pickOutsideBrowserColor } from "./features/pick-outside-browser-color"
 import { AnalyzerPanel } from "./features/webpage-color-analyzer/AnalyzerPanel"
 import { useWebpageAnalyzer } from "./features/webpage-color-analyzer/useWebpageAnalyzer"
-import { colorToHsv, getColorFromHsv, hsvToRgb } from "./popup/color-utils"
-import type { ColorEntry } from "./popup/types"
+import {
+  colorToHsv,
+  getColorFromHsv,
+  hsvToRgb,
+  type ColorEntry
+} from "~utils/color-utils"
 import { isRestrictedUrl } from "./utils/restricted-urls"
 
 function IndexPopup() {

@@ -7,6 +7,7 @@ interface ColorEntry {
   timestamp: number
 }
 
+import { hexToRgb } from "~utils/color-utils"
 import { isRestrictedUrl } from "./utils/restricted-urls"
 
 void initializeBadgeState()
@@ -125,19 +126,3 @@ async function updateBadgeColor(color: ColorEntry | null) {
   }
 }
 
-function hexToRgb(hex: string) {
-  const normalized = hex.replace("#", "").trim()
-  const value =
-    normalized.length === 3
-      ? normalized
-          .split("")
-          .map((ch) => `${ch}${ch}`)
-          .join("")
-      : normalized
-
-  const r = parseInt(value.slice(0, 2), 16) || 0
-  const g = parseInt(value.slice(2, 4), 16) || 0
-  const b = parseInt(value.slice(4, 6), 16) || 0
-
-  return { r, g, b }
-}

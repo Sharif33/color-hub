@@ -1,6 +1,4 @@
-import { getReadableTextColor } from "~utils/color-utils"
-
-import type { ColorEntry } from "../../popup/types"
+import { getReadableTextColor, type ColorEntry } from "~utils/color-utils"
 
 interface ColorHistoryPanelProps {
   colorHistory: ColorEntry[]

@@ -1,20 +1,135 @@
+export interface ColorEntry {
+  hex: string
+  rgb: string
+  hsl?: string
+  timestamp: number
+}
+
+export interface HSV {
+  h: number
+  s: number
+  v: number
+}
+
 export const DEFAULT_FOREGROUND = "#f8fafc"
 export const DEFAULT_BACKGROUND = "#111827"
 
-export const normalizeHex = (value: string, fallback: string): string => {
-  const raw = value.trim()
-  if (!raw) return fallback
+const clamp = (n: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, n))
+
+const toHexByte = (n: number) =>
+  clamp(Math.round(n), 0, 255).toString(16).padStart(2, "0")
+
+export const rgbToHex = (r: number, g: number, b: number): string =>
+  `#${toHexByte(r)}${toHexByte(g)}${toHexByte(b)}`
+
+export const hslToRgb = (
+  h: number,
+  s: number,
+  l: number
+): { r: number; g: number; b: number } => {
+  const hue = ((h % 360) + 360) % 360
+  const sat = clamp(s, 0, 100) / 100
+  const lit = clamp(l, 0, 100) / 100
+  const a = sat * Math.min(lit, 1 - lit)
+  const f = (n: number) => {
+    const k = (n + hue / 30) % 12
+    return lit - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+  }
+  return {
+    r: Math.round(f(0) * 255),
+    g: Math.round(f(8) * 255),
+    b: Math.round(f(4) * 255)
+  }
+}
+
+const hslToHex = (h: number, s: number, l: number): string => {
+  const { r, g, b } = hslToRgb(h, s, l)
+  return rgbToHex(r, g, b)
+}
+
+export const rgbToHsl = (
+  r: number,
+  g: number,
+  b: number
+): { h: number; s: number; l: number } => {
+  const rN = r / 255
+  const gN = g / 255
+  const bN = b / 255
+  const max = Math.max(rN, gN, bN)
+  const min = Math.min(rN, gN, bN)
+  const l = (max + min) / 2
+
+  if (max === min) return { h: 0, s: 0, l: Math.round(l * 100) }
+
+  const d = max - min
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+  let h = 0
+  switch (max) {
+    case rN:
+      h = ((gN - bN) / d + (gN < bN ? 6 : 0)) / 6
+      break
+    case gN:
+      h = ((bN - rN) / d + 2) / 6
+      break
+    case bN:
+      h = ((rN - gN) / d + 4) / 6
+      break
+  }
+  return {
+    h: Math.round(h * 360),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100)
+  }
+}
+
+export const formatHsl = (r: number, g: number, b: number): string => {
+  const { h, s, l } = rgbToHsl(r, g, b)
+  return `hsl(${h}, ${s}%, ${l}%)`
+}
+
+const RGB_RE = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i
+const HSL_RE = /^hsla?\(\s*([\d.]+)[\s,]+([\d.]+)%?[\s,]+([\d.]+)%?/i
+
+/**
+ * Attempts to parse a color string in hex, rgb(), or hsl() format.
+ * Returns a normalized 7-char hex string, or `null` if unparseable.
+ */
+export const parseColor = (input: string): string | null => {
+  const raw = input.trim()
+  if (!raw) return null
+
+  const rgbMatch = raw.match(RGB_RE)
+  if (rgbMatch) {
+    return rgbToHex(
+      parseFloat(rgbMatch[1]),
+      parseFloat(rgbMatch[2]),
+      parseFloat(rgbMatch[3])
+    )
+  }
+
+  const hslMatch = raw.match(HSL_RE)
+  if (hslMatch) {
+    return hslToHex(
+      parseFloat(hslMatch[1]),
+      parseFloat(hslMatch[2]),
+      parseFloat(hslMatch[3])
+    )
+  }
+
   const withHash = raw.startsWith("#") ? raw : `#${raw}`
   const cleaned = `#${withHash.slice(1).replace(/[^0-9a-fA-F]/g, "")}`
   if (cleaned.length === 4) {
-    const r = cleaned[1]
-    const g = cleaned[2]
-    const b = cleaned[3]
+    const [, r, g, b] = cleaned
     return `#${r}${r}${g}${g}${b}${b}`.toLowerCase()
   }
   if (cleaned.length === 7) return cleaned.toLowerCase()
-  return fallback
+
+  return null
 }
+
+export const normalizeHex = (value: string, fallback: string): string =>
+  parseColor(value) ?? fallback
 
 export const isValidPartialHex = (value: string): boolean => {
   if (!value.startsWith("#")) return false
@@ -102,4 +217,84 @@ export const getWebpageHexes = (value: unknown): string[] => {
       .filter(Boolean)
   })
   return uniqueNormalizedHexes(hexes)
+}
+
+// --- HSV conversions ---
+
+export const hsvToRgb = (
+  h: number,
+  s: number,
+  v: number
+): { r: number; g: number; b: number } => {
+  const sat = s / 100
+  const val = v / 100
+  const c = val * sat
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+  const m = val - c
+  let r = 0
+  let g = 0
+  let b = 0
+
+  if (h < 60) {
+    r = c; g = x
+  } else if (h < 120) {
+    r = x; g = c
+  } else if (h < 180) {
+    g = c; b = x
+  } else if (h < 240) {
+    g = x; b = c
+  } else if (h < 300) {
+    r = x; b = c
+  } else {
+    r = c; b = x
+  }
+
+  return {
+    r: Math.round((r + m) * 255),
+    g: Math.round((g + m) * 255),
+    b: Math.round((b + m) * 255)
+  }
+}
+
+export const rgbToHsv = (r: number, g: number, b: number): HSV => {
+  const rN = r / 255
+  const gN = g / 255
+  const bN = b / 255
+  const max = Math.max(rN, gN, bN)
+  const min = Math.min(rN, gN, bN)
+  const d = max - min
+
+  let h = 0
+  if (d !== 0) {
+    switch (max) {
+      case rN:
+        h = ((gN - bN) / d + (gN < bN ? 6 : 0)) * 60
+        break
+      case gN:
+        h = ((bN - rN) / d + 2) * 60
+        break
+      case bN:
+        h = ((rN - gN) / d + 4) * 60
+        break
+    }
+  }
+
+  const s = max === 0 ? 0 : (d / max) * 100
+  const v = max * 100
+  return { h, s, v }
+}
+
+export const getColorFromHsv = (hsv: HSV): ColorEntry => {
+  const { r, g, b } = hsvToRgb(hsv.h, hsv.s, hsv.v)
+  return {
+    hex: rgbToHex(r, g, b),
+    rgb: `rgb(${r}, ${g}, ${b})`,
+    hsl: formatHsl(r, g, b),
+    timestamp: Date.now()
+  }
+}
+
+export const colorToHsv = (color: ColorEntry): HSV => {
+  const { r, g, b } = hexToRgb(color.hex)
+  return rgbToHsv(r, g, b)
 }
