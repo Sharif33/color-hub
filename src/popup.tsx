@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react"
 
 import "~style.css"
 
-import logo from "data-base64:~assets/color-hub-logo.png"
 import {
   AlertTriangle,
   BrushCleaning,
@@ -16,6 +15,8 @@ import {
   TestTubes,
   X
 } from "lucide-react"
+
+import ColorHubLogo from "~components/color hub/logo"
 
 import { ColorHistoryPanel } from "./features/color-history/ColorHistoryPanel"
 import { useColorHistory } from "./features/color-history/useColorHistory"
@@ -270,10 +271,7 @@ function IndexPopup() {
   return (
     <div className="w-[300px] bg-gray-100 font-sans">
       <div className="bg-gray-900 flex items-center gap-1 p-3">
-        <img src={logo} alt="Color Hub" className="size-6" />
-        <h1 className="text-white/90 text-lg font-mono tracking-wider">
-          color_hub
-        </h1>
+        <ColorHubLogo className="text-white/90" />
       </div>
       <div className="flex flex-col gap-3">
         {lastPickedColor && (
