@@ -27,9 +27,6 @@ export function SavedPairsGrid({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-        Saved Pairs
-      </p>
       <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
         {pairs.map((pair) => {
           const ratio = getContrastRatio(pair.foreground, pair.background)

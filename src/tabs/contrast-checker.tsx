@@ -50,7 +50,10 @@ function ContrastCheckerPage() {
     setBackgroundInput(foregroundInput)
   }
 
-  const handleApplySuggestion = (hex: string, target: "foreground" | "background") => {
+  const handleApplySuggestion = (
+    hex: string,
+    target: "foreground" | "background"
+  ) => {
     if (target === "foreground") {
       setForegroundInput(hex)
     } else {
@@ -58,9 +61,9 @@ function ContrastCheckerPage() {
     }
   }
 
-  const [saveStatus, setSaveStatus] = useState<
-    "idle" | "saved" | "duplicate"
-  >("idle")
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "duplicate">(
+    "idle"
+  )
   const statusTimer = useRef<ReturnType<typeof setTimeout>>()
 
   const handleSavePair = useCallback(() => {
@@ -86,13 +89,13 @@ function ContrastCheckerPage() {
     <div
       className="min-h-screen w-full bg-[#f3f6fb] text-slate-900"
       style={{ fontFamily: "'Inter', sans-serif" }}>
-      <nav className="sticky top-0 z-10 flex items-center justify-between gap-4 h-20">
+      <nav className="sticky top-0 z-10 flex items-center justify-between gap-4 h-20 backdrop-blur-lg bg-white/10">
         <div className="container mx-auto">
           <ColorHubLogo size={32} className="text-2xl font-medium" />
         </div>
       </nav>
 
-      <div className="container mx-auto flex flex-col gap-6 mt-2">
+      <div className="container mx-auto flex flex-col gap-6 py-6">
         <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-slate-900">
           Color Contrast Checker
         </h2>

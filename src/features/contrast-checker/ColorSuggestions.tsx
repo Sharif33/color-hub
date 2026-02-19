@@ -1,5 +1,3 @@
-import { Check, CircleCheck } from "lucide-react"
-
 import type { ColorSuggestion, SuggestionTarget } from "~utils/wcag-utils"
 
 interface ColorSuggestionsProps {
@@ -36,21 +34,7 @@ export function ColorSuggestions({
   const onlyAAA =
     suggestions.length > 0 && suggestions.every((s) => s.level === "AAA")
 
-  if (suggestions.length === 0) {
-    return (
-      <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-        <CircleCheck className="size-4 shrink-0 text-emerald-500" />
-        <div className="flex flex-col gap-0.5">
-          <p className="text-xs font-medium text-emerald-700">
-            Excellent — all WCAG levels pass
-          </p>
-          <p className="text-[11px] text-emerald-500">
-            {ratio.toFixed(2)}:1 — no suggestions needed.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  if (suggestions.length === 0) return null
 
   return (
     <div className="flex flex-col gap-3 bg-white p-6">
@@ -80,7 +64,7 @@ export function ColorSuggestions({
           </p>
         </>
       )}
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-2 gap-3">
         {suggestions.map((s) => {
           const style = LEVEL_STYLES[s.level]
           const previewFg = s.target === "foreground" ? s.hex : foreground
@@ -90,46 +74,47 @@ export function ColorSuggestions({
               key={`${s.hex}-${s.level}-${s.target}`}
               type="button"
               onClick={() => onApply(s.hex, s.target)}
-              className="group flex items-center gap-3 rounded-lg border border-slate-200 p-3 text-left transition hover:border-slate-400 hover:bg-slate-50">
-              <div className="flex gap-1.5 shrink-0">
-                <span
-                  className="block size-8 rounded border border-slate-200"
-                  style={{ backgroundColor: previewFg }}
-                />
-                <span
-                  className="block size-8 rounded border border-slate-200"
-                  style={{ backgroundColor: previewBg }}
-                />
-              </div>
-              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-sm font-medium text-slate-900">
+              className="group flex flex-col items-center gap-2 rounded-lg border border-slate-200 p-3 text-left transition hover:border-slate-400 hover:bg-slate-50">
+              <div className="flex items-center justify-between gap-2 w-full">
+                <div className="flex shrink-0 overflow-hidden rounded">
+                  <span
+                    className="h-10 w-6"
+                    style={{ backgroundColor: previewFg }}
+                  />
+                  <span
+                    className="h-10 w-6"
+                    style={{ backgroundColor: previewBg }}
+                  />
+                </div>
+                <span className="text-slate-400 text-base">=</span>
+                <div
+                  className="flex items-center justify-center rounded-md size-10 text-base font-semibold"
+                  style={{
+                    backgroundColor: previewBg,
+                    color: previewFg
+                  }}>
+                  Aa
+                </div>
+                <div className="flex flex-col items-start gap-1.5">
+                  <span className="text-[11px] font-mono text-slate-400">
                     {s.hex}
                   </span>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    {s.ratio.toFixed(2)}:1
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-end gap-1.5">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${style.badge}`}>
+                    className={`rounded-full py-0.5 px-2 text-[10px] font-semibold whitespace-nowrap ${style.badge}`}>
                     {s.level} · {style.label}
                   </span>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${TARGET_STYLES[s.target]}`}>
+                    className={`rounded-full py-0.5 px-2 text-[10px] font-semibold whitespace-nowrap ${TARGET_STYLES[s.target]}`}>
                     {s.target}
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-400">
-                  {s.ratio.toFixed(2)}:1
-                </span>
               </div>
-              <div
-                className="flex items-center justify-center rounded-md px-2 py-1 text-xs font-semibold"
-                style={{
-                  backgroundColor: previewBg,
-                  color: previewFg
-                }}>
-                Aa
-              </div>
-              <span className="inline-flex size-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 opacity-0 transition group-hover:opacity-100">
-                <Check className="size-3.5" strokeWidth={2.5} />
-              </span>
             </button>
           )
         })}
