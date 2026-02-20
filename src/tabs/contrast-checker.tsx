@@ -22,7 +22,7 @@ import { DEFAULT_BACKGROUND, DEFAULT_FOREGROUND } from "~utils/color-utils"
 function ContrastCheckerPage() {
   const [foregroundInput, setForegroundInput] = useState(DEFAULT_FOREGROUND)
   const [backgroundInput, setBackgroundInput] = useState(DEFAULT_BACKGROUND)
-  const [fontSize, setFontSize] = useState(24)
+  const [fontSize, setFontSize] = useState(16)
   const [isBold, setIsBold] = useState(false)
   const [paletteSource, setPaletteSource] =
     useState<PaletteSource>("color-history")
@@ -86,114 +86,152 @@ function ContrastCheckerPage() {
   const isSavedPairsSource = paletteSource === "saved-pairs"
 
   return (
-    <div
-      className="min-h-screen w-full bg-[#f3f6fb] text-slate-900"
-      style={{ fontFamily: "'Inter', sans-serif" }}>
-      <nav className="sticky top-0 z-10 flex items-center justify-between gap-4 h-20 backdrop-blur-lg bg-white/10">
-        <div className="container mx-auto">
-          <ColorHubLogo size={32} className="text-2xl font-medium" />
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100">
+      <nav className="sticky top-0 z-20 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <ColorHubLogo size={28} className="text-blue-600" />
+            <h1 className="text-lg font-bold tracking-tight text-slate-900">
+              Contrast Checker
+            </h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={handleSavePair}
+              className={`flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all active:scale-95 ${
+                saveStatus === "saved"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100/50"
+                  : saveStatus === "duplicate"
+                    ? "border-amber-200 bg-amber-50 text-amber-700 shadow-sm shadow-amber-100/50"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 shadow-sm shadow-slate-100"
+              }`}>
+              {saveStatus === "saved" ? (
+                <Check className="size-4" strokeWidth={2.5} />
+              ) : saveStatus === "duplicate" ? (
+                <AlertCircle className="size-4" />
+              ) : (
+                <Save className="size-4" />
+              )}
+              {saveStatus === "saved"
+                ? "Saved"
+                : saveStatus === "duplicate"
+                  ? "Exists"
+                  : "Save Pair"}
+            </button>
+          </div>
         </div>
       </nav>
 
-      <div className="container mx-auto flex flex-col gap-6 py-6">
-        <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-slate-900">
-          Color Contrast Checker
-        </h2>
-        <div className="flex gap-6">
-          <div className="flex flex-col gap-4 bg-white p-6 w-2/3">
-            <div className="flex items-center justify-between gap-3">
-              <PaletteSelector
-                value={paletteSource}
-                onChange={setPaletteSource}
-                options={PALETTE_OPTIONS}
-              />
-              <button
-                type="button"
-                onClick={handleSavePair}
-                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition active:scale-95 ${
-                  saveStatus === "saved"
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                    : saveStatus === "duplicate"
-                      ? "border-amber-300 bg-amber-50 text-amber-700"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
-                }`}>
-                {saveStatus === "saved" ? (
-                  <Check className="size-3.5" strokeWidth={2.5} />
-                ) : saveStatus === "duplicate" ? (
-                  <AlertCircle className="size-3.5" />
-                ) : (
-                  <Save className="size-3.5" />
-                )}
-                {saveStatus === "saved"
-                  ? "Saved!"
-                  : saveStatus === "duplicate"
-                    ? "Already saved"
-                    : "Save Pair"}
-              </button>
-            </div>
-
-            <div className="grid items-start gap-6 lg:grid-cols-[1fr_auto_1fr]">
-              <ColorCard
-                label="Foreground"
-                color={foreground}
-                alpha={fgAlpha}
-                textColor={foregroundTextColor}
-                inputValue={foregroundInput}
-                onColorChange={setForegroundInput}
-                onInputChange={setForegroundInput}
-                swatches={swatches}
-                hideSwatches={isSavedPairsSource}
-              />
-
-              <div className="flex pt-20">
-                <SwapButton onSwap={handleSwapColors} />
+      <main className="container mx-auto max-w-7xl p-6 py-8">
+        <div className="grid gap-6 lg:grid-cols-12 items-start">
+          {/* Left Column: Controls */}
+          <div className="flex flex-col gap-6 lg:col-span-5 xl:col-span-4">
+            <div className="flex flex-col gap-6 rounded-3xl border border-slate-200/60 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+                  Colors
+                </h2>
+                <PaletteSelector
+                  value={paletteSource}
+                  onChange={setPaletteSource}
+                  options={PALETTE_OPTIONS}
+                />
               </div>
 
-              <ColorCard
-                label="Background"
-                color={background}
-                alpha={bgAlpha}
-                textColor={backgroundTextColor}
-                inputValue={backgroundInput}
-                onColorChange={setBackgroundInput}
-                onInputChange={setBackgroundInput}
-                swatches={swatches}
-                hideSwatches={isSavedPairsSource}
-              />
+              <div className="flex flex-col gap-3 items-center">
+                <div className="w-full">
+                  <ColorCard
+                    label="Foreground"
+                    color={foreground}
+                    alpha={fgAlpha}
+                    textColor={foregroundTextColor}
+                    inputValue={foregroundInput}
+                    onColorChange={setForegroundInput}
+                    onInputChange={setForegroundInput}
+                    swatches={swatches}
+                    hideSwatches={isSavedPairsSource}
+                  />
+                </div>
+
+                <div className="relative flex items-center justify-center w-full py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-100"></div>
+                  </div>
+                  <div className="relative bg-white px-4">
+                    <SwapButton onSwap={handleSwapColors} />
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <ColorCard
+                    label="Background"
+                    color={background}
+                    alpha={bgAlpha}
+                    textColor={backgroundTextColor}
+                    inputValue={backgroundInput}
+                    onColorChange={setBackgroundInput}
+                    onInputChange={setBackgroundInput}
+                    swatches={swatches}
+                    hideSwatches={isSavedPairsSource}
+                  />
+                </div>
+              </div>
+
+              {(fgAlpha < 1 || bgAlpha < 1) && (
+                <div className="pt-2">
+                  <AlphaIndicator
+                    fgAlpha={fgAlpha}
+                    bgAlpha={bgAlpha}
+                    effectiveForeground={effectiveForeground}
+                    effectiveBackground={effectiveBackground}
+                  />
+                </div>
+              )}
             </div>
 
             {isSavedPairsSource && (
-              <SavedPairsGrid
-                pairs={pairs}
-                onSelect={handleSelectPair}
-                onRemove={removePair}
-              />
+              <div className="rounded-3xl border border-slate-200/60 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-4">
+                  Saved Pairs
+                </h2>
+                <SavedPairsGrid
+                  pairs={pairs}
+                  onSelect={handleSelectPair}
+                  onRemove={removePair}
+                />
+              </div>
             )}
 
-            {(fgAlpha < 1 || bgAlpha < 1) && (
-              <AlphaIndicator
-                fgAlpha={fgAlpha}
-                bgAlpha={bgAlpha}
-                effectiveForeground={effectiveForeground}
-                effectiveBackground={effectiveBackground}
+            <div className="rounded-3xl border border-slate-200/60 bg-white p-6 shadow-sm">
+              <TypographyControls
+                fontSize={fontSize}
+                isBold={isBold}
+                largeText={largeText}
+                onFontSizeChange={setFontSize}
+                onBoldToggle={() => setIsBold((prev) => !prev)}
               />
-            )}
-
-            <TypographyControls
-              fontSize={fontSize}
-              isBold={isBold}
-              largeText={largeText}
-              onFontSizeChange={setFontSize}
-              onBoldToggle={() => setIsBold((prev) => !prev)}
-            />
+            </div>
           </div>
 
-          <div className="flex flex-col gap-6 w-full">
-            <WCAGCompliancePanel
-              ratio={ratio}
-              wcag={wcag}
-              largeText={largeText}
-            />
+          {/* Right Column: Preview & Analysis */}
+          <div className="flex flex-col gap-6 lg:col-span-7 xl:col-span-8">
+            <div className="rounded-3xl border border-slate-200/60 bg-white shadow-sm overflow-hidden flex flex-col">
+              <WCAGCompliancePanel
+                ratio={ratio}
+                wcag={wcag}
+                largeText={largeText}
+              />
+              <div className="h-px bg-slate-100 w-full" />
+              <ColorSuggestions
+                suggestions={suggestions}
+                foreground={effectiveForeground}
+                background={effectiveBackground}
+                ratio={ratio}
+                onApply={handleApplySuggestion}
+              />
+            </div>
+
             <ColorPreview
               background={effectiveBackground}
               foreground={effectiveForeground}
@@ -203,16 +241,9 @@ function ContrastCheckerPage() {
               ratio={ratio}
               largeText={largeText}
             />
-            <ColorSuggestions
-              suggestions={suggestions}
-              foreground={effectiveForeground}
-              background={effectiveBackground}
-              ratio={ratio}
-              onApply={handleApplySuggestion}
-            />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

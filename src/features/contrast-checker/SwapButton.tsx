@@ -10,8 +10,9 @@ export function SwapButton({ onSwap }: SwapButtonProps) {
       type="button"
       onClick={onSwap}
       aria-label="Swap foreground and background"
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-400 bg-[#f3f6fb] text-slate-500 transition hover:border-slate-500 hover:text-slate-700 hover:scale-110 active:scale-95">
-      <ArrowLeftRight className="size-6" />
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-blue-200 hover:text-blue-600 hover:shadow-md active:scale-95"
+    >
+      <ArrowLeftRight className="h-4 w-4" />
     </button>
   )
 }

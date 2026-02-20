@@ -34,35 +34,37 @@ export function WCAGCompliancePanel({
   const ratioLabel = getRatioLabel(ratio)
 
   return (
-    <div className="flex flex-col gap-3 bg-white p-6">
+    <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs tracking-[0.2em] text-slate-500 uppercase">
-          WCAG 2.2 Compliance
-        </h2>
-        <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ratioLabel.className}`}>
-          {ratioLabel.text}
-        </span>
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-bold tracking-widest text-slate-400 uppercase">
+            WCAG 2.2 Compliance
+          </h2>
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${ratioLabel.className}`}>
+            {ratioLabel.text}
+          </span>
+        </div>
       </div>
 
-      <div title="Color Contrast Ratio" className="flex items-baseline gap-1.5">
-        <p className={`text-3xl font-bold leading-none ${ratioColor}`}>
+      <div title="Color Contrast Ratio" className="flex items-baseline gap-2">
+        <p className={`text-6xl font-black tracking-tight leading-none ${ratioColor}`}>
           {ratio.toFixed(2)}
         </p>
-        <span className="text-base font-medium text-slate-400">: 1</span>
+        <span className="text-2xl font-bold text-slate-300">: 1</span>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3 mt-2">
         <div
-          className={`flex flex-col gap-3 border p-3 transition ${
+          className={`flex flex-col gap-4 rounded-2xl border p-4 transition ${
             !largeText
-              ? "border-slate-900/10 bg-slate-50"
-              : "border-slate-100 bg-white"
+              ? "border-blue-200 bg-blue-50/50 shadow-sm shadow-blue-100/50"
+              : "border-slate-200/60 bg-slate-50/50 hover:bg-slate-50"
           }`}>
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-mono text-slate-500">Normal Text</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-600">Normal Text</p>
             {!largeText && (
-              <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white">
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
                 Active
               </span>
             )}
@@ -82,15 +84,15 @@ export function WCAGCompliancePanel({
         </div>
 
         <div
-          className={`flex flex-col gap-3 border p-3 transition ${
+          className={`flex flex-col gap-4 rounded-2xl border p-4 transition ${
             largeText
-              ? "border-slate-900/10 bg-slate-50"
-              : "border-slate-100 bg-white"
+              ? "border-blue-200 bg-blue-50/50 shadow-sm shadow-blue-100/50"
+              : "border-slate-200/60 bg-slate-50/50 hover:bg-slate-50"
           }`}>
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-mono text-slate-500">Large Text</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-600">Large Text</p>
             {largeText && (
-              <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white">
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
                 Active
               </span>
             )}
@@ -109,8 +111,8 @@ export function WCAGCompliancePanel({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border border-slate-100 bg-white p-3">
-          <p className="text-xs font-mono text-slate-500">Graphics & UI</p>
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/60 bg-slate-50/50 p-4 hover:bg-slate-50 transition">
+          <p className="text-sm font-semibold text-slate-600">Graphics & UI</p>
           <div className="flex gap-4">
             <ComplianceBadge
               label="AA"
