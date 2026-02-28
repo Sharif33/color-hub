@@ -37,9 +37,9 @@ export function ColorSuggestions({
   if (suggestions.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-4 p-6 bg-slate-50/30">
+    <div className="flex flex-col gap-5 p-6 bg-slate-50/50">
       {onlyAAA ? (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2.5">
             <h2 className="text-sm font-bold tracking-widest text-slate-400 uppercase">
               Reach Excellent (AAA)
@@ -54,7 +54,7 @@ export function ColorSuggestions({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <h2 className="text-sm font-bold tracking-widest text-slate-400 uppercase">
             Suggested Fixes
           </h2>
@@ -64,7 +64,7 @@ export function ColorSuggestions({
           </p>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-4 mt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
         {suggestions.map((s) => {
           const style = LEVEL_STYLES[s.level]
           const previewFg = s.target === "foreground" ? s.hex : foreground
@@ -74,43 +74,34 @@ export function ColorSuggestions({
               key={`${s.hex}-${s.level}-${s.target}`}
               type="button"
               onClick={() => onApply(s.hex, s.target)}
-              className="group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/80 bg-white p-3.5 text-left shadow-sm transition-all hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0">
-              <div className="flex items-center justify-between gap-3 w-full">
-                <div className="flex shrink-0 overflow-hidden rounded-lg shadow-inner ring-1 ring-black/5">
-                  <span
-                    className="h-10 w-7"
-                    style={{ backgroundColor: previewFg }}
-                  />
-                  <span
-                    className="h-10 w-7"
-                    style={{ backgroundColor: previewBg }}
-                  />
-                </div>
-                <span className="text-slate-300 text-lg font-light">=</span>
-                <div
-                  className="flex items-center justify-center rounded-lg size-10 text-base font-bold shadow-sm ring-1 ring-black/5"
-                  style={{
-                    backgroundColor: previewBg,
-                    color: previewFg
-                  }}>
-                  Aa
-                </div>
-                <div className="flex flex-col items-start gap-1">
-                  <span className="text-xs font-mono font-bold text-slate-700">
-                    {s.hex.toUpperCase()}
-                  </span>
-                  <span className="text-[11px] font-mono font-medium text-slate-500">
-                    {s.ratio.toFixed(2)}:1
-                  </span>
+              className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 text-left shadow-sm transition-all hover:border-blue-400 hover:shadow-md hover:ring-1 hover:ring-blue-400 active:scale-[0.98]">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center rounded-xl size-10 text-base font-bold shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-105"
+                    style={{
+                      backgroundColor: previewBg,
+                      color: previewFg
+                    }}>
+                    Aa
+                  </div>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-xs font-mono font-bold text-slate-700">
+                      {s.hex.toUpperCase()}
+                    </span>
+                    <span className="text-[11px] font-mono font-medium text-slate-500">
+                      Ratio: {s.ratio.toFixed(2)}:1
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-1.5 ml-auto">
+                <div className="flex flex-col items-end gap-1.5">
                   <span
-                    className={`rounded-full py-0.5 px-2 text-[10px] font-bold tracking-wider uppercase whitespace-nowrap shadow-sm ${style.badge}`}>
+                    className={`rounded-md py-0.5 px-2 text-[10px] font-bold tracking-wider uppercase whitespace-nowrap ${style.badge}`}>
                     {s.level} · {style.label}
                   </span>
                   <span
-                    className={`rounded-full py-0.5 px-2 text-[10px] font-bold tracking-wider uppercase whitespace-nowrap shadow-sm ${TARGET_STYLES[s.target]}`}>
+                    className={`rounded-md py-0.5 px-2 text-[10px] font-bold tracking-wider uppercase whitespace-nowrap ${TARGET_STYLES[s.target]}`}>
                     {s.target}
                   </span>
                 </div>

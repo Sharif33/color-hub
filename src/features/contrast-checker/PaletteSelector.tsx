@@ -43,18 +43,18 @@ export function PaletteSelector({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-      >
+        className="flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white/80 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:border-slate-300 hover:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 active:scale-95">
         <span>{selectedOption?.label}</span>
         <ChevronDown
-          className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
+          className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-300 ${
             isOpen ? "rotate-180" : ""
           }`}
+          strokeWidth={2.5}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-48 origin-top-right rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-48 origin-top-right rounded-xl border border-slate-100 bg-white/95 backdrop-blur-md p-1.5 shadow-xl shadow-slate-200/50 ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 duration-150">
           {options.map((option) => (
             <button
               key={option.value}
@@ -62,13 +62,12 @@ export function PaletteSelector({
               onClick={() => handleSelect(option.value)}
               className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                 option.value === value
-                  ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
+                  ? "bg-blue-50/80 text-blue-700 font-semibold"
+                  : "text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900"
+              }`}>
               {option.label}
               {option.value === value && (
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 shadow-sm" />
               )}
             </button>
           ))}
