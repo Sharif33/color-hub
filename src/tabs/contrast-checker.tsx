@@ -4,11 +4,11 @@ import { useCallback, useRef, useState } from "react"
 import "~style.css"
 
 import ColorHubLogo from "~components/color hub/logo"
+import { Dropdown } from "~components/dropdown"
 import { AlphaIndicator } from "~features/contrast-checker/AlphaIndicator"
 import { ColorCard } from "~features/contrast-checker/ColorCard"
 import { ColorPreview } from "~features/contrast-checker/ColorPreview"
 import { ColorSuggestions } from "~features/contrast-checker/ColorSuggestions"
-import { PaletteSelector } from "~features/contrast-checker/PaletteSelector"
 import { SavedPairsGrid } from "~features/contrast-checker/SavedPairsGrid"
 import { SwapButton } from "~features/contrast-checker/SwapButton"
 import { TypographyControls } from "~features/contrast-checker/TypographyControls"
@@ -139,10 +139,11 @@ function ContrastCheckerPage() {
                 <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">
                   Colors
                 </h2>
-                <PaletteSelector
+                <Dropdown
                   value={paletteSource}
-                  onChange={setPaletteSource}
+                  onChange={(next) => setPaletteSource(next)}
                   options={PALETTE_OPTIONS}
+                  ariaLabel="Palette source"
                 />
               </div>
 
