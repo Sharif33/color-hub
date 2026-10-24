@@ -20,8 +20,14 @@ import { PALETTE_OPTIONS, type PaletteSource } from "~lib/constants"
 import { DEFAULT_BACKGROUND, DEFAULT_FOREGROUND } from "~utils/color-utils"
 
 function ContrastCheckerPage() {
-  const [foregroundInput, setForegroundInput] = useState(DEFAULT_FOREGROUND)
-  const [backgroundInput, setBackgroundInput] = useState(DEFAULT_BACKGROUND)
+  const [foregroundInput, setForegroundInput] = useState(() => {
+    const fg = new URLSearchParams(window.location.search).get("fg")
+    return fg ? `#${fg}` : DEFAULT_FOREGROUND
+  })
+  const [backgroundInput, setBackgroundInput] = useState(() => {
+    const bg = new URLSearchParams(window.location.search).get("bg")
+    return bg ? `#${bg}` : DEFAULT_BACKGROUND
+  })
   const [fontSize, setFontSize] = useState(16)
   const [isBold, setIsBold] = useState(false)
   const [paletteSource, setPaletteSource] =

@@ -246,6 +246,215 @@ export const highlightWebpageColor = async (color: AnalyzedColor) => {
   })
 }
 
+export interface ContrastPair {
+  foreground: string
+  background: string
+  count: number
+  selectors: string[]
+}
+
+export interface WCAGAnalysisData {
+  url: string
+  title: string
+  timestamp: number
+  pairs: ContrastPair[]
+}
+
+const extractContrastPairsInPage = (): Array<{
+  foreground: string
+  background: string
+  count: number
+  selectors: string[]
+}> => {
+  const normalizeRgb = (value: string): string | null => {
+    const rgbMatch = value
+      .replace(/\s+/g, "")
+      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,(\d*\.?\d+))?\)$/i)
+    if (!rgbMatch) return null
+    const r = Math.max(0, Math.min(255, parseInt(rgbMatch[1], 10)))
+    const g = Math.max(0, Math.min(255, parseInt(rgbMatch[2], 10)))
+    const b = Math.max(0, Math.min(255, parseInt(rgbMatch[3], 10)))
+    const alpha = rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1
+    if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null
+    if (alpha === 0) return null
+    return `rgb(${r}, ${g}, ${b})`
+  }
+
+  const rgbToHex = (rgb: string): string => {
+    const match = rgb
+      .replace(/\s+/g, "")
+      .match(/^rgb\((\d+),(\d+),(\d+)\)$/i)
+    if (!match) return "#000000"
+    const r = parseInt(match[1], 10)
+    const g = parseInt(match[2], 10)
+    const b = parseInt(match[3], 10)
+    return (
+      "#" +
+      [r, g, b]
+        .map((x) => x.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase()
+    )
+  }
+
+  const isTransparent = (value: string): boolean => {
+    if (!value || value === "transparent") return true
+    const m = value.replace(/\s+/g, "").match(/^rgba?\(\d+,\d+,\d+,?(\d*\.?\d+)?\)$/i)
+    if (!m) return false
+    const a = m[1] !== undefined ? parseFloat(m[1]) : 1
+    return a === 0
+  }
+
+  const getEffectiveBg = (el: Element): string => {
+    let current: Element | null = el
+    while (current) {
+      const bg = window.getComputedStyle(current).backgroundColor
+      if (!isTransparent(bg)) {
+        const normalized = normalizeRgb(bg)
+        if (normalized) return normalized
+      }
+      current = current.parentElement
+    }
+    return "rgb(255, 255, 255)"
+  }
+
+  const buildRawSelector = (el: Element): string => {
+    const tag = el.tagName.toLowerCase()
+    const id = (el.id || "").trim()
+    if (id) return `${tag}#${id}`
+
+    const classList = Array.from(el.classList)
+      .map((name) => name.trim())
+      .filter(Boolean)
+    const classes = classList.length ? `.${classList.join(".")}` : ""
+    return `${tag}${classes}`.trim()
+  }
+
+  const buildReadableSelector = (el: Element): string => {
+    const tag = el.tagName.toLowerCase()
+    const shorten = (value: string, max = 28): string =>
+      value.length > max ? `${value.slice(0, max)}...` : value
+
+    const id = (el.id || "").trim()
+    if (id) return `${tag}#${shorten(id)}`
+
+    const classList = Array.from(el.classList)
+      .map((name) => name.trim())
+      .filter(Boolean)
+
+    if (classList.length > 0) {
+      const topClasses = classList.slice(0, 2).map((name) => shorten(name, 20))
+      const remainingCount = classList.length - topClasses.length
+      const classPart = `.${topClasses.join(".")}`
+      return remainingCount > 0
+        ? `${tag}${classPart} (+${remainingCount} classes)`
+        : `${tag}${classPart}`
+    }
+
+    const ariaLabel = (el.getAttribute("aria-label") || "").trim()
+    if (ariaLabel) {
+      return `${tag}[aria-label="${shorten(ariaLabel.replace(/"/g, "'"), 24)}"]`
+    }
+
+    return tag
+  }
+
+  const pairs = new Map<
+    string,
+    {
+      foreground: string
+      background: string
+      count: number
+      selectors: Map<string, string>
+    }
+  >()
+
+  const textSelectors =
+    "p, h1, h2, h3, h4, h5, h6, a, span, li, td, th, label, button"
+  const nodes = Array.from(document.querySelectorAll(textSelectors))
+  const limit = Math.min(nodes.length, 1200)
+
+  for (let i = 0; i < limit; i++) {
+    const el = nodes[i]
+    const hasText =
+      el.childNodes.length > 0 &&
+      Array.from(el.childNodes).some(
+        (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim().length > 0
+      )
+    if (!hasText) continue
+
+    const styles = window.getComputedStyle(el)
+    const fgRgb = normalizeRgb(styles.color)
+    if (!fgRgb) continue
+
+    const bgRgb = getEffectiveBg(el)
+    if (fgRgb === bgRgb) continue
+
+    const fgHex = rgbToHex(fgRgb)
+    const bgHex = rgbToHex(bgRgb)
+    const key = `${fgHex}|${bgHex}`
+    const rawSelector = buildRawSelector(el)
+    const readableSelector = buildReadableSelector(el)
+
+    if (pairs.has(key)) {
+      const existing = pairs.get(key)!
+      existing.count++
+      if (rawSelector) existing.selectors.set(rawSelector, readableSelector)
+    } else {
+      const selectors = new Map<string, string>()
+      if (rawSelector) selectors.set(rawSelector, readableSelector)
+      pairs.set(key, {
+        foreground: fgHex,
+        background: bgHex,
+        selectors,
+        count: 1
+      })
+    }
+  }
+
+  return Array.from(pairs.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 100)
+    .map((pair) => ({
+      ...pair,
+      selectors: Array.from(pair.selectors.values())
+    }))
+}
+
+export const analyzeWebpageContrastPairs =
+  async (): Promise<WCAGAnalysisData | null> => {
+    return new Promise((resolve) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs?.[0]
+        if (!tab?.id) {
+          resolve(null)
+          return
+        }
+
+        const url = tab.url ?? ""
+        const title = tab.title ?? ""
+
+        chrome.scripting.executeScript(
+          {
+            target: { tabId: tab.id },
+            func: extractContrastPairsInPage
+          },
+          async (results) => {
+            const pairs = (results?.[0]?.result ?? []) as ContrastPair[]
+            const data: WCAGAnalysisData = {
+              url,
+              title,
+              timestamp: Date.now(),
+              pairs
+            }
+            await chrome.storage.local.set({ WCAG_ANALYSIS_PENDING: data })
+            resolve(data)
+          }
+        )
+      })
+    })
+  }
+
 export const clearWebpageHighlights = async () => {
   return new Promise<void>((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

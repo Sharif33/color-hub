@@ -12,6 +12,7 @@ import {
   NotepadText,
   Palette,
   Pipette,
+  ScanEye,
   TestTubes,
   X
 } from "lucide-react"
@@ -24,6 +25,7 @@ import { ColorPickerPanel } from "./features/color-picker/ColorPickerPanel"
 import { useColorPicker } from "./features/color-picker/useColorPicker"
 import { pickOutsideBrowserColor } from "./features/pick-outside-browser-color"
 import { AnalyzerPanel } from "./features/webpage-color-analyzer/AnalyzerPanel"
+import { analyzeWebpageContrastPairs } from "./features/webpage-color-analyzer"
 import { useWebpageAnalyzer } from "./features/webpage-color-analyzer/useWebpageAnalyzer"
 import {
   colorToHsv,
@@ -151,6 +153,21 @@ function IndexPopup() {
     chrome.tabs.create({ url })
   }
 
+  const [isAnalyzingWCAG, setIsAnalyzingWCAG] = useState(false)
+
+  const analyzeWCAGContrast = async () => {
+    setIsAnalyzingWCAG(true)
+    try {
+      await analyzeWebpageContrastPairs()
+      const url = chrome.runtime.getURL("tabs/wcag-contrast-analyzer.html")
+      chrome.tabs.create({ url })
+    } catch (error) {
+      console.warn("WCAG analysis failed:", error)
+    } finally {
+      setIsAnalyzingWCAG(false)
+    }
+  }
+
   const copyToClipboard = async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -208,6 +225,12 @@ function IndexPopup() {
       icon: TestTubes,
       onClick: openContrastChecker,
       disabled: false
+    },
+    {
+      label: isAnalyzingWCAG ? "Analyzing…" : "Analyze WCAG Contrast",
+      icon: ScanEye,
+      onClick: analyzeWCAGContrast,
+      disabled: isAnalyzingWCAG || pageRestricted
     },
     {
       label: "Picked Color History",
