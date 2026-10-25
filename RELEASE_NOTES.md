@@ -1,5 +1,25 @@
 # Release Notes
 
+## 1.2.0 (2026-10-25)
+Developer tools: get a page's colors into your code as tokens, check accessibility more deeply, and trust the analysis more.
+
+Highlights:
+- Palette Studio: see every color with its OKLCH value, CSS variable and nearest Tailwind color, then export it as CSS variables, SCSS, Tailwind v4 `@theme`, Tailwind v3 config or W3C design tokens
+- Find near-duplicate colors that should be one token, and compare palettes (for example staging against production)
+- `Analyze Webpage Colors` names the CSS variables colors come from, keeps translucent colors with their alpha, sees outlines, SVG, shadows and gradients, and looks inside shadow DOM and iframes
+- `Extract Colors from Screenshot` gets the main colors of the visible page, images and video included
+- Copy any color as HEX, RGB, HSL, OKLCH, Tailwind, SwiftUI, UIKit or Compose/Flutter code, and see its nearest Tailwind color
+- APCA (WCAG 3 draft) contrast next to WCAG 2.2, in the Contrast Checker and the WCAG report
+- Export the WCAG report as a GitHub issue with suggested fixes, Markdown, CSV or JSON
+- Hover inspector for any element's colors and contrast, and color vision deficiency simulation on any page
+- Right-click menu for the page tools, including checking the contrast of a selected color code
+- Settings page with a default copy format, the Tailwind palette version, and backup and restore
+- Fixed color counts that were inflated by borders that aren't drawn and by elements without text
+
+Permissions used:
+- `activeTab`, `tabs`, `storage`, `unlimitedStorage`, `scripting`, `contextMenus` (no new permissions)
+- `host_permissions`: `<all_urls>`
+
 ## 1.1.0 (2026-10-25)
 New contrast tools: a Color Contrast Checker and a WCAG contrast report for the current page.
 

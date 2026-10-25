@@ -1,5 +1,12 @@
 import { Heart, MoreHorizontal, Share2, Star } from "lucide-react"
+import { useState } from "react"
 
+import {
+  BLUR_FILTER,
+  VISION_MATRICES,
+  VISION_MODES,
+  type VisionMode
+} from "~features/vision-simulation"
 import { formatRatio } from "~utils/wcag-utils"
 
 interface ColorPreviewProps {
@@ -21,6 +28,14 @@ export function ColorPreview({
   ratio,
   largeText
 }: ColorPreviewProps) {
+  const [vision, setVision] = useState<VisionMode | "">("")
+  const visionFilter =
+    vision === "blurred"
+      ? BLUR_FILTER
+      : vision
+        ? `url(#preview-vision-${vision})`
+        : undefined
+
   return (
     <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm transition-all duration-200 hover:shadow-md">
       <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-4 flex items-center justify-between">
@@ -28,6 +43,18 @@ export function ColorPreview({
           Live Preview
         </h3>
         <div className="flex items-center gap-2">
+          <select
+            value={vision}
+            onChange={(e) => setVision(e.target.value as VisionMode | "")}
+            aria-label="Simulate vision"
+            className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+            <option value="">Normal vision</option>
+            {VISION_MODES.map((mode) => (
+              <option key={mode.value} value={mode.value}>
+                {mode.label}
+              </option>
+            ))}
+          </select>
           <span className="rounded-full bg-slate-200/50 px-3 py-1 text-xs font-mono font-medium text-slate-600">
             {formatRatio(ratio)}:1
           </span>
@@ -37,9 +64,19 @@ export function ColorPreview({
         </div>
       </div>
 
+      <svg aria-hidden="true" className="absolute h-0 w-0 overflow-hidden">
+        {Object.entries(VISION_MATRICES).map(([mode, values]) => (
+          <filter
+            key={mode}
+            id={`preview-vision-${mode}`}
+            colorInterpolationFilters="linearRGB">
+            <feColorMatrix type="matrix" values={values} />
+          </filter>
+        ))}
+      </svg>
       <div
         className="flex flex-col gap-8 p-8 transition-colors duration-200 min-h-[400px]"
-        style={{ backgroundColor: background }}>
+        style={{ backgroundColor: background, filter: visionFilter }}>
         {/* Typography Sample */}
         <div className="flex flex-col justify-center flex-1">
           <p

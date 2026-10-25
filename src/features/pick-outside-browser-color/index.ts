@@ -1,10 +1,15 @@
-import { hexToRgb, formatHsl, type ColorEntry } from "~utils/color-utils"
+import { readSettings } from "~lib/settings"
+import { formatColor } from "~utils/color-formats"
+import { formatHsl, hexToRgb, type ColorEntry } from "~utils/color-utils"
 
 export const pickOutsideBrowserColor = async (): Promise<ColorEntry | null> => {
   if (!("EyeDropper" in window)) {
     console.warn("EyeDropper is not supported in this context")
     return null
   }
+
+  // Read before picking, so the clipboard write right after it isn't delayed
+  const settings = readSettings().catch(() => null)
 
   try {
     // @ts-ignore
@@ -20,7 +25,8 @@ export const pickOutsideBrowserColor = async (): Promise<ColorEntry | null> => {
     }
 
     try {
-      await navigator.clipboard.writeText(hex)
+      const copyFormat = (await settings)?.copyFormat ?? "hex"
+      await navigator.clipboard.writeText(formatColor(hex, copyFormat))
     } catch (error) {
       console.warn("Clipboard write failed:", error)
     }

@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react"
 
+import { openPendingPalette } from "~features/palette-studio/pending"
+import { analyzeScreenshotColors } from "~features/screenshot-colors"
+
 import type { AnalyzedColor } from "./index"
 import {
   analyzeWebpageColors,
@@ -22,6 +25,15 @@ export const useWebpageAnalyzer = ({
   const [selectedAnalyzedColor, setSelectedAnalyzedColor] =
     useState<AnalyzedColor | null>(null)
   const [analyzedDomain, setAnalyzedDomain] = useState<string | null>(null)
+  // A screenshot palette is saved separately from the page's CSS palette
+  const [analysisSource, setAnalysisSource] = useState<"css" | "screenshot">(
+    "css"
+  )
+  // Set when the scan stopped before checking every element
+  const [truncatedScan, setTruncatedScan] = useState<{
+    scanned: number
+    total: number
+  } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [savedWebpageColors, setSavedWebpageColors] = useState<
@@ -48,10 +60,8 @@ export const useWebpageAnalyzer = ({
     return () => chrome.storage.onChanged.removeListener(listener)
   }, [])
 
-  const analyze = async () => {
-    setIsAnalyzing(true)
-    setSaveError(null)
-    const domain = await new Promise<string | null>((resolve) => {
+  const getActiveHostname = () =>
+    new Promise<string | null>((resolve) => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs?.[0]
         if (!tab?.url) {
@@ -66,7 +76,32 @@ export const useWebpageAnalyzer = ({
         }
       })
     })
-    const colors = await analyzeWebpageColors()
+
+  const analyze = async () => {
+    setIsAnalyzing(true)
+    setSaveError(null)
+    const domain = await getActiveHostname()
+    const analysis = await analyzeWebpageColors()
+    setIsAnalyzing(false)
+    if (!analysis) {
+      onAnalyzeFailed?.()
+      return
+    }
+    const { colors, scanned, total } = analysis
+    setAnalyzedColors(colors)
+    setSelectedAnalyzedColor(colors[0] ?? null)
+    setAnalyzedDomain(domain)
+    setAnalysisSource("css")
+    setTruncatedScan(scanned < total ? { scanned, total } : null)
+  }
+
+  const analyzeScreenshot = async () => {
+    setIsAnalyzing(true)
+    setSaveError(null)
+    // Highlight overlays would be captured too
+    await clearWebpageHighlights()
+    const domain = await getActiveHostname()
+    const colors = await analyzeScreenshotColors()
     setIsAnalyzing(false)
     if (!colors) {
       onAnalyzeFailed?.()
@@ -74,12 +109,15 @@ export const useWebpageAnalyzer = ({
     }
     setAnalyzedColors(colors)
     setSelectedAnalyzedColor(colors[0] ?? null)
-    setAnalyzedDomain(domain)
+    setAnalyzedDomain(domain ? `${domain} (screenshot)` : null)
+    setAnalysisSource("screenshot")
+    setTruncatedScan(null)
   }
 
   const selectColor = async (color: AnalyzedColor) => {
     setSelectedAnalyzedColor(color)
-    void highlightWebpageColor(color)
+    // Screenshot colors aren't CSS values, so there's nothing to highlight
+    if (analysisSource === "css") void highlightWebpageColor(color)
     onSelectColor(color)
   }
 
@@ -108,10 +146,30 @@ export const useWebpageAnalyzer = ({
     return true
   }
 
+  /** Opens the current results in Palette Studio without saving them */
+  const openInStudio = async (view?: string) => {
+    const tab = await new Promise<chrome.tabs.Tab | undefined>((resolve) =>
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) =>
+        resolve(tabs?.[0])
+      )
+    )
+    await openPendingPalette(
+      {
+        domain: analyzedDomain,
+        url: tab?.url ?? "",
+        title: tab?.title ?? "",
+        timestamp: Date.now(),
+        colors: analyzedColors
+      },
+      view
+    )
+  }
+
   const cancel = () => {
     setAnalyzedColors([])
     setSelectedAnalyzedColor(null)
     setAnalyzedDomain(null)
+    setTruncatedScan(null)
     setSaveError(null)
     void clearWebpageHighlights()
   }
@@ -132,13 +190,17 @@ export const useWebpageAnalyzer = ({
     selectedAnalyzedColor,
     isAnalyzing,
     analyzedDomain,
+    analysisSource,
+    truncatedScan,
     isSaving,
     saveError,
     savedWebpageColors,
     analyze,
+    analyzeScreenshot,
     selectColor,
     save,
     cancel,
+    openInStudio,
     deleteDomain
   }
 }

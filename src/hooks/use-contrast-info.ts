@@ -1,13 +1,14 @@
 import { useMemo } from "react"
 
+import { apcaContrast } from "../utils/apca"
 import {
   blendColorPair,
+  DEFAULT_BACKGROUND,
+  DEFAULT_FOREGROUND,
   getContrastRatio,
   getReadableTextColor,
   normalizeWithAlpha,
-  withAlpha,
-  DEFAULT_FOREGROUND,
-  DEFAULT_BACKGROUND
+  withAlpha
 } from "../utils/color-utils"
 import {
   calculateWCAGCompliance,
@@ -45,6 +46,11 @@ export const useContrastInfo = (
 
   const ratio = useMemo(
     () => getContrastRatio(effectiveForeground, effectiveBackground),
+    [effectiveForeground, effectiveBackground]
+  )
+
+  const apcaLc = useMemo(
+    () => apcaContrast(effectiveForeground, effectiveBackground),
     [effectiveForeground, effectiveBackground]
   )
 
@@ -93,6 +99,7 @@ export const useContrastInfo = (
     effectiveForeground,
     effectiveBackground,
     ratio,
+    apcaLc,
     foregroundTextColor,
     backgroundTextColor,
     previewUiColor,

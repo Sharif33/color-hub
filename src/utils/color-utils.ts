@@ -88,10 +88,192 @@ export const formatHsl = (r: number, g: number, b: number): string => {
   return `hsl(${h}, ${s}%, ${l}%)`
 }
 
+// --- OKLab / OKLCH (Björn Ottosson's matrices, as used by CSS Color 4) ---
+
+export interface Oklab {
+  L: number
+  a: number
+  b: number
+}
+
+export interface Oklch {
+  /** Lightness, 0–1 */
+  l: number
+  /** Chroma, 0 to about 0.32 inside sRGB */
+  c: number
+  /** Hue in degrees, 0–360 */
+  h: number
+}
+
+const srgbToLinear = (channel: number) => {
+  const n = channel / 255
+  return n <= 0.04045 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4)
+}
+
+// Out-of-gamut values are clipped to sRGB
+const linearToSrgb = (value: number) => {
+  const v = clamp(value, 0, 1)
+  const n = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055
+  return clamp(Math.round(n * 255), 0, 255)
+}
+
+export const rgbToOklab = (r: number, g: number, b: number): Oklab => {
+  const lr = srgbToLinear(r)
+  const lg = srgbToLinear(g)
+  const lb = srgbToLinear(b)
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb)
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb)
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb)
+  return {
+    L: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    a: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    b: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
+  }
+}
+
+export const oklabToRgb = ({
+  L,
+  a,
+  b
+}: Oklab): { r: number; g: number; b: number } => {
+  const l = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3)
+  const m = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3)
+  const s = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3)
+  return {
+    r: linearToSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    g: linearToSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    b: linearToSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s)
+  }
+}
+
+export const rgbToOklch = (r: number, g: number, b: number): Oklch => {
+  const { L, a, b: bAxis } = rgbToOklab(r, g, b)
+  const h = (Math.atan2(bAxis, a) * 180) / Math.PI
+  return { l: L, c: Math.hypot(a, bAxis), h: (h + 360) % 360 }
+}
+
+export const oklchToRgb = ({
+  l,
+  c,
+  h
+}: Oklch): { r: number; g: number; b: number } => {
+  const radians = (h * Math.PI) / 180
+  return oklabToRgb({
+    L: l,
+    a: c * Math.cos(radians),
+    b: c * Math.sin(radians)
+  })
+}
+
+/**
+ * `oklch(62.8% 0.25768 29.23)`. Chroma needs five decimals for every sRGB hex
+ * to parse back to itself; with four, some dark channels come back off by one
+ */
+export const formatOklch = (r: number, g: number, b: number): string => {
+  const { l, c, h } = rgbToOklch(r, g, b)
+  const lightness = +(l * 100).toFixed(2)
+  const chroma = +c.toFixed(5)
+  // Grays come out with a tiny chroma from rounding in the matrices, which
+  // would otherwise print an arbitrary hue
+  if (chroma === 0) return `oklch(${lightness}% 0 0)`
+  return `oklch(${lightness}% ${chroma} ${+h.toFixed(2)})`
+}
+
+// --- CIE Lab (D65) and CIEDE2000 color difference ---
+
+export interface Lab {
+  L: number
+  a: number
+  b: number
+}
+
+export const rgbToLab = (r: number, g: number, b: number): Lab => {
+  const lr = srgbToLinear(r)
+  const lg = srgbToLinear(g)
+  const lb = srgbToLinear(b)
+  const f = (t: number) =>
+    t > 216 / 24389 ? Math.cbrt(t) : ((24389 / 27) * t + 16) / 116
+  const x = f((0.4124564 * lr + 0.3575761 * lg + 0.1804375 * lb) / 0.95047)
+  const y = f(0.2126729 * lr + 0.7151522 * lg + 0.072175 * lb)
+  const z = f((0.0193339 * lr + 0.119192 * lg + 0.9503041 * lb) / 1.08883)
+  return { L: 116 * y - 16, a: 500 * (x - y), b: 200 * (y - z) }
+}
+
+export const hexToLab = (hex: string): Lab => {
+  const { r, g, b } = hexToRgb(hex)
+  return rgbToLab(r, g, b)
+}
+
+const toDegrees = (radians: number) => (radians * 180) / Math.PI
+const toRadians = (degrees: number) => (degrees * Math.PI) / 180
+
+/**
+ * CIEDE2000 color difference (Sharma, Wu & Dalal, 2005). About 1 is the
+ * smallest difference most people notice side by side; 2–3 is noticeable at a
+ * glance.
+ */
+export const deltaE2000 = (first: Lab, second: Lab): number => {
+  const { L: L1, a: a1, b: b1 } = first
+  const { L: L2, a: a2, b: b2 } = second
+  const pow7 = (n: number) => Math.pow(n, 7)
+
+  const meanC = (Math.hypot(a1, b1) + Math.hypot(a2, b2)) / 2
+  const G = 0.5 * (1 - Math.sqrt(pow7(meanC) / (pow7(meanC) + pow7(25))))
+  const a1p = (1 + G) * a1
+  const a2p = (1 + G) * a2
+  const C1p = Math.hypot(a1p, b1)
+  const C2p = Math.hypot(a2p, b2)
+  const hueOf = (b: number, ap: number) =>
+    b === 0 && ap === 0 ? 0 : (toDegrees(Math.atan2(b, ap)) + 360) % 360
+  const h1p = hueOf(b1, a1p)
+  const h2p = hueOf(b2, a2p)
+
+  const deltaLp = L2 - L1
+  const deltaCp = C2p - C1p
+  let deltahp = 0
+  if (C1p * C2p !== 0) {
+    deltahp = h2p - h1p
+    if (deltahp > 180) deltahp -= 360
+    else if (deltahp < -180) deltahp += 360
+  }
+  const deltaHp = 2 * Math.sqrt(C1p * C2p) * Math.sin(toRadians(deltahp / 2))
+
+  const meanLp = (L1 + L2) / 2
+  const meanCp = (C1p + C2p) / 2
+  let meanhp = h1p + h2p
+  if (C1p * C2p !== 0) {
+    if (Math.abs(h1p - h2p) <= 180) meanhp /= 2
+    else meanhp = (meanhp + (meanhp < 360 ? 360 : -360)) / 2
+  }
+
+  const T =
+    1 -
+    0.17 * Math.cos(toRadians(meanhp - 30)) +
+    0.24 * Math.cos(toRadians(2 * meanhp)) +
+    0.32 * Math.cos(toRadians(3 * meanhp + 6)) -
+    0.2 * Math.cos(toRadians(4 * meanhp - 63))
+  const deltaTheta = 30 * Math.exp(-Math.pow((meanhp - 275) / 25, 2))
+  const RC = 2 * Math.sqrt(pow7(meanCp) / (pow7(meanCp) + pow7(25)))
+  const SL =
+    1 +
+    (0.015 * Math.pow(meanLp - 50, 2)) /
+      Math.sqrt(20 + Math.pow(meanLp - 50, 2))
+  const SC = 1 + 0.045 * meanCp
+  const SH = 1 + 0.015 * meanCp * T
+  const RT = -Math.sin(toRadians(2 * deltaTheta)) * RC
+
+  const l = deltaLp / SL
+  const c = deltaCp / SC
+  const h = deltaHp / SH
+  return Math.sqrt(l * l + c * c + h * h + RT * c * h)
+}
+
 const RGB_RE =
   /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+%?))?\s*\)/i
 const HSL_RE =
   /^hsla?\(\s*([\d.]+)[\s,]+([\d.]+)%?[\s,]+([\d.]+)%?(?:[\s,/]+([\d.]+%?))?\s*\)/i
+const OKLCH_RE =
+  /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)(%?)\s+([\d.]+|none)(?:deg)?\s*(?:\/\s*([\d.]+%?))?\s*\)/i
 const HEX8_RE = /^#?([0-9a-fA-F]{8})$/
 const HEX4_RE = /^#?([0-9a-fA-F]{4})$/
 const HEX_RE = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
@@ -110,7 +292,8 @@ const parseAlphaToken = (token: string | undefined): number => {
 
 /**
  * Parse a color string and return both the opaque hex and the alpha channel.
- * Supports hex (3/4/6/8), rgb(a), and hsl(a).
+ * Supports hex (3/4/6/8), rgb(a), hsl(a) and oklch(). OKLCH colors outside
+ * sRGB are clipped.
  */
 export const parseColorWithAlpha = (input: string): ParsedColor | null => {
   const raw = input.trim()
@@ -140,6 +323,18 @@ export const parseColorWithAlpha = (input: string): ParsedColor | null => {
     }
   }
 
+  const oklchMatch = raw.match(OKLCH_RE)
+  if (oklchMatch) {
+    const [, l, lPercent, c, cPercent, h, alpha] = oklchMatch
+    // In CSS, 100% lightness is 1 and 100% chroma is 0.4
+    const { r, g, b } = oklchToRgb({
+      l: parseFloat(l) / (lPercent ? 100 : 1),
+      c: cPercent ? (parseFloat(c) / 100) * 0.4 : parseFloat(c),
+      h: h.toLowerCase() === "none" ? 0 : parseFloat(h)
+    })
+    return { hex: rgbToHex(r, g, b), alpha: parseAlphaToken(alpha) }
+  }
+
   const hex8Match = raw.match(HEX8_RE)
   if (hex8Match) {
     const h = hex8Match[1]
@@ -167,7 +362,7 @@ export const parseColorWithAlpha = (input: string): ParsedColor | null => {
 }
 
 /**
- * Attempts to parse a color string in hex, rgb(), or hsl() format.
+ * Attempts to parse a color string in hex, rgb(), hsl() or oklch() format.
  * Returns a normalized 7-char hex string, or `null` if unparseable.
  */
 export const parseColor = (input: string): string | null => {
@@ -263,9 +458,14 @@ export const getContrastRatio = (
   return (lighter + 0.05) / (darker + 0.05)
 }
 
+/** A translucent background is judged as it looks over white */
 export const getReadableTextColor = (background: string): string => {
-  const whiteRatio = getContrastRatio("#ffffff", background)
-  const blackRatio = getContrastRatio("#000000", background)
+  const parsed = parseColorWithAlpha(background)
+  const solid = parsed
+    ? alphaBlend(parsed.hex, parsed.alpha, "#ffffff")
+    : background
+  const whiteRatio = getContrastRatio("#ffffff", solid)
+  const blackRatio = getContrastRatio("#000000", solid)
   return whiteRatio >= blackRatio ? "#f8fafc" : "#0f172a"
 }
 
@@ -323,17 +523,23 @@ export const hsvToRgb = (
   let b = 0
 
   if (h < 60) {
-    r = c; g = x
+    r = c
+    g = x
   } else if (h < 120) {
-    r = x; g = c
+    r = x
+    g = c
   } else if (h < 180) {
-    g = c; b = x
+    g = c
+    b = x
   } else if (h < 240) {
-    g = x; b = c
+    g = x
+    b = c
   } else if (h < 300) {
-    r = x; b = c
+    r = x
+    b = c
   } else {
-    r = c; b = x
+    r = c
+    b = x
   }
 
   return {

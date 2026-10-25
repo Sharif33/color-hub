@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [1.2.0] - 2026-10-25
+### Added
+- Palette Studio, a page for saved palettes and unsaved analyses, opened from the popup's `Palette Studio` action, `Open in Studio` on analyzer results, or `Studio` on a saved palette. It lists each color's HEX, OKLCH, uses, properties, CSS variables, nearest Tailwind color and elements, with click-to-copy. An unsaved analysis can be saved from there.
+- Export a palette as CSS variables, SCSS, a Tailwind v4 `@theme` block, a Tailwind v3 config or W3C design tokens (DTCG 2025.10 JSON), with values as HEX, RGB, HSL or OKLCH. Token names come from the page's CSS variables, else the nearest Tailwind color within ΔE 2, else `palette-N`. Copy the code or download it.
+- Near-duplicate detection: Palette Studio groups colors that are almost the same (CIEDE2000, threshold adjustable from ΔE 0.5 to 5), suggests the most used color in each group, and copies a find-and-replace list. Analyzer results in the popup show how many near-duplicate groups a page has.
+- Compare two palettes in Palette Studio, e.g. staging against production or an unsaved analysis against the saved palette. Colors are shown as the same, changed (up to ΔE 5, with the difference), only in A, or only in B.
+- `Analyze Webpage Colors` names the CSS variables each color comes from, e.g. `--primary`, including variables that hold bare channels such as `222 47% 11%` (shadcn/ui) or `37 99 235`. Click a variable to copy `var(--name)`.
+- `Analyze Webpage Colors` also finds outline, underline, SVG fill and stroke, shadow and gradient colors, and shows which of these uses each color has.
+- Translucent colors are kept with their alpha (e.g. `rgba(0, 0, 0, 0.1)` / `#0000001A`) instead of being merged with the opaque color, and every copy format keeps the alpha. The Tailwind match adds the opacity modifier, e.g. `black/10`.
+- `Analyze Webpage Colors` and `Analyze WCAG Contrast` look inside shadow DOM (web components) and iframes. Selectors from an iframe start with `iframe(host) ›`.
+- `Analyze Webpage Colors` keeps the 40 most used colors (up from 24).
+- `Extract Colors from Screenshot` in the popup finds the main colors of the visible page, including images, canvas and video, and shows how much of the screen each covers. Colors are exact pixel colors, not averages, and text antialiasing is folded into the colors it blends. The result is saved as `<hostname> (screenshot)`, next to the page's CSS palette.
+- Nearest Tailwind color for the picked color and for the selected analyzed color, e.g. `≈ blue-500 · ΔE 1.3`. Click it to copy the name. Colors are matched by CIEDE2000 against the Tailwind v4 (4.3.3) or v3 (3.4.1) palette, chosen in Settings.
+- Choose the format a click copies: HEX, RGB, HSL, OKLCH, a Tailwind arbitrary value, SwiftUI, UIKit or Compose/Flutter. It applies to color history, saved webpage colors and Pick Color.
+- Color picker: an editable OKLCH row, and a "Copy as" row for Tailwind, SwiftUI, UIKit and Compose/Flutter code.
+- Color inputs, including the Contrast Checker's, accept `oklch()`.
+- APCA contrast (the WCAG 3 draft method, shown as advisory) in the Contrast Checker: the Lc value, its polarity, and which uses it's good enough for, from body text (Lc 75/90) to non-text (Lc 15).
+- The WCAG report shows APCA Lc for every pair and can sort by it.
+- Export the WCAG report's current view as a GitHub issue (failing pairs as a task list, with the nearest color that passes AA), a Markdown table, CSV or JSON.
+- `Inspect Element Colors` in the popup turns on a hover inspector: point at any element to see its text color, rendered background, border color, matching CSS variables, contrast ratio with AA/AAA, APCA Lc, and font size and weight. Click to pin it, copy a color, or open the pair in the Contrast Checker. Esc exits. Clicks don't reach the page while inspecting.
+- `Simulate Vision Deficiency` in the popup filters the current page as seen with protanopia, deuteranopia, tritanopia, achromatopsia or blurred vision, using the same color matrices as Chrome DevTools (Machado et al., 2009). It stays on until turned off or the page reloads. The Contrast Checker's live preview has the same simulations.
+- Right-click menu (on http, https and file pages): check the contrast of a selected color (e.g. `#2563eb` in code), inspect element colors, analyze page colors or a screenshot into Palette Studio, analyze WCAG contrast, simulate vision, or open the Contrast Checker.
+- Settings page, opened from the gear button in the popup header.
+- Backup and restore in Settings: export color history, saved palettes, contrast pairs and settings to a JSON file, then import it to merge with or replace the current data. Files are checked before anything is written.
+
+### Changed
+- Both analyses check up to 50,000 elements, stopping after about 1.5 seconds on very large pages (before: the first 2,000 elements for colors and 1,200 for contrast). When a scan stops early, the popup and the report say how much of the page was checked.
+- `Analyze WCAG Contrast` checks any element with its own text, not only common text tags, so text directly inside a `<div>` is included. Hidden text is skipped.
+- The `contextMenus` permission, declared since 1.0, is now used by the right-click menu. No permissions were added.
+
+### Fixed
+- `Analyze Webpage Colors` counted every element's border colors even where no border is drawn, which inflated the text color's count several times over.
+- `Analyze Webpage Colors` counted the text color of elements without text, of hidden elements, and of `<head>` elements such as `<style>` and `<script>`.
+- Re-analyzing a page while a color was highlighted counted the highlight overlays' red.
+- Labels on translucent color tiles are now readable. Their text color was chosen as if the color were opaque.
+
 ## [1.1.0] - 2026-10-25
 ### Added
 - Added a Color Contrast Checker page, opened from the popup's `Color Contrast Checker` action.

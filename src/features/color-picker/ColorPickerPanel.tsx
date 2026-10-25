@@ -1,8 +1,15 @@
 import { Check, Copy } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { TailwindMatchChip } from "~features/tailwind-match/TailwindMatchChip"
+import {
+  COLOR_FORMATS,
+  formatColor,
+  type ColorFormat
+} from "~utils/color-formats"
 import {
   formatHsl,
+  formatOklch,
   getReadableTextColor,
   hexToRgb,
   hslToRgb,
@@ -11,6 +18,12 @@ import {
   type ColorEntry,
   type HSV
 } from "~utils/color-utils"
+import type { TailwindVersion } from "~utils/tailwind-match"
+
+// The formats that don't have their own row above the "Copy as" row
+const CODE_FORMATS = COLOR_FORMATS.filter(({ value }) =>
+  ["tailwind", "swiftui", "uikit", "compose"].includes(value)
+)
 
 interface ColorPickerPanelProps {
   hsv: HSV
@@ -24,6 +37,7 @@ interface ColorPickerPanelProps {
   onAddToHistory: () => void
   firstHistoryColor: ColorEntry | null
   copiedField: string | null
+  tailwindVersion: TailwindVersion
   r: number
   g: number
   b: number
@@ -41,6 +55,7 @@ export const ColorPickerPanel = ({
   onAddToHistory,
   firstHistoryColor,
   copiedField,
+  tailwindVersion,
   r,
   g,
   b
@@ -56,6 +71,8 @@ export const ColorPickerPanel = ({
   const [sValue, setSValue] = useState("")
   const [lValue, setLValue] = useState("")
   const [hexValue, setHexValue] = useState("")
+  const [oklchValue, setOklchValue] = useState("")
+  const [codeFormat, setCodeFormat] = useState<ColorFormat>("tailwind")
 
   useEffect(() => {
     setRValue(r.toString())
@@ -81,6 +98,12 @@ export const ColorPickerPanel = ({
   useEffect(() => {
     const hex = currentColor?.hex || ""
     setHexValue((prev) => (parseColor(prev) === hex.toLowerCase() ? prev : hex))
+    setOklchValue((prev) => {
+      if (!hex) return ""
+      if (parseColor(prev) === hex.toLowerCase()) return prev
+      const { r, g, b } = hexToRgb(hex)
+      return formatOklch(r, g, b)
+    })
   }, [currentColor])
 
   useEffect(() => {
@@ -144,6 +167,20 @@ export const ColorPickerPanel = ({
     }
   }
 
+  const handleOklchChange = (value: string) => {
+    setOklchValue(value)
+    if (!/^\s*oklch\(/i.test(value)) return
+    const parsed = parseColor(value)
+    if (parsed) {
+      const { r, g, b } = hexToRgb(parsed)
+      onColorChange(rgbToHsv(r, g, b))
+    }
+  }
+
+  const codeValue = currentColor
+    ? formatColor(currentColor.hex, codeFormat)
+    : ""
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-3">
@@ -181,7 +218,7 @@ export const ColorPickerPanel = ({
       <div className="flex flex-col gap-2">
         {/* RGB Inputs */}
         <div className="flex items-center gap-1">
-          <span className="text-xs font-medium w-8">RGB:</span>
+          <span className="text-xs font-medium w-11">RGB:</span>
           <div className="flex gap-1 flex-1">
             <div className="relative flex-1">
               <input
@@ -231,7 +268,7 @@ export const ColorPickerPanel = ({
 
         {/* HSL Inputs */}
         <div className="flex items-center gap-1">
-          <span className="text-xs font-medium w-8">HSL:</span>
+          <span className="text-xs font-medium w-11">HSL:</span>
           <div className="flex gap-1 flex-1">
             <div className="relative flex-1">
               <input
@@ -281,7 +318,7 @@ export const ColorPickerPanel = ({
 
         {/* HEX Input */}
         <div className="flex items-center gap-1">
-          <span className="text-xs font-medium w-8">HEX:</span>
+          <span className="text-xs font-medium w-11">HEX:</span>
           <div className="relative flex-1">
             <input
               type="text"
@@ -302,6 +339,72 @@ export const ColorPickerPanel = ({
             )}
           </button>
         </div>
+
+        {/* OKLCH Input */}
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-medium w-11">OKLCH:</span>
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={oklchValue}
+              onChange={(e) => handleOklchChange(e.target.value)}
+              className="w-full px-1.5 py-1 border border-gray-400 text-xs bg-white"
+              placeholder="oklch(62.8% 0.25768 29.23)"
+              title="OKLCH"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => onCopy(oklchValue, "oklch")}
+            className="p-1 hover:bg-gray-100 rounded">
+            {copiedField === "oklch" ? (
+              <Check className="w-3 h-3 text-green-600" />
+            ) : (
+              <Copy className="w-3 h-3 text-gray-600" />
+            )}
+          </button>
+        </div>
+
+        {/* Copy as code */}
+        <div className="flex items-center gap-1">
+          <select
+            value={codeFormat}
+            onChange={(e) => setCodeFormat(e.target.value as ColorFormat)}
+            aria-label="Code format"
+            className="w-[4.5rem] shrink-0 px-0.5 py-1 border border-gray-400 text-xs bg-white">
+            {CODE_FORMATS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            readOnly
+            value={codeValue}
+            title={codeValue}
+            className="min-w-0 flex-1 px-1.5 py-1 border border-gray-400 font-mono text-[10px] bg-gray-50"
+          />
+          <button
+            type="button"
+            onClick={() => onCopy(codeValue, "code")}
+            className="p-1 hover:bg-gray-100 rounded">
+            {copiedField === "code" ? (
+              <Check className="w-3 h-3 text-green-600" />
+            ) : (
+              <Copy className="w-3 h-3 text-gray-600" />
+            )}
+          </button>
+        </div>
+
+        {currentColor && (
+          <TailwindMatchChip
+            hex={currentColor.hex}
+            version={tailwindVersion}
+            copied={copiedField === "tailwind-name"}
+            onCopy={(name) => onCopy(name, "tailwind-name")}
+          />
+        )}
 
         {/* New and Current Color Buttons */}
         <div className="flex items-center w-full">

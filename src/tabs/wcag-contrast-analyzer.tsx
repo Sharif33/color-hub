@@ -14,16 +14,20 @@ import {
 
 import ColorHubLogo from "~components/color hub/logo"
 import { Dropdown, type DropdownOption } from "~components/dropdown"
+import { ExportMenu } from "~features/wcag-report/ExportMenu"
 import type { WCAGAnalysisData } from "~features/webpage-color-analyzer"
+import { apcaContrast, formatLc } from "~utils/apca"
 import { getContrastRatio } from "~utils/color-utils"
 import { calculateWCAGCompliance, formatRatio } from "~utils/wcag-utils"
 
 type FilterKey = "all" | "fail-aa" | "pass-aa" | "pass-aaa"
-type SortKey = "ratio-desc" | "ratio-asc" | "count"
+type SortKey = "ratio-desc" | "ratio-asc" | "apca-desc" | "apca-asc" | "count"
 
 const SORT_OPTIONS: Array<DropdownOption<SortKey>> = [
   { value: "ratio-desc", label: "Ratio (high → low)" },
   { value: "ratio-asc", label: "Ratio (low → high)" },
+  { value: "apca-desc", label: "APCA Lc (high → low)" },
+  { value: "apca-asc", label: "APCA Lc (low → high)" },
   { value: "count", label: "Frequency" }
 ]
 
@@ -33,6 +37,8 @@ interface AnalyzedPair {
   count: number
   selectors: string[]
   ratio: number
+  /** APCA lightness contrast; the sign gives the polarity */
+  lc: number
   normalAA: boolean
   normalAAA: boolean
   largeAA: boolean
@@ -128,8 +134,7 @@ const StatCard = ({
           : "bg-slate-50/80 ring-slate-200/90 text-slate-700"
 
   return (
-    <div
-      className={`rounded-2xl px-4 py-3 ring-1 shadow-sm ${toneClass}`}>
+    <div className={`rounded-2xl px-4 py-3 ring-1 shadow-sm ${toneClass}`}>
       <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
         {label}
       </p>
@@ -182,6 +187,7 @@ export default function WCAGContrastAnalyzerPage() {
       return {
         ...pair,
         ratio,
+        lc: apcaContrast(pair.foreground, pair.background),
         normalAA: wcag.normalAA,
         normalAAA: wcag.normalAAA,
         largeAA: wcag.largeAA,
@@ -202,6 +208,8 @@ export default function WCAGContrastAnalyzerPage() {
     return [...result].sort((a, b) => {
       if (sortBy === "ratio-asc") return a.ratio - b.ratio
       if (sortBy === "ratio-desc") return b.ratio - a.ratio
+      if (sortBy === "apca-asc") return Math.abs(a.lc) - Math.abs(b.lc)
+      if (sortBy === "apca-desc") return Math.abs(b.lc) - Math.abs(a.lc)
       return b.count - a.count
     })
   }, [analyzedPairs, filter, sortBy])
@@ -294,6 +302,16 @@ export default function WCAGContrastAnalyzerPage() {
                     Updated {formatTimestamp(data.timestamp)}
                   </span>
                 )}
+                {data.scanned !== undefined &&
+                  data.total !== undefined &&
+                  data.scanned < data.total && (
+                    <span
+                      title="Very large pages are cut short to keep the analysis fast"
+                      className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] text-amber-700 ring-1 ring-amber-200/80">
+                      Checked the first {data.scanned.toLocaleString()} of{" "}
+                      {data.total.toLocaleString()} elements
+                    </span>
+                  )}
               </div>
             </div>
 
@@ -360,6 +378,17 @@ export default function WCAGContrastAnalyzerPage() {
                 options={SORT_OPTIONS}
                 size="md"
                 ariaLabel="Sort pairs"
+              />
+              <ExportMenu
+                pairs={filtered}
+                info={{
+                  url: data.url,
+                  title: data.title,
+                  timestamp: data.timestamp,
+                  filterLabel:
+                    FILTERS.find((entry) => entry.key === filter)?.label ??
+                    "All Pairs"
+                }}
               />
             </div>
           </div>
@@ -444,6 +473,11 @@ export default function WCAGContrastAnalyzerPage() {
                     <Badge pass={pair.normalAAA} label="AAA Normal" />
                     <Badge pass={pair.largeAA} label="AA Large" />
                     <Badge pass={pair.largeAAA} label="AAA Large" />
+                    <span
+                      title="APCA lightness contrast (WCAG 3 draft, advisory)"
+                      className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-slate-600 ring-1 ring-slate-200/80">
+                      APCA Lc {formatLc(pair.lc)}
+                    </span>
                   </div>
 
                   {/* Open in Contrast Checker */}

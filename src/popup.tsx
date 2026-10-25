@@ -5,34 +5,45 @@ import "~style.css"
 import {
   AlertTriangle,
   BrushCleaning,
+  Camera,
   ChevronDown,
   ChevronRight,
+  Crosshair,
+  Eye,
   Heart,
   History,
   NotepadText,
   Palette,
   Pipette,
   ScanEye,
+  Settings,
+  SwatchBook,
   TestTubes,
   X
 } from "lucide-react"
 
 import ColorHubLogo from "~components/color hub/logo"
-
-import { ColorHistoryPanel } from "./features/color-history/ColorHistoryPanel"
-import { useColorHistory } from "./features/color-history/useColorHistory"
-import { ColorPickerPanel } from "./features/color-picker/ColorPickerPanel"
-import { useColorPicker } from "./features/color-picker/useColorPicker"
-import { pickOutsideBrowserColor } from "./features/pick-outside-browser-color"
-import { AnalyzerPanel } from "./features/webpage-color-analyzer/AnalyzerPanel"
-import { analyzeWebpageContrastPairs } from "./features/webpage-color-analyzer"
-import { useWebpageAnalyzer } from "./features/webpage-color-analyzer/useWebpageAnalyzer"
+import { toggleColorInspector } from "~features/color-inspector"
+import { openPaletteStudio } from "~features/palette-studio/pending"
+import { VisionSimulationPanel } from "~features/vision-simulation/VisionSimulationPanel"
+import { useSettings } from "~hooks/use-settings"
+import { COLOR_HISTORY_LIMIT } from "~lib/constants"
+import { formatColor } from "~utils/color-formats"
 import {
   colorToHsv,
   getColorFromHsv,
   hsvToRgb,
   type ColorEntry
 } from "~utils/color-utils"
+
+import { ColorHistoryPanel } from "./features/color-history/ColorHistoryPanel"
+import { useColorHistory } from "./features/color-history/useColorHistory"
+import { ColorPickerPanel } from "./features/color-picker/ColorPickerPanel"
+import { useColorPicker } from "./features/color-picker/useColorPicker"
+import { pickOutsideBrowserColor } from "./features/pick-outside-browser-color"
+import { analyzeWebpageContrastPairs } from "./features/webpage-color-analyzer"
+import { AnalyzerPanel } from "./features/webpage-color-analyzer/AnalyzerPanel"
+import { useWebpageAnalyzer } from "./features/webpage-color-analyzer/useWebpageAnalyzer"
 import { isRestrictedUrl } from "./utils/restricted-urls"
 
 function IndexPopup() {
@@ -40,8 +51,10 @@ function IndexPopup() {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [outsidePickActive, setOutsidePickActive] = useState(false)
   const [pageRestricted, setPageRestricted] = useState(false)
+  const [activeTabId, setActiveTabId] = useState<number | null>(null)
   const [expandedFeatures, setExpandedFeatures] = useState<string | null>(null)
   const colorPicker = useColorPicker({ h: 220, s: 66, v: 16 })
+  const { copyFormat, tailwindVersion } = useSettings()
 
   const getCurrentColorFromHsv = useCallback((): ColorEntry => {
     return getColorFromHsv(colorPicker.hsv)
@@ -57,7 +70,7 @@ function IndexPopup() {
       if (nextHsv) colorPicker.setHsv(nextHsv)
       setCurrentColor(picked)
       if (source === "storage") {
-        void copyToClipboard(picked.hex, "hex")
+        void copyToClipboard(formatColor(picked.hex, copyFormat), "hex")
       }
     }
   })
@@ -97,6 +110,7 @@ function IndexPopup() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs?.[0]
       activeTabIdRef.current = tab?.id ?? null
+      setActiveTabId(tab?.id ?? null)
       const url = tab?.url || tab?.pendingUrl || ""
       setPageRestricted(isRestrictedUrl(url))
     })
@@ -190,7 +204,7 @@ function IndexPopup() {
     const updated = [
       currentColor,
       ...colorHistory.filter((c) => c.hex.toLowerCase() !== hex)
-    ].slice(0, 35)
+    ].slice(0, COLOR_HISTORY_LIMIT)
     setColorHistory(updated)
     chrome.storage.local.set({ colorHistory: updated })
   }
@@ -224,6 +238,12 @@ function IndexPopup() {
       disabled: analyzer.isAnalyzing || pageRestricted
     },
     {
+      label: "Extract Colors from Screenshot",
+      icon: Camera,
+      onClick: analyzer.analyzeScreenshot,
+      disabled: analyzer.isAnalyzing || pageRestricted
+    },
+    {
       label: "Color Contrast Checker",
       icon: TestTubes,
       onClick: openContrastChecker,
@@ -234,6 +254,33 @@ function IndexPopup() {
       icon: ScanEye,
       onClick: analyzeWCAGContrast,
       disabled: isAnalyzingWCAG || pageRestricted
+    },
+    {
+      label: "Inspect Element Colors",
+      icon: Crosshair,
+      onClick: async () => {
+        if (activeTabId === null) return
+        const running = await toggleColorInspector(activeTabId)
+        if (running === null) setPageRestricted(true)
+        // Close so the page can be hovered
+        else if (running) window.close()
+      },
+      disabled: pageRestricted
+    },
+    {
+      label: "Simulate Vision Deficiency",
+      icon: Eye,
+      onClick: () => {
+        setExpandedFeatures(expandedFeatures === "vision" ? null : "vision")
+      },
+      disabled: pageRestricted,
+      secondaryIcon: expandedFeatures === "vision" ? ChevronDown : ChevronRight
+    },
+    {
+      label: "Palette Studio",
+      icon: SwatchBook,
+      onClick: () => openPaletteStudio(),
+      disabled: false
     },
     {
       label: "Picked Color History",
@@ -283,7 +330,10 @@ function IndexPopup() {
           const nextHsv = colorToHsv(color)
           if (nextHsv) colorPicker.setHsv(nextHsv)
           setCurrentColor(color)
-          copyToClipboard(color.hex, `history-${index}`)
+          copyToClipboard(
+            formatColor(color.hex, copyFormat),
+            `history-${index}`
+          )
         }}
         onClear={clearHistory}
       />
@@ -300,8 +350,15 @@ function IndexPopup() {
 
   return (
     <div className="w-[300px] bg-gray-100 font-sans">
-      <div className="bg-gray-900 flex items-center gap-1 p-3">
+      <div className="bg-gray-900 flex items-center justify-between gap-1 p-3">
         <ColorHubLogo className="text-white/90" />
+        <button
+          type="button"
+          title="Settings"
+          onClick={() => chrome.runtime.openOptionsPage()}
+          className="rounded p-1 text-white/70 hover:bg-white/10 hover:text-white">
+          <Settings className="size-4" />
+        </button>
       </div>
       <div className="flex flex-col gap-3">
         {lastPickedColor && (
@@ -386,12 +443,19 @@ function IndexPopup() {
             onAddToHistory={handleAddToHistory}
             firstHistoryColor={colorHistory[0] || null}
             copiedField={copiedField}
+            tailwindVersion={tailwindVersion}
             r={r}
             g={g}
             b={b}
           />
           <div className="w-full">{renderColorHistory()}</div>
         </div>
+
+        {expandedFeatures === "vision" && !pageRestricted && (
+          <div className="px-3">
+            <VisionSimulationPanel tabId={activeTabId} />
+          </div>
+        )}
 
         {expandedFeatures === "color-history" && (
           <div className="px-3">{renderColorHistory()}</div>
@@ -402,6 +466,8 @@ function IndexPopup() {
           analyzedColors={analyzer.analyzedColors}
           selectedAnalyzedColor={analyzer.selectedAnalyzedColor}
           isAnalyzing={analyzer.isAnalyzing}
+          truncatedScan={analyzer.truncatedScan}
+          analysisSource={analyzer.analysisSource}
           isSaving={analyzer.isSaving}
           saveError={analyzer.saveError}
           savedWebpageColors={analyzer.savedWebpageColors}
@@ -410,8 +476,12 @@ function IndexPopup() {
           onSelectColor={analyzer.selectColor}
           onSave={handleAnalyzerSave}
           onCancel={handleAnalyzerCancel}
+          onOpenInStudio={(view) => void analyzer.openInStudio(view)}
+          onOpenSavedInStudio={(domain) => openPaletteStudio({ domain })}
           onDeleteDomain={analyzer.deleteDomain}
           onCopy={copyToClipboard}
+          copiedField={copiedField}
+          tailwindVersion={tailwindVersion}
           onPickSaved={(color, key) => {
             const nextHsv = colorToHsv({
               hex: color.hex,
@@ -426,7 +496,7 @@ function IndexPopup() {
               hsl: undefined,
               timestamp: Date.now()
             })
-            copyToClipboard(color.hex, `saved-${key}`)
+            copyToClipboard(formatColor(color.hex, copyFormat), `saved-${key}`)
           }}
         />
       </div>
