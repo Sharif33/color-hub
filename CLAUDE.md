@@ -79,6 +79,15 @@ Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING`
 - **Contrast checker** (`tabs/contrast-checker.tsx`) reads `?fg=RRGGBB&bg=RRGGBB` (no `#`), plus `&large=1` to start at 24px so the pair is judged as large text. The WCAG analyzer links into it this way.
 - **Color math** is in pure functions in `src/utils/color-utils.ts` (parsing, conversion including OKLab/OKLCH and CIE Lab, CIEDE2000 `deltaE2000`, alpha blending, relative luminance, contrast ratio), `src/utils/color-formats.ts` (writing a color as CSS or platform code), `src/utils/tailwind-match.ts` (nearest Tailwind color), `src/utils/apca.ts` (APCA Lc) and `src/utils/wcag-utils.ts` (AA/AAA thresholds, the large-text rule, accessible-color suggestions). Use them from extension pages, but not inside injected functions.
 
+### Popup
+- `src/popup.tsx` keeps all state (current color, picker, history, analyzer, vision mode, the highlight port) and shows one screen at a time: `home`, `adjust`, `history`, `results`, `saved` or `vision`. Every screen except home starts with `ScreenHeader` (Back plus a title).
+- Leaving `results` calls `analyzer.cancel()`, which discards the results and clears the page highlights.
+- Shared popup pieces are in `src/features/popup/`: `HomeScreen`, `ColorHero` (the current-color band), `ScreenHeader`, `ColorSwatchButton` and `ConfirmDialog` (`useConfirm`). Each feature's screen lives in its feature folder (`PageColorsScreen`, `SavedPalettesScreen`, `HistoryScreen`, `AdjustScreen`, `VisionScreen`).
+- Only the popup supports dark mode. It uses `dark:` classes and sets `color-scheme: light dark` on its own document. The tab pages and the options page are light only.
+- The home screen must fit in Chrome's 600px popup height without scrolling. Check its height after adding anything to it.
+- The current color is the only strong color in the popup. Primary buttons are slate rather than blue, so they don't compete with it.
+- Don't use `window.confirm()` or `alert()`. Use `useConfirm()` from `~features/popup/ConfirmDialog`: render its `confirmDialog` once, then `if (!(await confirm({ title, message, confirmLabel, destructive })))`. The confirm label names the action, e.g. "Delete palette".
+
 ### Code layout
 - `src/features/<feature>/` holds a feature's components and its hooks.
 - `src/hooks/` holds hooks shared by the contrast checker tab.
@@ -92,7 +101,8 @@ Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING`
   - Imports are sorted by `@ianvs/prettier-plugin-sort-imports` in this order: third-party → `@plasmo/*` → `@plasmohq/*` → `~*` → relative.
 - **Tailwind:**
   - `content` only scans `./src/**/*.{tsx,html}`, so class names written in `.ts` files are not generated.
-  - `darkMode: "media"`.
+  - `darkMode: "media"`, used by the popup only.
+  - `animate-screen-in` and `animate-dialog-in` (in `tailwind.config.js`) are the popup's only transitions: a screen sliding in, and a confirmation dialog appearing. Use them with `motion-safe:`.
   - Each entry point imports `~style.css`.
 - **`cn`:** `~lib/cn` is a homegrown clsx without tailwind-merge. It does not resolve conflicting classes.
 - **Releases:**

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [Unreleased]
+### Changed
+- Redesigned the popup. The home screen shows the current color as a full-width band with its HEX, OKLCH and nearest Tailwind color (each copies on click), Pick from screen and Adjust, recent colors, and the page tools with a one-line description each. Results, the color editor, history, saved palettes and vision simulation each open as their own screen with a Back button, instead of expanding inside one long list.
+- The popup follows the system's light or dark mode.
+- The popup is 360px wide (was 300px), and the color editor's hue slider is horizontal.
+- In the History screen, `Remove` takes the last picked color off the toolbar icon. This replaces the `×` next to `Last Picked`.
+- Deleting a saved palette and clearing the history now ask in the popup's own dialog instead of a browser alert. The dialog says what will be removed and names the action on its button (`Delete palette`, `Clear history`). Cancel has focus first, and Esc or a click outside the dialog cancels.
+
 ## [1.2.0] - 2026-10-25
 ### Added
 - Palette Studio, a page for saved palettes and unsaved analyses, opened from the popup's `Palette Studio` action, `Open in Studio` on analyzer results, or `Studio` on a saved palette. It lists each color's HEX, OKLCH, uses, properties, CSS variables, nearest Tailwind color and elements, with click-to-copy. An unsaved analysis can be saved from there.

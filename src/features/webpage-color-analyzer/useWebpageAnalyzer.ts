@@ -174,11 +174,8 @@ export const useWebpageAnalyzer = ({
     void clearWebpageHighlights()
   }
 
+  /** Deletes without asking; callers confirm first */
   const deleteDomain = async (domain: string) => {
-    const confirmed = confirm(
-      "Are you sure you want to delete the saved colors for this domain?"
-    )
-    if (!confirmed) return
     const existing = await chrome.storage.local.get(["WEBPAGES_COLORS"])
     const next = { ...(existing.WEBPAGES_COLORS || {}) }
     delete next[domain]

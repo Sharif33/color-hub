@@ -1,32 +1,34 @@
+import { Pipette } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import "~style.css"
 
-import {
-  AlertTriangle,
-  BrushCleaning,
-  Camera,
-  ChevronDown,
-  ChevronRight,
-  Crosshair,
-  Eye,
-  Heart,
-  History,
-  NotepadText,
-  Palette,
-  Pipette,
-  ScanEye,
-  Settings,
-  SwatchBook,
-  TestTubes,
-  X
-} from "lucide-react"
-
-import ColorHubLogo from "~components/color hub/logo"
+import { HistoryScreen } from "~features/color-history/HistoryScreen"
+import { useColorHistory } from "~features/color-history/useColorHistory"
 import { toggleColorInspector } from "~features/color-inspector"
+import { AdjustScreen } from "~features/color-picker/AdjustScreen"
+import { useColorPicker } from "~features/color-picker/useColorPicker"
 import { openPaletteStudio } from "~features/palette-studio/pending"
-import { VisionSimulationPanel } from "~features/vision-simulation/VisionSimulationPanel"
+import { pickOutsideBrowserColor } from "~features/pick-outside-browser-color"
+import { ColorHero } from "~features/popup/ColorHero"
+import { useConfirm } from "~features/popup/ConfirmDialog"
+import { HomeScreen } from "~features/popup/HomeScreen"
+import {
+  getVisionSimulation,
+  setVisionSimulation,
+  VISION_MODES,
+  type VisionMode
+} from "~features/vision-simulation"
+import { VisionScreen } from "~features/vision-simulation/VisionScreen"
+import {
+  analyzeWebpageContrastPairs,
+  type AnalyzedColor
+} from "~features/webpage-color-analyzer"
+import { PageColorsScreen } from "~features/webpage-color-analyzer/PageColorsScreen"
+import { SavedPalettesScreen } from "~features/webpage-color-analyzer/SavedPalettesScreen"
+import { useWebpageAnalyzer } from "~features/webpage-color-analyzer/useWebpageAnalyzer"
 import { useSettings } from "~hooks/use-settings"
+import { cn } from "~lib/cn"
 import { COLOR_HISTORY_LIMIT } from "~lib/constants"
 import { formatColor } from "~utils/color-formats"
 import {
@@ -35,26 +37,36 @@ import {
   hsvToRgb,
   type ColorEntry
 } from "~utils/color-utils"
+import { isRestrictedUrl } from "~utils/restricted-urls"
 
-import { ColorHistoryPanel } from "./features/color-history/ColorHistoryPanel"
-import { useColorHistory } from "./features/color-history/useColorHistory"
-import { ColorPickerPanel } from "./features/color-picker/ColorPickerPanel"
-import { useColorPicker } from "./features/color-picker/useColorPicker"
-import { pickOutsideBrowserColor } from "./features/pick-outside-browser-color"
-import { analyzeWebpageContrastPairs } from "./features/webpage-color-analyzer"
-import { AnalyzerPanel } from "./features/webpage-color-analyzer/AnalyzerPanel"
-import { useWebpageAnalyzer } from "./features/webpage-color-analyzer/useWebpageAnalyzer"
-import { isRestrictedUrl } from "./utils/restricted-urls"
+type Screen = "home" | "adjust" | "history" | "results" | "saved" | "vision"
+
+// Native form controls and scrollbars follow the popup's light or dark theme.
+// Only the popup does this; the extension's tab pages are light
+document.documentElement.style.colorScheme = "light dark"
+
+const toColorEntry = (color: { hex: string; rgb: string }): ColorEntry => ({
+  hex: color.hex,
+  rgb: color.rgb,
+  hsl: undefined,
+  timestamp: Date.now()
+})
 
 function IndexPopup() {
+  const [screen, setScreen] = useState<Screen>("home")
   const [currentColor, setCurrentColor] = useState<ColorEntry | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [outsidePickActive, setOutsidePickActive] = useState(false)
   const [pageRestricted, setPageRestricted] = useState(false)
   const [activeTabId, setActiveTabId] = useState<number | null>(null)
-  const [expandedFeatures, setExpandedFeatures] = useState<string | null>(null)
+  const [visionMode, setVisionMode] = useState<VisionMode | null>(null)
+  const [isAnalyzingContrast, setIsAnalyzingContrast] = useState(false)
+  // False until a color is picked, chosen or adjusted, so a first launch
+  // shows "No color yet" instead of the picker's starting color
+  const [hasColor, setHasColor] = useState(false)
   const colorPicker = useColorPicker({ h: 220, s: 66, v: 16 })
   const { copyFormat, tailwindVersion } = useSettings()
+  const { confirm, confirmDialog, isConfirming } = useConfirm()
 
   const getCurrentColorFromHsv = useCallback((): ColorEntry => {
     return getColorFromHsv(colorPicker.hsv)
@@ -64,16 +76,42 @@ function IndexPopup() {
     setCurrentColor(getCurrentColorFromHsv())
   }, [colorPicker.hsv, getCurrentColorFromHsv])
 
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedField(field)
+      setTimeout(() => setCopiedField(null), 1500)
+    } catch (error) {
+      console.warn("Clipboard write failed:", error)
+    }
+  }
+
+  const showColor = (color: ColorEntry) => {
+    colorPicker.setHsv(colorToHsv(color))
+    setCurrentColor(color)
+    setHasColor(true)
+  }
+
+  // Makes `color` the current color and copies it in the default format
+  const selectAndCopy = (color: ColorEntry, field: string) => {
+    showColor(color)
+    void copyToClipboard(formatColor(color.hex, copyFormat), field)
+  }
+
   const { colorHistory, setColorHistory, lastPickedColor } = useColorHistory({
     onPickedColor: (picked, source) => {
-      const nextHsv = colorToHsv(picked)
-      if (nextHsv) colorPicker.setHsv(nextHsv)
-      setCurrentColor(picked)
+      showColor(picked)
       if (source === "storage") {
-        void copyToClipboard(formatColor(picked.hex, copyFormat), "hex")
+        void copyToClipboard(formatColor(picked.hex, copyFormat), "hero-hex")
       }
     }
   })
+
+  // Without a last picked color (it was removed), show the newest history
+  // color rather than nothing
+  useEffect(() => {
+    if (!hasColor && colorHistory.length > 0) showColor(colorHistory[0])
+  }, [colorHistory, hasColor])
 
   // The background clears page highlights when this port disconnects (the
   // popup closed). It only knows which tab to clean up if we tell it
@@ -112,12 +150,20 @@ function IndexPopup() {
       activeTabIdRef.current = tab?.id ?? null
       setActiveTabId(tab?.id ?? null)
       const url = tab?.url || tab?.pendingUrl || ""
-      setPageRestricted(isRestrictedUrl(url))
+      const restricted = isRestrictedUrl(url)
+      setPageRestricted(restricted)
+      // The simulation outlives the popup, so show what's on
+      if (tab?.id !== undefined && !restricted) {
+        void getVisionSimulation(tab.id).then(setVisionMode)
+      }
     })
   }, [])
 
   const analyzer = useWebpageAnalyzer({
-    onAnalyzeFailed: () => setPageRestricted(true),
+    onAnalyzeFailed: () => {
+      setPageRestricted(true)
+      setScreen("home")
+    },
     onSelectColor: (color) => {
       if (activeTabIdRef.current !== null) {
         highlightedTabIdRef.current = activeTabIdRef.current
@@ -125,81 +171,77 @@ function IndexPopup() {
           highlightedTabId: activeTabIdRef.current
         })
       }
-      const nextHsv = colorToHsv({
-        hex: color.hex,
-        rgb: color.rgb,
-        hsl: undefined,
-        timestamp: Date.now()
-      })
-      if (nextHsv) colorPicker.setHsv(nextHsv)
-      setCurrentColor({
-        hex: color.hex,
-        rgb: color.rgb,
-        hsl: undefined,
-        timestamp: Date.now()
-      })
+      showColor(toColorEntry(color))
     }
   })
 
-  const activateOutsidePicker = async () => {
+  const goHome = () => setScreen("home")
+
+  const pickFromScreen = async () => {
     setOutsidePickActive(true)
     await pickOutsideBrowserColor()
     setOutsidePickActive(false)
     window.close()
   }
 
-  // save() and cancel() clear the page highlights themselves
-  const handleAnalyzerSave = async () => {
+  const runPageColors = () => {
+    setScreen("results")
+    void analyzer.analyze()
+  }
+
+  const runScreenshotColors = () => {
+    setScreen("results")
+    void analyzer.analyzeScreenshot()
+  }
+
+  // Leaving the results discards them and clears the page highlights
+  const closeResults = () => {
+    analyzer.cancel()
+    goHome()
+  }
+
+  const saveResults = async () => {
     // On failure keep the results open so the user can retry
     if (!(await analyzer.save())) return
     analyzer.cancel()
-    setExpandedFeatures("saved-webpage-colors")
+    setScreen("saved")
   }
 
-  const handleAnalyzerCancel = () => {
-    analyzer.cancel()
-  }
-
-  const openContrastChecker = () => {
-    const url = chrome.runtime.getURL("tabs/contrast-checker.html")
-    chrome.tabs.create({ url })
-  }
-
-  const [isAnalyzingWCAG, setIsAnalyzingWCAG] = useState(false)
-
-  const analyzeWCAGContrast = async () => {
-    setIsAnalyzingWCAG(true)
+  const runContrastReport = async () => {
+    setIsAnalyzingContrast(true)
     try {
       const data = await analyzeWebpageContrastPairs()
       if (!data) {
         setPageRestricted(true)
         return
       }
-      const url = chrome.runtime.getURL("tabs/wcag-contrast-analyzer.html")
-      chrome.tabs.create({ url })
+      chrome.tabs.create({
+        url: chrome.runtime.getURL("tabs/wcag-contrast-analyzer.html")
+      })
     } catch (error) {
       console.warn("WCAG analysis failed:", error)
     } finally {
-      setIsAnalyzingWCAG(false)
+      setIsAnalyzingContrast(false)
     }
   }
 
-  const copyToClipboard = async (text: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedField(field)
-      setTimeout(() => setCopiedField(null), 1500)
-    } catch (error) {
-      console.warn("Clipboard write failed:", error)
-    }
+  const startInspector = async () => {
+    if (activeTabId === null) return
+    const running = await toggleColorInspector(activeTabId)
+    if (running === null) setPageRestricted(true)
+    // Close so the page can be hovered
+    else if (running) window.close()
   }
 
-  const clearLastPickedColor = async () => {
-    await chrome.storage.local.remove("lastPickedColor")
+  const changeVision = async (mode: VisionMode | null) => {
+    if (activeTabId === null) return
+    setVisionMode(mode)
+    setVisionMode(await setVisionSimulation(activeTabId, mode))
   }
 
-  const handleAddToHistory = () => {
+  const addToHistory = () => {
     if (!currentColor) return
+    setHasColor(true)
     const hex = currentColor.hex.toLowerCase()
     const updated = [
       currentColor,
@@ -209,13 +251,28 @@ function IndexPopup() {
     chrome.storage.local.set({ colorHistory: updated })
   }
 
-  const clearHistory = () => {
-    const confirmed = confirm(
-      "Are you sure you want to clear the color history?"
-    )
+  const clearHistory = async () => {
+    const count = colorHistory.length
+    const confirmed = await confirm({
+      title: "Clear color history?",
+      message: `All ${count} ${count === 1 ? "color" : "colors"} in your history will be removed. Saved palettes aren't affected.`,
+      confirmLabel: "Clear history",
+      destructive: true
+    })
     if (!confirmed) return
     setColorHistory([])
     chrome.storage.local.set({ colorHistory: [] })
+  }
+
+  const deletePalette = async (domain: string) => {
+    const count = analyzer.savedWebpageColors[domain]?.length ?? 0
+    const confirmed = await confirm({
+      title: `Delete the ${domain} palette?`,
+      message: `Its ${count} ${count === 1 ? "color" : "colors"} will be removed from Color Hub. This can't be undone.`,
+      confirmLabel: "Delete palette",
+      destructive: true
+    })
+    if (confirmed) await analyzer.deleteDomain(domain)
   }
 
   const { r, g, b } = hsvToRgb(
@@ -223,294 +280,174 @@ function IndexPopup() {
     colorPicker.hsv.s,
     colorPicker.hsv.v
   )
-
-  const FEATURES = [
-    {
-      label: "Pick Color",
-      icon: Pipette,
-      onClick: activateOutsidePicker,
-      disabled: false
-    },
-    {
-      label: "Analyze Webpage Colors",
-      icon: BrushCleaning,
-      onClick: analyzer.analyze,
-      disabled: analyzer.isAnalyzing || pageRestricted
-    },
-    {
-      label: "Extract Colors from Screenshot",
-      icon: Camera,
-      onClick: analyzer.analyzeScreenshot,
-      disabled: analyzer.isAnalyzing || pageRestricted
-    },
-    {
-      label: "Color Contrast Checker",
-      icon: TestTubes,
-      onClick: openContrastChecker,
-      disabled: false
-    },
-    {
-      label: isAnalyzingWCAG ? "Analyzing…" : "Analyze WCAG Contrast",
-      icon: ScanEye,
-      onClick: analyzeWCAGContrast,
-      disabled: isAnalyzingWCAG || pageRestricted
-    },
-    {
-      label: "Inspect Element Colors",
-      icon: Crosshair,
-      onClick: async () => {
-        if (activeTabId === null) return
-        const running = await toggleColorInspector(activeTabId)
-        if (running === null) setPageRestricted(true)
-        // Close so the page can be hovered
-        else if (running) window.close()
-      },
-      disabled: pageRestricted
-    },
-    {
-      label: "Simulate Vision Deficiency",
-      icon: Eye,
-      onClick: () => {
-        setExpandedFeatures(expandedFeatures === "vision" ? null : "vision")
-      },
-      disabled: pageRestricted,
-      secondaryIcon: expandedFeatures === "vision" ? ChevronDown : ChevronRight
-    },
-    {
-      label: "Palette Studio",
-      icon: SwatchBook,
-      onClick: () => openPaletteStudio(),
-      disabled: false
-    },
-    {
-      label: "Picked Color History",
-      icon: History,
-      onClick: () => {
-        setExpandedFeatures(
-          expandedFeatures === "color-history" ? null : "color-history"
-        )
-      },
-      disabled: false,
-      secondaryIcon:
-        expandedFeatures === "color-history" ? ChevronDown : ChevronRight
-    },
-    {
-      label: "Saved Webpage Colors",
-      icon: NotepadText,
-      onClick: () => {
-        setExpandedFeatures(
-          expandedFeatures === "saved-webpage-colors"
-            ? null
-            : "saved-webpage-colors"
-        )
-      },
-      disabled: Object.keys(analyzer.savedWebpageColors).length === 0,
-      secondaryIcon:
-        expandedFeatures === "saved-webpage-colors" ? ChevronDown : ChevronRight
-    },
-    {
-      label: "Color Picker Panel",
-      icon: Palette,
-      secondaryIcon:
-        expandedFeatures === "color-picker" ? ChevronDown : ChevronRight,
-      onClick: () => {
-        setExpandedFeatures(
-          expandedFeatures === "color-picker" ? null : "color-picker"
-        )
-      },
-      disabled: false
-    }
-  ]
-
-  const renderColorHistory = () => {
-    return (
-      <ColorHistoryPanel
-        colorHistory={colorHistory}
-        onPick={(color, index) => {
-          const nextHsv = colorToHsv(color)
-          if (nextHsv) colorPicker.setHsv(nextHsv)
-          setCurrentColor(color)
-          copyToClipboard(
-            formatColor(color.hex, copyFormat),
-            `history-${index}`
-          )
-        }}
-        onClear={clearHistory}
-      />
-    )
-  }
+  const currentHex = hasColor && currentColor ? currentColor.hex : null
 
   if (outsidePickActive) {
     return (
-      <div className="w-[220px] bg-gray-100 px-2 py-1 font-sans text-sm">
-        <div className="text-sm font-semibold">Pick colors from anywhere</div>
+      <div className="flex w-[360px] items-center gap-3 bg-white p-4 font-sans text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+        <Pipette className="size-5 shrink-0 text-blue-600 dark:text-blue-400" />
+        <div>
+          <p className="text-sm font-semibold">Pick a color</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Click anywhere on your screen. Press Esc to cancel.
+          </p>
+        </div>
       </div>
     )
   }
 
-  return (
-    <div className="w-[300px] bg-gray-100 font-sans">
-      <div className="bg-gray-900 flex items-center justify-between gap-1 p-3">
-        <ColorHubLogo className="text-white/90" />
-        <button
-          type="button"
-          title="Settings"
-          onClick={() => chrome.runtime.openOptionsPage()}
-          className="rounded p-1 text-white/70 hover:bg-white/10 hover:text-white">
-          <Settings className="size-4" />
-        </button>
-      </div>
-      <div className="flex flex-col gap-3">
-        {lastPickedColor && (
-          <div className="px-3 pt-3 font-mono flex items-center justify-between gap-2">
-            <span className="text-[11px] text-gray-700  tracking-wide flex items-center gap-1">
-              <History className="size-3" />
-              Last Picked
-            </span>
-
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-flex items-center gap-2">
-                <span
-                  className="h-4 w-4 rounded border border-gray-300"
-                  style={{ backgroundColor: lastPickedColor.hex }}
-                />
-                {lastPickedColor.hex}
-              </span>
-              <button
-                type="button"
-                title="Clear last picked color"
-                onClick={(event) => {
-                  event.preventDefault()
-                  event.stopPropagation()
-                  void clearLastPickedColor()
-                }}
-                className="inline-flex items-center justify-center rounded text-gray-500 hover:text-red-600">
-                <X className="size-3" />
-              </button>
-            </span>
-          </div>
-        )}
-        <div className="flex-1 flex flex-col gap-3">
-          {/* New / Current Color */}
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col w-full">
-              {FEATURES.map(
-                ({
-                  label,
-                  icon: Icon,
-                  onClick,
-                  disabled,
-                  secondaryIcon: SecondaryIcon
-                }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={onClick}
-                    disabled={disabled}
-                    className="w-full px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-between gap-1 border-b border-dashed border-gray-300">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Icon className="size-3" />
-                      {label}
-                    </span>
-                    {disabled && <AlertTriangle className="size-3" />}
-                    {!disabled && SecondaryIcon && (
-                      <SecondaryIcon className="size-3" />
-                    )}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div
-          className={`flex flex-col items-center gap-2 px-3 w-full ${expandedFeatures === "color-picker" ? "block" : "hidden"}`}>
-          <ColorPickerPanel
+  const renderScreen = () => {
+    switch (screen) {
+      case "adjust":
+        return (
+          <AdjustScreen
             hsv={colorPicker.hsv}
             currentColor={currentColor}
             gradientRef={colorPicker.gradientRef}
             hueRef={colorPicker.hueRef}
             onGradientMouseDown={(e) => {
+              setHasColor(true)
               colorPicker.setIsDraggingGradient(true)
               colorPicker.handleGradientInteraction(e)
             }}
             onHueMouseDown={(e) => {
+              setHasColor(true)
               colorPicker.setIsDraggingHue(true)
               colorPicker.handleHueInteraction(e)
             }}
+            redraw={colorPicker.redraw}
             onCopy={copyToClipboard}
-            onColorChange={colorPicker.setHsv}
-            onAddToHistory={handleAddToHistory}
-            firstHistoryColor={colorHistory[0] || null}
+            onColorChange={(hsv) => {
+              setHasColor(true)
+              colorPicker.setHsv(hsv)
+            }}
+            onAddToHistory={addToHistory}
             copiedField={copiedField}
             tailwindVersion={tailwindVersion}
+            onBack={goHome}
             r={r}
             g={g}
             b={b}
           />
-          <div className="w-full">{renderColorHistory()}</div>
-        </div>
+        )
+      case "history":
+        return (
+          <HistoryScreen
+            history={colorHistory}
+            lastPicked={lastPickedColor}
+            copiedField={copiedField}
+            onPick={(color, index) => selectAndCopy(color, `history-${index}`)}
+            onClearHistory={() => void clearHistory()}
+            onClearLastPicked={() =>
+              void chrome.storage.local.remove("lastPickedColor")
+            }
+            onBack={goHome}
+          />
+        )
+      case "results":
+        return (
+          <PageColorsScreen
+            source={analyzer.analysisSource}
+            domain={analyzer.analyzedDomain}
+            colors={analyzer.analyzedColors}
+            selected={analyzer.selectedAnalyzedColor}
+            isAnalyzing={analyzer.isAnalyzing}
+            truncatedScan={analyzer.truncatedScan}
+            isSaving={analyzer.isSaving}
+            saveError={analyzer.saveError}
+            copyFormat={copyFormat}
+            tailwindVersion={tailwindVersion}
+            copiedField={copiedField}
+            onCopy={copyToClipboard}
+            onSelect={analyzer.selectColor}
+            onSave={() => void saveResults()}
+            onOpenInStudio={(view) => void analyzer.openInStudio(view)}
+            onBack={closeResults}
+          />
+        )
+      case "saved":
+        return (
+          <SavedPalettesScreen
+            palettes={analyzer.savedWebpageColors}
+            copiedField={copiedField}
+            onPickColor={(color: AnalyzedColor, field) =>
+              selectAndCopy(toColorEntry(color), field)
+            }
+            onOpenInStudio={(domain) =>
+              openPaletteStudio(domain ? { domain } : {})
+            }
+            onDelete={(domain) => void deletePalette(domain)}
+            onBack={goHome}
+          />
+        )
+      case "vision":
+        return (
+          <VisionScreen
+            mode={visionMode}
+            onChange={(mode) => void changeVision(mode)}
+            onBack={goHome}
+          />
+        )
+      case "home":
+        return (
+          <HomeScreen
+            hero={
+              <ColorHero
+                hex={currentHex}
+                copyFormat={copyFormat}
+                tailwindVersion={tailwindVersion}
+                copiedField={copiedField}
+                onCopy={copyToClipboard}
+              />
+            }
+            history={colorHistory}
+            savedPaletteCount={Object.keys(analyzer.savedWebpageColors).length}
+            pageRestricted={pageRestricted}
+            isAnalyzing={analyzer.isAnalyzing}
+            isAnalyzingContrast={isAnalyzingContrast}
+            visionLabel={
+              VISION_MODES.find((mode) => mode.value === visionMode)?.label ??
+              "Off"
+            }
+            copiedField={copiedField}
+            onPick={() => void pickFromScreen()}
+            onAdjust={() => setScreen("adjust")}
+            onPickRecent={(color, index) =>
+              selectAndCopy(color, `recent-${index}`)
+            }
+            onOpenHistory={() => setScreen("history")}
+            onPageColors={runPageColors}
+            onScreenshotColors={runScreenshotColors}
+            onContrastReport={() => void runContrastReport()}
+            onInspect={() => void startInspector()}
+            onVision={() => setScreen("vision")}
+            onOpenSaved={() => setScreen("saved")}
+            onOpenStudio={() => openPaletteStudio()}
+            onOpenChecker={() =>
+              chrome.tabs.create({
+                url: chrome.runtime.getURL("tabs/contrast-checker.html")
+              })
+            }
+            onOpenSettings={() => chrome.runtime.openOptionsPage()}
+          />
+        )
+    }
+  }
 
-        {expandedFeatures === "vision" && !pageRestricted && (
-          <div className="px-3">
-            <VisionSimulationPanel tabId={activeTabId} />
-          </div>
-        )}
-
-        {expandedFeatures === "color-history" && (
-          <div className="px-3">{renderColorHistory()}</div>
-        )}
-
-        <AnalyzerPanel
-          showSavedWebpageColors={expandedFeatures === "saved-webpage-colors"}
-          analyzedColors={analyzer.analyzedColors}
-          selectedAnalyzedColor={analyzer.selectedAnalyzedColor}
-          isAnalyzing={analyzer.isAnalyzing}
-          truncatedScan={analyzer.truncatedScan}
-          analysisSource={analyzer.analysisSource}
-          isSaving={analyzer.isSaving}
-          saveError={analyzer.saveError}
-          savedWebpageColors={analyzer.savedWebpageColors}
-          showAnalyzeButton={false}
-          onAnalyze={analyzer.analyze}
-          onSelectColor={analyzer.selectColor}
-          onSave={handleAnalyzerSave}
-          onCancel={handleAnalyzerCancel}
-          onOpenInStudio={(view) => void analyzer.openInStudio(view)}
-          onOpenSavedInStudio={(domain) => openPaletteStudio({ domain })}
-          onDeleteDomain={analyzer.deleteDomain}
-          onCopy={copyToClipboard}
-          copiedField={copiedField}
-          tailwindVersion={tailwindVersion}
-          onPickSaved={(color, key) => {
-            const nextHsv = colorToHsv({
-              hex: color.hex,
-              rgb: color.rgb,
-              hsl: undefined,
-              timestamp: Date.now()
-            })
-            if (nextHsv) colorPicker.setHsv(nextHsv)
-            setCurrentColor({
-              hex: color.hex,
-              rgb: color.rgb,
-              hsl: undefined,
-              timestamp: Date.now()
-            })
-            copyToClipboard(formatColor(color.hex, copyFormat), `saved-${key}`)
-          }}
-        />
+  return (
+    <div
+      className={cn(
+        "w-[360px] bg-white font-sans text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100",
+        // The popup is only as tall as its content; give a dialog room to
+        // show on a short screen
+        isConfirming && "min-h-[260px]"
+      )}>
+      <div
+        key={screen}
+        className={screen === "home" ? "" : "motion-safe:animate-screen-in"}>
+        {renderScreen()}
       </div>
-      {/* footer */}
-      <div className="p-3 text-xs text-gray-500 flex items-center justify-center gap-1">
-        <Heart className="size-3" fill="currentColor" /> by{" "}
-        <a
-          href="https://github.com/Sharif33"
-          className="text-sky-500 hover:underline underline-offset-2"
-          target="_blank"
-          rel="noopener noreferrer">
-          Sharif Rashed
-        </a>
-      </div>
+      {confirmDialog}
     </div>
   )
 }

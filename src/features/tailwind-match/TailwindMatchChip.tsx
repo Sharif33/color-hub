@@ -35,16 +35,18 @@ export const TailwindMatchChip = ({
       type="button"
       onClick={() => onCopy(name)}
       title={`Nearest Tailwind ${version} color: ${name} (${match.hex}). Click to copy the name`}
-      className="flex w-full items-center gap-1.5 rounded border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50">
+      className="flex w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
       <span
-        className="h-3.5 w-3.5 shrink-0 rounded-sm border border-gray-300"
+        className="h-3.5 w-3.5 shrink-0 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
         style={{ backgroundColor: match.hex }}
       />
-      <span className="text-gray-500">Tailwind {version}</span>
-      <span className="font-mono font-semibold text-gray-800">
+      <span className="text-slate-500 dark:text-slate-400">
+        Tailwind {version}
+      </span>
+      <span className="font-mono font-semibold">
         {exact ? "=" : "≈"} {name}
       </span>
-      <span className="ml-auto tabular-nums text-gray-500">
+      <span className="ml-auto tabular-nums text-slate-500 dark:text-slate-400">
         {copied ? "Copied" : `ΔE ${match.deltaE.toFixed(1)}`}
       </span>
     </button>
