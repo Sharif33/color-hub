@@ -1,4 +1,4 @@
-import { getContrastTextColor } from "~utils/get-contrast-text-color"
+import { getReadableTextColor } from "~utils/color-utils"
 
 import type { AnalyzedColor } from "./index"
 
@@ -8,6 +8,7 @@ interface AnalyzerPanelProps {
   selectedAnalyzedColor: AnalyzedColor | null
   isAnalyzing: boolean
   isSaving: boolean
+  saveError: string | null
   savedWebpageColors: Record<string, AnalyzedColor[]>
   showAnalyzeButton?: boolean
   onAnalyze: () => void
@@ -25,6 +26,7 @@ export const AnalyzerPanel = ({
   selectedAnalyzedColor,
   isAnalyzing,
   isSaving,
+  saveError,
   savedWebpageColors,
   showAnalyzeButton = true,
   onAnalyze,
@@ -108,6 +110,9 @@ export const AnalyzerPanel = ({
               No elements recorded for this color.
             </div>
           )}
+          {saveError && (
+            <div className="mt-2 text-[11px] text-red-600">{saveError}</div>
+          )}
           <div className="mt-2 flex justify-end gap-2">
             <button
               type="button"
@@ -157,7 +162,7 @@ export const AnalyzerPanel = ({
                       className="h-10 border-gray-300 border-[0.5px] flex items-end justify-center"
                       style={{
                         backgroundColor: color.hex,
-                        color: getContrastTextColor(color.hex) || "#000"
+                        color: getReadableTextColor(color.hex) || "#000"
                       }}>
                       <span className="text-[9px] font-mono font-medium w-full text-center">
                         {color.hex}

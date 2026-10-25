@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import type { HSV } from "../../popup/types"
-import { hsvToRgb } from "../../popup/color-utils"
+import { hsvToRgb, type HSV } from "~utils/color-utils"
 
 export const useColorPicker = (initial: HSV) => {
   const [hsv, setHsv] = useState<HSV>(initial)
@@ -42,12 +41,13 @@ export const useColorPicker = (initial: HSV) => {
 
     const { height } = canvas
     const gradient = ctx.createLinearGradient(0, 0, 0, height)
+    // Top to bottom must follow hue 0 → 360, matching handleHueInteraction
     gradient.addColorStop(0, "#ff0000")
-    gradient.addColorStop(0.17, "#ff00ff")
-    gradient.addColorStop(0.33, "#0000ff")
-    gradient.addColorStop(0.5, "#00ffff")
-    gradient.addColorStop(0.67, "#00ff00")
-    gradient.addColorStop(0.83, "#ffff00")
+    gradient.addColorStop(1 / 6, "#ffff00")
+    gradient.addColorStop(2 / 6, "#00ff00")
+    gradient.addColorStop(3 / 6, "#00ffff")
+    gradient.addColorStop(4 / 6, "#0000ff")
+    gradient.addColorStop(5 / 6, "#ff00ff")
     gradient.addColorStop(1, "#ff0000")
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, canvas.width, height)

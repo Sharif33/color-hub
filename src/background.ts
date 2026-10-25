@@ -7,6 +7,7 @@ interface ColorEntry {
   timestamp: number
 }
 
+import { hexToRgb } from "~utils/color-utils"
 import { isRestrictedUrl } from "./utils/restricted-urls"
 
 void initializeBadgeState()
@@ -15,10 +16,6 @@ void initializeBadgeState()
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "COLOR_PICKED" && message.color) {
     void savePickedColor(message.color as ColorEntry)
-    sendResponse({ success: true })
-  }
-  if (message.type === "CLEAR_WEBPAGE_HIGHLIGHTS" && message.tabId) {
-    void clearWebpageHighlights(message.tabId as number)
     sendResponse({ success: true })
   }
   return false
@@ -39,14 +36,18 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   void updateBadgeColor(nextColor)
 })
 
+// The popup reports the tab it highlighted. Querying the active tab on
+// disconnect would miss it when the popup closed because the user switched tabs
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "popup") return
+  let highlightedTabId: number | null = null
+  port.onMessage.addListener((message) => {
+    if (typeof message?.highlightedTabId === "number") {
+      highlightedTabId = message.highlightedTabId
+    }
+  })
   port.onDisconnect.addListener(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs?.[0]
-      if (!tab?.id) return
-      void clearWebpageHighlights(tab.id)
-    })
+    if (highlightedTabId !== null) void clearWebpageHighlights(highlightedTabId)
   })
 })
 
@@ -79,10 +80,12 @@ async function savePickedColor(color: ColorEntry) {
     const history: ColorEntry[] = Array.isArray(data.colorHistory)
       ? data.colorHistory
       : []
-    const updated = [color, ...history.filter((c) => c.hex !== color.hex)].slice(
-      0,
-      35
-    )
+    // Picked colors are uppercase and picker colors lowercase, so compare both ways
+    const hex = color.hex.toLowerCase()
+    const updated = [
+      color,
+      ...history.filter((c) => c.hex.toLowerCase() !== hex)
+    ].slice(0, 35)
 
     await chrome.storage.local.set({
       colorHistory: updated,
@@ -125,19 +128,3 @@ async function updateBadgeColor(color: ColorEntry | null) {
   }
 }
 
-function hexToRgb(hex: string) {
-  const normalized = hex.replace("#", "").trim()
-  const value =
-    normalized.length === 3
-      ? normalized
-          .split("")
-          .map((ch) => `${ch}${ch}`)
-          .join("")
-      : normalized
-
-  const r = parseInt(value.slice(0, 2), 16) || 0
-  const g = parseInt(value.slice(2, 4), 16) || 0
-  const b = parseInt(value.slice(4, 6), 16) || 0
-
-  return { r, g, b }
-}

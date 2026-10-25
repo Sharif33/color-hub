@@ -1,5 +1,22 @@
 # Release Notes
 
+## 1.1.0 (2026-10-25)
+New contrast tools: a Color Contrast Checker and a WCAG contrast report for the current page.
+
+Highlights:
+- Added a Color Contrast Checker with alpha support, an eyedropper per color, a live preview, AA/AAA results for normal and large text, and suggested fixes
+- Added saved contrast pairs and swatches from color history and saved webpage colors
+- Added `Analyze WCAG Contrast`, a report of every text/background pair on the page, measured as rendered, with large text judged at 3:1 and 4.5:1
+- Filter the report by failing or passing AA/AAA, sort by ratio or frequency, and open any pair in the Contrast Checker
+- `Analyze Webpage Colors` now finds colors written as `oklch()`, `lab()` and `color()`
+- Page highlights stay on their elements while scrolling and are cleared from the right tab when the popup closes
+- Fixed the hue slider showing hues in reverse order
+- Disabled page-based actions on extension stores and other pages the browser doesn't allow scripting on
+
+Permissions used:
+- `activeTab`, `tabs`, `storage`, `unlimitedStorage`, `scripting`, `contextMenus`
+- `host_permissions`: `<all_urls>`
+
 ## 1.0.2 (2026-02-10)
 UI and state improvements for picked colors, history visibility, and analyzer interactions.
 

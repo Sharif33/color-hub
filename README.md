@@ -26,10 +26,11 @@ This creates a production bundle in `build/`.
 
 ## Permissions
 - `activeTab`: read the currently active tab on demand
+- `tabs`: read the active tab's URL and title (restricted-page check, saved colors per site, WCAG report header)
 - `storage`: save palettes and settings
-- `unlimitedStorage`: store larger color histories if needed
+- `unlimitedStorage`: store larger color histories and saved webpage colors
 - `scripting`: inject scripts to sample colors
-- `contextMenus`: add right‑click menu actions
+- `contextMenus`: reserved for upcoming right‑click menu actions
 - `host_permissions` `<all_urls>`: allow color sampling on any page
 
 ## Privacy

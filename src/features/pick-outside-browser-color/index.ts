@@ -1,5 +1,4 @@
-import { hexToRgb, rgbToHsl } from "../../popup/color-utils"
-import type { ColorEntry } from "../../popup/types"
+import { hexToRgb, formatHsl, type ColorEntry } from "~utils/color-utils"
 
 export const pickOutsideBrowserColor = async (): Promise<ColorEntry | null> => {
   if (!("EyeDropper" in window)) {
@@ -12,14 +11,11 @@ export const pickOutsideBrowserColor = async (): Promise<ColorEntry | null> => {
     const eyeDropper = new EyeDropper()
     const result = await eyeDropper.open()
     const hex = result.sRGBHex.toUpperCase()
-    const rgbParsed = hexToRgb(hex)
-    if (!rgbParsed) return null
-
-    const { r, g, b } = rgbParsed
+    const { r, g, b } = hexToRgb(hex)
     const color: ColorEntry = {
       hex,
       rgb: `rgb(${r}, ${g}, ${b})`,
-      hsl: rgbToHsl(r, g, b),
+      hsl: formatHsl(r, g, b),
       timestamp: Date.now()
     }
 

@@ -9,10 +9,13 @@ import {
 
 interface UseWebpageAnalyzerOptions {
   onSelectColor: (color: AnalyzedColor) => void
+  /** Called when the active page can't be scripted. */
+  onAnalyzeFailed?: () => void
 }
 
 export const useWebpageAnalyzer = ({
-  onSelectColor
+  onSelectColor,
+  onAnalyzeFailed
 }: UseWebpageAnalyzerOptions) => {
   const [analyzedColors, setAnalyzedColors] = useState<AnalyzedColor[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -20,6 +23,7 @@ export const useWebpageAnalyzer = ({
     useState<AnalyzedColor | null>(null)
   const [analyzedDomain, setAnalyzedDomain] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [savedWebpageColors, setSavedWebpageColors] = useState<
     Record<string, AnalyzedColor[]>
   >({})
@@ -46,6 +50,7 @@ export const useWebpageAnalyzer = ({
 
   const analyze = async () => {
     setIsAnalyzing(true)
+    setSaveError(null)
     const domain = await new Promise<string | null>((resolve) => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs?.[0]
@@ -62,10 +67,14 @@ export const useWebpageAnalyzer = ({
       })
     })
     const colors = await analyzeWebpageColors()
+    setIsAnalyzing(false)
+    if (!colors) {
+      onAnalyzeFailed?.()
+      return
+    }
     setAnalyzedColors(colors)
     setSelectedAnalyzedColor(colors[0] ?? null)
     setAnalyzedDomain(domain)
-    setIsAnalyzing(false)
   }
 
   const selectColor = async (color: AnalyzedColor) => {
@@ -74,23 +83,36 @@ export const useWebpageAnalyzer = ({
     onSelectColor(color)
   }
 
-  const save = async () => {
-    if (!analyzedDomain || analyzedColors.length === 0) return
+  /** Resolves `false` when the storage write fails. */
+  const save = async (): Promise<boolean> => {
+    // A page without a hostname (e.g. file://) has nothing to save under.
+    // That isn't a failed write, so the popup still closes the results
+    if (!analyzedDomain || analyzedColors.length === 0) return true
     setIsSaving(true)
-    const existing = await chrome.storage.local.get(["WEBPAGES_COLORS"])
-    const next = {
-      ...(existing.WEBPAGES_COLORS || {}),
-      [analyzedDomain]: analyzedColors
+    setSaveError(null)
+    try {
+      const existing = await chrome.storage.local.get(["WEBPAGES_COLORS"])
+      const next = {
+        ...(existing.WEBPAGES_COLORS || {}),
+        [analyzedDomain]: analyzedColors
+      }
+      await chrome.storage.local.set({ WEBPAGES_COLORS: next })
+    } catch (error) {
+      console.warn("Saving webpage colors failed:", error)
+      setSaveError("Couldn't save these colors. Please try again.")
+      return false
+    } finally {
+      setIsSaving(false)
     }
-    await chrome.storage.local.set({ WEBPAGES_COLORS: next })
-    setIsSaving(false)
     void clearWebpageHighlights()
+    return true
   }
 
   const cancel = () => {
     setAnalyzedColors([])
     setSelectedAnalyzedColor(null)
     setAnalyzedDomain(null)
+    setSaveError(null)
     void clearWebpageHighlights()
   }
 
@@ -111,6 +133,7 @@ export const useWebpageAnalyzer = ({
     isAnalyzing,
     analyzedDomain,
     isSaving,
+    saveError,
     savedWebpageColors,
     analyze,
     selectColor,

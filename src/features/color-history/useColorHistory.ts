@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
-import type { ColorEntry } from "../../popup/types"
+import type { ColorEntry } from "~utils/color-utils"
 
 interface UseColorHistoryOptions {
   onPickedColor: (color: ColorEntry, source: "hydrate" | "storage") => void
@@ -11,6 +11,10 @@ export const useColorHistory = ({
 }: UseColorHistoryOptions) => {
   const [colorHistory, setColorHistory] = useState<ColorEntry[]>([])
   const [lastPickedColor, setLastPickedColor] = useState<ColorEntry | null>(null)
+  // Callers pass a new callback every render. Reading it through a ref keeps
+  // the effect from re-running, which re-read storage and re-rendered forever
+  const onPickedColorRef = useRef(onPickedColor)
+  onPickedColorRef.current = onPickedColor
 
   useEffect(() => {
     chrome.storage.local.get(["colorHistory", "lastPickedColor"], (result) => {
@@ -18,7 +22,7 @@ export const useColorHistory = ({
       if (result.lastPickedColor?.hex) {
         const picked = result.lastPickedColor as ColorEntry
         setLastPickedColor(picked)
-        onPickedColor(picked, "hydrate")
+        onPickedColorRef.current(picked, "hydrate")
       }
     })
 
@@ -34,7 +38,7 @@ export const useColorHistory = ({
       if (changes.lastPickedColor?.newValue) {
         const picked = changes.lastPickedColor.newValue as ColorEntry
         setLastPickedColor(picked)
-        onPickedColor(picked, "storage")
+        onPickedColorRef.current(picked, "storage")
       }
       if (
         changes.lastPickedColor &&
@@ -45,7 +49,7 @@ export const useColorHistory = ({
     }
     chrome.storage.onChanged.addListener(listener)
     return () => chrome.storage.onChanged.removeListener(listener)
-  }, [onPickedColor])
+  }, [])
 
   return {
     colorHistory,
