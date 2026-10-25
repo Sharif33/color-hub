@@ -43,6 +43,20 @@ const NORMAL_TARGETS = [
   { ratio: 7, level: "AAA" as const }
 ]
 
+const LARGE_TEXT_TARGETS = [
+  { ratio: 3, level: "AA" as const },
+  { ratio: 4.5, level: "AAA" as const }
+]
+
+/**
+ * Format a contrast ratio to 2 decimals, truncating instead of rounding so a
+ * failing 4.497 never displays as "4.50". The epsilon only absorbs float
+ * error (black on white computes to 20.999…); keep it tiny so a ratio just
+ * under a threshold still truncates below it.
+ */
+export const formatRatio = (ratio: number): string =>
+  (Math.floor(ratio * 100 + 1e-9) / 100).toFixed(2)
+
 // ---------------------------------------------------------------------------
 // sRGB ↔ CIE Lab for perceptual distance
 // ---------------------------------------------------------------------------
@@ -225,7 +239,8 @@ const nudgeToMeetRatio = (
 
 /**
  * Suggest the nearest accessible foreground and background colors that
- * reach AA (4.5:1) and AAA (7:1) levels, in both darker and lighter directions.
+ * reach AA (4.5:1) and AAA (7:1) levels — or 3:1 and 4.5:1 for large text —
+ * in both darker and lighter directions.
  *
  * Algorithm:
  * 1. Compute the exact target luminance needed for each WCAG threshold
@@ -236,10 +251,12 @@ const nudgeToMeetRatio = (
  */
 export const suggestAccessibleColors = (
   fgHex: string,
-  bgHex: string
+  bgHex: string,
+  largeText = false
 ): ColorSuggestion[] => {
   const currentRatio = getContrastRatio(fgHex, bgHex)
-  const failingTargets = NORMAL_TARGETS.filter((t) => currentRatio < t.ratio)
+  const targets = largeText ? LARGE_TEXT_TARGETS : NORMAL_TARGETS
+  const failingTargets = targets.filter((t) => currentRatio < t.ratio)
   if (failingTargets.length === 0) return []
 
   const fgSuggestions = collectSuggestions(

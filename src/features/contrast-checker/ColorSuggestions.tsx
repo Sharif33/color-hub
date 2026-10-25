@@ -1,10 +1,15 @@
-import type { ColorSuggestion, SuggestionTarget } from "~utils/wcag-utils"
+import {
+  formatRatio,
+  type ColorSuggestion,
+  type SuggestionTarget
+} from "~utils/wcag-utils"
 
 interface ColorSuggestionsProps {
   suggestions: ColorSuggestion[]
   foreground: string
   background: string
   ratio: number
+  largeText: boolean
   onApply: (hex: string, target: SuggestionTarget) => void
 }
 
@@ -29,10 +34,12 @@ export function ColorSuggestions({
   foreground,
   background,
   ratio,
+  largeText,
   onApply
 }: ColorSuggestionsProps) {
   const onlyAAA =
     suggestions.length > 0 && suggestions.every((s) => s.level === "AAA")
+  const aaaRatio = largeText ? 4.5 : 7
 
   if (suggestions.length === 0) return null
 
@@ -49,8 +56,8 @@ export function ColorSuggestions({
             </span>
           </div>
           <p className="text-xs font-medium text-slate-500">
-            Your pair meets AA ({ratio.toFixed(2)}:1). These tweaks would reach
-            AAA (7:1).
+            Your pair meets AA ({formatRatio(ratio)}:1). These tweaks would
+            reach AAA ({aaaRatio}:1).
           </p>
         </div>
       ) : (
@@ -90,7 +97,7 @@ export function ColorSuggestions({
                       {s.hex.toUpperCase()}
                     </span>
                     <span className="text-[11px] font-mono font-medium text-slate-500">
-                      Ratio: {s.ratio.toFixed(2)}:1
+                      Ratio: {formatRatio(s.ratio)}:1
                     </span>
                   </div>
                 </div>

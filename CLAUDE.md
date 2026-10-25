@@ -28,13 +28,13 @@ pnpm exec prettier --write <files>
   - `src/popup.tsx` → the action popup.
   - `src/background.ts` → the service worker.
   - `src/tabs/<name>.tsx` → an extension page at `tabs/<name>.html`, opened with `chrome.tabs.create({ url: chrome.runtime.getURL("tabs/<name>.html") })`.
-- The manifest is generated from the `manifest` field in `package.json`, so change permissions there. Per CONTRIBUTING, permission or privacy changes also need a `README.md` update. `contextMenus` is declared, but nothing in `src/` registers a context menu.
+- The manifest is generated from the `manifest` field in `package.json`, so change permissions there. Per CONTRIBUTING, permission or privacy changes also need a `README.md` update. `contextMenus` is declared for planned right-click actions, but nothing in `src/` registers a context menu yet.
 - `.plasmo/` and `build/` are generated. Don't edit them.
 - The path alias `~` maps to `src/` (e.g. `~utils/color-utils`). Images are imported as `data-base64:~assets/...`. One directory name contains a space: `src/components/color hub/`.
 
 ### Page interaction: injected functions, no content scripts
 The extension has no content scripts. All work on the page goes through `chrome.scripting.executeScript({ func, args })`, called from the popup or the background script (see `src/features/webpage-color-analyzer/index.ts`).
-- **Injected functions are serialized**, so they must be self-contained: no imports, and no references to module-scope helpers. That is why `normalizeRgb` and `rgbToHex` are copied inside each injected function. Don't refactor them to use `~utils/color-utils`. Pass inputs through `args`.
+- **Injected functions are serialized**, so they must be self-contained: no imports, and no references to module-scope helpers. That is why `parseCssColor` (which resolves `oklch()`/`lab()`/`color()` through a 1×1 canvas, since computed styles keep those as written) and its helpers are copied inside each injected function. Don't refactor them to use `~utils/color-utils`. Pass inputs through `args`.
 - Page-highlight overlays live under `#ecp-highlight-root` as `[data-ecp-highlight="true"]` nodes. Cleanup code in both `background.ts` and the analyzer depends on these markers.
 - `chrome://`, `edge://`, `about:` and similar pages can't be scripted (see `src/utils/restricted-urls.ts`). The popup disables page-based features on them.
 
@@ -50,10 +50,9 @@ The code calls `chrome.storage.local` directly. `@plasmohq/storage` and `@plasmo
 | `WCAG_ANALYSIS_PENDING` | `WCAGAnalysisData` | Handoff from the popup to the `wcag-contrast-analyzer` tab. |
 
 ### Messaging and lifecycle
-- Messages go to the background with raw `chrome.runtime.sendMessage`. There are two:
-  - `COLOR_PICKED` saves the color to history and to `lastPickedColor`.
-  - `CLEAR_WEBPAGE_HIGHLIGHTS` (`{ tabId }`) removes the page overlays.
-- The popup opens a port named `"popup"`. When it disconnects (the popup closes), the background clears highlights on the active tab.
+- Messages go to the background with raw `chrome.runtime.sendMessage`. There is one: `COLOR_PICKED`, which saves the color to history and to `lastPickedColor`.
+- The analyzer's `save()` and `cancel()` clear the page overlays themselves (`clearWebpageHighlights()` in the analyzer).
+- The popup opens a port named `"popup"` and posts `{ highlightedTabId }` on it when it highlights a page. When the port disconnects (the popup closes), the background clears highlights on that tab. It doesn't query the active tab, because the user may have switched tabs.
 - **Pick Color** uses the EyeDropper API from the popup (`features/pick-outside-browser-color`):
   - While picking, the popup shows a minimal UI, then calls `window.close()`.
   - The color reaches the next popup session by this path: `COLOR_PICKED` → background → storage → `useColorHistory`.
@@ -61,10 +60,10 @@ The code calls `chrome.storage.local` directly. `@plasmohq/storage` and `@plasmo
 
 ### Feature flows
 - **WCAG analysis:**
-  1. The popup calls `analyzeWebpageContrastPairs()`. It scans text elements and finds each one's effective background by walking up the ancestors to the first non-transparent one, falling back to white.
+  1. The popup calls `analyzeWebpageContrastPairs()`. It scans text elements and composites the text color over every ancestor's background color and `opacity` up to the root, on a white canvas, to get the colors actually rendered (background images are ignored). Each pair is flagged `largeText` (≥ 24px, or ≥ 18.66px bold) and judged at 3:1 / 4.5:1. It resolves `null` and writes nothing when the page can't be scripted.
   2. It writes the result to `WCAG_ANALYSIS_PENDING`.
   3. It opens `tabs/wcag-contrast-analyzer.html`.
-- **Contrast checker** (`tabs/contrast-checker.tsx`) reads `?fg=RRGGBB&bg=RRGGBB` (no `#`). The WCAG analyzer links into it this way.
+- **Contrast checker** (`tabs/contrast-checker.tsx`) reads `?fg=RRGGBB&bg=RRGGBB` (no `#`), plus `&large=1` to start at 24px so the pair is judged as large text. The WCAG analyzer links into it this way.
 - **Color math** is in pure functions in `src/utils/color-utils.ts` (parsing, conversion, alpha blending, relative luminance, contrast ratio) and `src/utils/wcag-utils.ts` (AA/AAA thresholds, the large-text rule, accessible-color suggestions). Use them from extension pages, but not inside injected functions.
 
 ### Code layout

@@ -8,6 +8,7 @@ interface AnalyzerPanelProps {
   selectedAnalyzedColor: AnalyzedColor | null
   isAnalyzing: boolean
   isSaving: boolean
+  saveError: string | null
   savedWebpageColors: Record<string, AnalyzedColor[]>
   showAnalyzeButton?: boolean
   onAnalyze: () => void
@@ -25,6 +26,7 @@ export const AnalyzerPanel = ({
   selectedAnalyzedColor,
   isAnalyzing,
   isSaving,
+  saveError,
   savedWebpageColors,
   showAnalyzeButton = true,
   onAnalyze,
@@ -107,6 +109,9 @@ export const AnalyzerPanel = ({
             <div className="mt-2 text-[11px] text-gray-500">
               No elements recorded for this color.
             </div>
+          )}
+          {saveError && (
+            <div className="mt-2 text-[11px] text-red-600">{saveError}</div>
           )}
           <div className="mt-2 flex justify-end gap-2">
             <button

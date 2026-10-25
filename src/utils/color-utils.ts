@@ -94,6 +94,7 @@ const HSL_RE =
   /^hsla?\(\s*([\d.]+)[\s,]+([\d.]+)%?[\s,]+([\d.]+)%?(?:[\s,/]+([\d.]+%?))?\s*\)/i
 const HEX8_RE = /^#?([0-9a-fA-F]{8})$/
 const HEX4_RE = /^#?([0-9a-fA-F]{4})$/
+const HEX_RE = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
 export interface ParsedColor {
   hex: string
@@ -155,13 +156,12 @@ export const parseColorWithAlpha = (input: string): ParsedColor | null => {
     return { hex, alpha }
   }
 
-  const withHash = raw.startsWith("#") ? raw : `#${raw}`
-  const cleaned = `#${withHash.slice(1).replace(/[^0-9a-fA-F]/g, "")}`
-  if (cleaned.length === 4) {
-    const [, r, g, b] = cleaned
-    return { hex: `#${r}${r}${g}${g}${b}${b}`.toLowerCase(), alpha: 1 }
+  const hexMatch = raw.match(HEX_RE)
+  if (hexMatch) {
+    const h = hexMatch[1]
+    const full = h.length === 3 ? h.replace(/./g, "$&$&") : h
+    return { hex: `#${full}`.toLowerCase(), alpha: 1 }
   }
-  if (cleaned.length === 7) return { hex: cleaned.toLowerCase(), alpha: 1 }
 
   return null
 }
@@ -193,6 +193,18 @@ export const alphaBlend = (
     Math.round(fg.g * a + bg.g * (1 - a)),
     Math.round(fg.b * a + bg.b * (1 - a))
   )
+}
+
+/**
+ * Resolve a possibly translucent pair to the opaque colors that render:
+ * the background over white, then the foreground over that result.
+ */
+export const blendColorPair = (
+  fg: ParsedColor,
+  bg: ParsedColor
+): { foreground: string; background: string } => {
+  const background = alphaBlend(bg.hex, bg.alpha, "#ffffff")
+  return { foreground: alphaBlend(fg.hex, fg.alpha, background), background }
 }
 
 export const normalizeHex = (value: string, fallback: string): string =>

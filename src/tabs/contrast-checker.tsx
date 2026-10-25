@@ -28,7 +28,11 @@ function ContrastCheckerPage() {
     const bg = new URLSearchParams(window.location.search).get("bg")
     return bg ? `#${bg}` : DEFAULT_BACKGROUND
   })
-  const [fontSize, setFontSize] = useState(16)
+  // The WCAG analyzer passes large=1 for large-text pairs. 24px is the
+  // smallest size that counts as large text without bold
+  const [fontSize, setFontSize] = useState(() =>
+    new URLSearchParams(window.location.search).get("large") === "1" ? 24 : 16
+  )
   const [isBold, setIsBold] = useState(false)
   const [paletteSource, setPaletteSource] =
     useState<PaletteSource>("color-history")
@@ -74,15 +78,28 @@ function ContrastCheckerPage() {
 
   const handleSavePair = useCallback(() => {
     clearTimeout(statusTimer.current)
-    if (isDuplicate(foreground, background)) {
+    // Keep the entered value when it has alpha, so reopening the pair gives
+    // the same ratio
+    const savedForeground = fgAlpha < 1 ? foregroundInput.trim() : foreground
+    const savedBackground = bgAlpha < 1 ? backgroundInput.trim() : background
+    if (isDuplicate(savedForeground, savedBackground)) {
       setSaveStatus("duplicate")
       statusTimer.current = setTimeout(() => setSaveStatus("idle"), 2000)
       return
     }
-    savePair(foreground, background)
+    savePair(savedForeground, savedBackground)
     setSaveStatus("saved")
     statusTimer.current = setTimeout(() => setSaveStatus("idle"), 1500)
-  }, [foreground, background, savePair, isDuplicate])
+  }, [
+    foreground,
+    background,
+    fgAlpha,
+    bgAlpha,
+    foregroundInput,
+    backgroundInput,
+    savePair,
+    isDuplicate
+  ])
 
   const handleSelectPair = (fg: string, bg: string) => {
     setForegroundInput(fg)
@@ -236,6 +253,7 @@ function ContrastCheckerPage() {
                 foreground={effectiveForeground}
                 background={effectiveBackground}
                 ratio={ratio}
+                largeText={largeText}
                 onApply={handleApplySuggestion}
               />
             </div>

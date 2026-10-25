@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 
 import {
-  alphaBlend,
+  blendColorPair,
   getContrastRatio,
   getReadableTextColor,
   normalizeWithAlpha,
@@ -36,15 +36,12 @@ export const useContrastInfo = (
   const fgAlpha = fgParsed.alpha
   const bgAlpha = bgParsed.alpha
 
-  const effectiveForeground = useMemo(
-    () => alphaBlend(foreground, fgAlpha, background),
-    [foreground, fgAlpha, background]
+  const effective = useMemo(
+    () => blendColorPair(fgParsed, bgParsed),
+    [fgParsed, bgParsed]
   )
-
-  const effectiveBackground = useMemo(
-    () => alphaBlend(background, bgAlpha, "#ffffff"),
-    [background, bgAlpha]
-  )
+  const effectiveForeground = effective.foreground
+  const effectiveBackground = effective.background
 
   const ratio = useMemo(
     () => getContrastRatio(effectiveForeground, effectiveBackground),
@@ -79,8 +76,13 @@ export const useContrastInfo = (
   )
 
   const suggestions = useMemo(
-    () => suggestAccessibleColors(effectiveForeground, effectiveBackground),
-    [effectiveForeground, effectiveBackground]
+    () =>
+      suggestAccessibleColors(
+        effectiveForeground,
+        effectiveBackground,
+        largeText
+      ),
+    [effectiveForeground, effectiveBackground, largeText]
   )
 
   return {

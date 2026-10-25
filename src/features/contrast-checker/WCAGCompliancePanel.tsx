@@ -1,4 +1,4 @@
-import type { WCAGCompliance } from "~utils/wcag-utils"
+import { formatRatio, type WCAGCompliance } from "~utils/wcag-utils"
 
 import { ComplianceBadge } from "./ComplianceBadge"
 
@@ -58,7 +58,7 @@ export function WCAGCompliancePanel({
         className="flex items-baseline gap-2 pb-2">
         <p
           className={`text-6xl font-black tracking-tighter leading-none ${ratioColor} drop-shadow-sm`}>
-          {ratio.toFixed(2)}
+          {formatRatio(ratio)}
         </p>
         <span className="text-2xl font-bold text-slate-300 tracking-tight">
           : 1

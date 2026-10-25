@@ -26,45 +26,44 @@ export function ColorCard({
   swatches,
   hideSwatches = false
 }: ColorCardProps) {
-  // ... existing handleInputChange, handlePaste, handlePickColor ...
+  // Keep the raw text while typing and normalize on blur. Normalizing on every
+  // keystroke expanded "#abc" to "#aabbcc" before "#abcdef" could be finished
   const handleInputChange = (value: string) => {
     if (!value) {
       onInputChange("#")
       return
     }
 
-    const parsed = parseColorWithAlpha(value)
-    if (parsed) {
-      if (parsed.alpha < 1) {
-        onInputChange(value.trim())
-      } else {
-        onInputChange(parsed.hex)
-      }
-      return
-    }
-
     const next = value.startsWith("#") ? value : `#${value}`
     if (isValidPartialHex(next)) {
       onInputChange(next.toLowerCase())
+      return
     }
 
-    if (/^(rgba?|hsla?)\(/i.test(value)) {
+    // Allow rgb()/hsl() to be typed letter by letter
+    if (/^(rgba?|hsla?)\(/i.test(value) || /^(rg?b?a?|hs?l?a?)$/i.test(value)) {
       onInputChange(value)
     }
   }
 
+  const commitValue = (value: string) => {
+    const parsed = parseColorWithAlpha(value)
+    if (!parsed) return false
+    onInputChange(parsed.alpha < 1 ? value : parsed.hex)
+    return true
+  }
+
+  const handleBlur = () => {
+    // Revert unfinished input to the color the checker is actually using
+    if (!commitValue(inputValue.trim())) onInputChange(color)
+  }
+
   const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
     event.preventDefault()
-    const pasted = event.clipboardData.getData("text").trim()
-
-    const parsed = parseColorWithAlpha(pasted)
-    if (parsed) {
-      if (parsed.alpha < 1) {
-        onInputChange(pasted)
-      } else {
-        onInputChange(parsed.hex)
-      }
-    }
+    // Accept values copied straight out of a stylesheet, e.g. "#fff;"
+    commitValue(
+      event.clipboardData.getData("text").trim().replace(/;$/, "").trim()
+    )
   }
 
   const handlePickColor = async () => {
@@ -102,6 +101,7 @@ export function ColorCard({
             type="text"
             value={inputValue}
             onChange={(event) => handleInputChange(event.target.value)}
+            onBlur={handleBlur}
             onPaste={handlePaste}
             placeholder="#000000"
             spellCheck={false}

@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 interface TypographyControlsProps {
   fontSize: number
   isBold: boolean
@@ -8,6 +10,8 @@ interface TypographyControlsProps {
 
 const LARGE_TEXT_THRESHOLD = 24
 const LARGE_TEXT_BOLD_THRESHOLD = 18.66
+const MIN_FONT_SIZE = 12
+const MAX_FONT_SIZE = 64
 
 export function TypographyControls({
   fontSize,
@@ -18,6 +22,19 @@ export function TypographyControls({
 }: TypographyControlsProps) {
   const threshold = isBold ? LARGE_TEXT_BOLD_THRESHOLD : LARGE_TEXT_THRESHOLD
   const thresholdPt = isBold ? 14 : 18
+
+  // The number field keeps its own text so it can be cleared or hold a partial
+  // value while typing; only sizes within range reach the preview
+  const [sizeDraft, setSizeDraft] = useState(String(fontSize))
+  useEffect(() => setSizeDraft(String(fontSize)), [fontSize])
+
+  const handleSizeInput = (value: string) => {
+    setSizeDraft(value)
+    const next = Number(value)
+    if (value && next >= MIN_FONT_SIZE && next <= MAX_FONT_SIZE) {
+      onFontSizeChange(next)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,10 +62,11 @@ export function TypographyControls({
             <div className="flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50 px-2 py-1 shadow-inner">
               <input
                 type="number"
-                min={12}
-                max={64}
-                value={fontSize}
-                onChange={(e) => onFontSizeChange(Number(e.target.value))}
+                min={MIN_FONT_SIZE}
+                max={MAX_FONT_SIZE}
+                value={sizeDraft}
+                onChange={(e) => handleSizeInput(e.target.value)}
+                onBlur={() => setSizeDraft(String(fontSize))}
                 className="w-10 bg-transparent text-right font-mono text-sm font-bold text-slate-700 outline-none"
               />
               <span className="text-xs font-medium text-slate-400">px</span>
@@ -57,13 +75,13 @@ export function TypographyControls({
           <div className="relative flex items-center h-4">
             <input
               type="range"
-              min={12}
-              max={64}
+              min={MIN_FONT_SIZE}
+              max={MAX_FONT_SIZE}
               value={fontSize}
               onChange={(event) => onFontSizeChange(Number(event.target.value))}
               className="absolute w-full h-1.5 cursor-pointer appearance-none rounded-full bg-slate-200 outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:ring-1 [&::-webkit-slider-thumb]:ring-slate-200 [&::-webkit-slider-thumb]:transition-transform hover:[&::-webkit-slider-thumb]:scale-110 active:[&::-webkit-slider-thumb]:scale-95 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:ring-1 [&::-moz-range-thumb]:ring-slate-200 [&::-moz-range-thumb]:transition-transform hover:[&::-moz-range-thumb]:scale-110 active:[&::-moz-range-thumb]:scale-95"
               style={{
-                background: `linear-gradient(to right, #3b82f6 ${((fontSize - 12) / (64 - 12)) * 100}%, #e2e8f0 ${((fontSize - 12) / (64 - 12)) * 100}%)`
+                background: `linear-gradient(to right, #3b82f6 ${((fontSize - MIN_FONT_SIZE) / (MAX_FONT_SIZE - MIN_FONT_SIZE)) * 100}%, #e2e8f0 ${((fontSize - MIN_FONT_SIZE) / (MAX_FONT_SIZE - MIN_FONT_SIZE)) * 100}%)`
               }}
             />
           </div>

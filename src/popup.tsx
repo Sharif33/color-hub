@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import "~style.css"
 
@@ -62,43 +62,55 @@ function IndexPopup() {
     }
   })
 
+  // The background clears page highlights when this port disconnects (the
+  // popup closed). It only knows which tab to clean up if we tell it
+  const portRef = useRef<chrome.runtime.Port | null>(null)
+  const activeTabIdRef = useRef<number | null>(null)
+  const highlightedTabIdRef = useRef<number | null>(null)
+
   useEffect(() => {
-    const port = chrome.runtime.connect({ name: "popup" })
+    let closed = false
+    const connect = () => {
+      const port = chrome.runtime.connect({ name: "popup" })
+      const connectedAt = Date.now()
+      portRef.current = port
+      if (highlightedTabIdRef.current !== null) {
+        port.postMessage({ highlightedTabId: highlightedTabIdRef.current })
+      }
+      // An idle service worker can be stopped, which drops the port without
+      // the popup closing. Reconnect so cleanup still happens on close. A port
+      // that drops at once means nothing is listening, so don't retry in a
+      // tight loop (the worker is only stopped after being idle for 30s)
+      port.onDisconnect.addListener(() => {
+        void chrome.runtime.lastError
+        if (!closed && Date.now() - connectedAt > 1000) connect()
+      })
+    }
+    connect()
     return () => {
-      port.disconnect()
+      closed = true
+      portRef.current?.disconnect()
     }
   }, [])
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs?.[0]
+      activeTabIdRef.current = tab?.id ?? null
       const url = tab?.url || tab?.pendingUrl || ""
       setPageRestricted(isRestrictedUrl(url))
     })
   }, [])
 
-  useEffect(() => {
-    const handleUnload = () => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const tab = tabs?.[0]
-        if (!tab?.id) return
-        chrome.runtime.sendMessage({
-          type: "CLEAR_WEBPAGE_HIGHLIGHTS",
-          tabId: tab.id
-        })
-      })
-    }
-    window.addEventListener("beforeunload", handleUnload)
-    window.addEventListener("unload", handleUnload)
-    return () => {
-      window.removeEventListener("beforeunload", handleUnload)
-      window.removeEventListener("unload", handleUnload)
-      handleUnload()
-    }
-  }, [])
-
   const analyzer = useWebpageAnalyzer({
+    onAnalyzeFailed: () => setPageRestricted(true),
     onSelectColor: (color) => {
+      if (activeTabIdRef.current !== null) {
+        highlightedTabIdRef.current = activeTabIdRef.current
+        portRef.current?.postMessage({
+          highlightedTabId: activeTabIdRef.current
+        })
+      }
       const nextHsv = colorToHsv({
         hex: color.hex,
         rgb: color.rgb,
@@ -122,30 +134,16 @@ function IndexPopup() {
     window.close()
   }
 
+  // save() and cancel() clear the page highlights themselves
   const handleAnalyzerSave = async () => {
-    await analyzer.save()
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs?.[0]
-      if (!tab?.id) return
-      chrome.runtime.sendMessage({
-        type: "CLEAR_WEBPAGE_HIGHLIGHTS",
-        tabId: tab.id
-      })
-    })
+    // On failure keep the results open so the user can retry
+    if (!(await analyzer.save())) return
     analyzer.cancel()
     setExpandedFeatures("saved-webpage-colors")
   }
 
   const handleAnalyzerCancel = () => {
     analyzer.cancel()
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs?.[0]
-      if (!tab?.id) return
-      chrome.runtime.sendMessage({
-        type: "CLEAR_WEBPAGE_HIGHLIGHTS",
-        tabId: tab.id
-      })
-    })
   }
 
   const openContrastChecker = () => {
@@ -158,7 +156,11 @@ function IndexPopup() {
   const analyzeWCAGContrast = async () => {
     setIsAnalyzingWCAG(true)
     try {
-      await analyzeWebpageContrastPairs()
+      const data = await analyzeWebpageContrastPairs()
+      if (!data) {
+        setPageRestricted(true)
+        return
+      }
       const url = chrome.runtime.getURL("tabs/wcag-contrast-analyzer.html")
       chrome.tabs.create({ url })
     } catch (error) {
@@ -184,9 +186,10 @@ function IndexPopup() {
 
   const handleAddToHistory = () => {
     if (!currentColor) return
+    const hex = currentColor.hex.toLowerCase()
     const updated = [
       currentColor,
-      ...colorHistory.filter((c) => c.hex !== currentColor.hex)
+      ...colorHistory.filter((c) => c.hex.toLowerCase() !== hex)
     ].slice(0, 35)
     setColorHistory(updated)
     chrome.storage.local.set({ colorHistory: updated })
@@ -400,6 +403,7 @@ function IndexPopup() {
           selectedAnalyzedColor={analyzer.selectedAnalyzedColor}
           isAnalyzing={analyzer.isAnalyzing}
           isSaving={analyzer.isSaving}
+          saveError={analyzer.saveError}
           savedWebpageColors={analyzer.savedWebpageColors}
           showAnalyzeButton={false}
           onAnalyze={analyzer.analyze}

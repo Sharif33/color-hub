@@ -61,7 +61,6 @@ export const ColorPickerPanel = ({
     setRValue(r.toString())
     setGValue(g.toString())
     setBValue(b.toString())
-    setHexValue(currentColor?.hex || "")
 
     // Parse HSL from string
     const hslString = currentColor?.hsl || formatHsl(r, g, b)
@@ -74,6 +73,15 @@ export const ColorPickerPanel = ({
       setLValue(hslMatch[3])
     }
   }, [currentColor, r, g, b])
+
+  // Keep the typed text while it still names the current color, so "#abc"
+  // isn't expanded to "#aabbcc" before "#abcdef" is finished. This depends on
+  // currentColor only: r/g/b change one render earlier, while currentColor is
+  // still the previous color, and comparing then would overwrite the text
+  useEffect(() => {
+    const hex = currentColor?.hex || ""
+    setHexValue((prev) => (parseColor(prev) === hex.toLowerCase() ? prev : hex))
+  }, [currentColor])
 
   useEffect(() => {
     const updateDimensions = () => {

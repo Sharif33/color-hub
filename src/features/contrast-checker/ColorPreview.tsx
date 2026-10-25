@@ -1,5 +1,7 @@
 import { Heart, MoreHorizontal, Share2, Star } from "lucide-react"
 
+import { formatRatio } from "~utils/wcag-utils"
+
 interface ColorPreviewProps {
   background: string
   foreground: string
@@ -27,7 +29,7 @@ export function ColorPreview({
         </h3>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-slate-200/50 px-3 py-1 text-xs font-mono font-medium text-slate-600">
-            {ratio.toFixed(2)}:1
+            {formatRatio(ratio)}:1
           </span>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
             {largeText ? "Large Text" : "Normal Text"}

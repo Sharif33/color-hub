@@ -1,7 +1,22 @@
 import { Trash2 } from "lucide-react"
 
 import type { SavedPair } from "~hooks/use-saved-pairs"
-import { getContrastRatio } from "~utils/color-utils"
+import {
+  blendColorPair,
+  DEFAULT_BACKGROUND,
+  DEFAULT_FOREGROUND,
+  getContrastRatio,
+  normalizeWithAlpha
+} from "~utils/color-utils"
+import { formatRatio } from "~utils/wcag-utils"
+
+const getPairRatio = (pair: SavedPair): number => {
+  const { foreground, background } = blendColorPair(
+    normalizeWithAlpha(pair.foreground, DEFAULT_FOREGROUND),
+    normalizeWithAlpha(pair.background, DEFAULT_BACKGROUND)
+  )
+  return getContrastRatio(foreground, background)
+}
 
 interface SavedPairsGridProps {
   pairs: SavedPair[]
@@ -35,7 +50,7 @@ export function SavedPairsGrid({
   return (
     <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
       {pairs.map((pair) => {
-        const ratio = getContrastRatio(pair.foreground, pair.background)
+        const ratio = getPairRatio(pair)
         return (
           <div
             key={pair.id}
@@ -61,19 +76,19 @@ export function SavedPairsGrid({
             </div>
 
             <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-slate-700">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="truncate text-xs font-mono font-bold text-slate-700">
                   {pair.foreground}
                 </span>
                 <span className="text-[10px] font-medium text-slate-400">
                   on
                 </span>
-                <span className="text-xs font-mono font-bold text-slate-700">
+                <span className="truncate text-xs font-mono font-bold text-slate-700">
                   {pair.background}
                 </span>
               </div>
               <span className="text-[11px] font-medium text-slate-500">
-                Ratio: {ratio.toFixed(2)}:1
+                Ratio: {formatRatio(ratio)}:1
               </span>
             </div>
 

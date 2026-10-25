@@ -5,19 +5,60 @@ export interface AnalyzedColor {
   selectors: string[]
 }
 
+interface PageColor {
+  r: number
+  g: number
+  b: number
+  a: number
+}
+
 const highlightColorInPage = (targetRgb: string) => {
-  const normalizeRgb = (value: string): string | null => {
+  // Computed styles keep oklch(), lab() and color() as written, so anything
+  // that isn't rgb() is resolved to sRGB by painting it on a 1×1 canvas
+  const canvas = document.createElement("canvas")
+  canvas.width = canvas.height = 1
+  const canvasCtx = canvas.getContext("2d", { willReadFrequently: true })
+  const parsedColors = new Map<string, PageColor | null>()
+  const parseCssColor = (value: string): PageColor | null => {
+    const cached = parsedColors.get(value)
+    if (cached !== undefined) return cached
+    let parsed: PageColor | null = null
     const rgbMatch = value
       .replace(/\s+/g, "")
-      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,(\d*\.?\d+))?\)$/i)
-    if (!rgbMatch) return null
-    const r = Math.max(0, Math.min(255, parseInt(rgbMatch[1], 10)))
-    const g = Math.max(0, Math.min(255, parseInt(rgbMatch[2], 10)))
-    const b = Math.max(0, Math.min(255, parseInt(rgbMatch[3], 10)))
-    const a = rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1
-    if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null
-    if (a === 0) return null
-    return `rgb(${r}, ${g}, ${b})`
+      .match(/^rgba?\(([\d.]+),([\d.]+),([\d.]+)(?:,([\d.]+))?\)$/i)
+    if (rgbMatch) {
+      const channel = (n: string) =>
+        Math.max(0, Math.min(255, Math.round(parseFloat(n))))
+      parsed = {
+        r: channel(rgbMatch[1]),
+        g: channel(rgbMatch[2]),
+        b: channel(rgbMatch[3]),
+        a: rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1
+      }
+    } else if (canvasCtx) {
+      // Paint without the "/ alpha" part so the channels read back exactly
+      const alphaMatch = value.match(/\/\s*([\d.]+)(%?)\s*\)$/)
+      canvasCtx.clearRect(0, 0, 1, 1)
+      canvasCtx.fillStyle = "rgba(0, 0, 0, 0)"
+      canvasCtx.fillStyle = value.replace(/\/[^/)]*\)$/, ")")
+      canvasCtx.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = canvasCtx.getImageData(0, 0, 1, 1).data
+      // A value the canvas can't parse leaves the transparent fill in place
+      if (a > 0) {
+        const alpha = alphaMatch
+          ? parseFloat(alphaMatch[1]) / (alphaMatch[2] ? 100 : 1)
+          : a / 255
+        parsed = { r, g, b, a: alpha }
+      }
+    }
+    parsedColors.set(value, parsed)
+    return parsed
+  }
+
+  const normalizeRgb = (value: string): string | null => {
+    const color = parseCssColor(value)
+    if (!color || color.a === 0) return null
+    return `rgb(${color.r}, ${color.g}, ${color.b})`
   }
 
   const clearHighlights = () => {
@@ -45,6 +86,9 @@ const highlightColorInPage = (targetRgb: string) => {
 
   clearHighlights()
   const root = ensureOverlayRoot()
+  // Overlays are absolute inside the root so they move with the page when it
+  // scrolls. Offsetting by the root's own position covers a positioned <body>
+  const rootRect = root.getBoundingClientRect()
   const nodes = Array.from(document.querySelectorAll("*"))
   const limit = Math.min(nodes.length, 2000)
 
@@ -80,9 +124,9 @@ const highlightColorInPage = (targetRgb: string) => {
 
     const overlay = document.createElement("div")
     overlay.setAttribute("data-ecp-highlight", "true")
-    overlay.style.position = "fixed"
-    overlay.style.left = `${rect.left}px`
-    overlay.style.top = `${rect.top}px`
+    overlay.style.position = "absolute"
+    overlay.style.left = `${rect.left - rootRect.left}px`
+    overlay.style.top = `${rect.top - rootRect.top}px`
     overlay.style.width = `${rect.width}px`
     overlay.style.height = `${rect.height}px`
     overlay.style.border = "2px solid #ff4d4f"
@@ -110,18 +154,52 @@ const clearHighlightsInPage = () => {
 }
 
 const extractColorsInPage = () => {
-  const normalizeRgb = (value: string): string | null => {
+  // Computed styles keep oklch(), lab() and color() as written, so anything
+  // that isn't rgb() is resolved to sRGB by painting it on a 1×1 canvas
+  const canvas = document.createElement("canvas")
+  canvas.width = canvas.height = 1
+  const canvasCtx = canvas.getContext("2d", { willReadFrequently: true })
+  const parsedColors = new Map<string, PageColor | null>()
+  const parseCssColor = (value: string): PageColor | null => {
+    const cached = parsedColors.get(value)
+    if (cached !== undefined) return cached
+    let parsed: PageColor | null = null
     const rgbMatch = value
       .replace(/\s+/g, "")
-      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,(\d*\.?\d+))?\)$/i)
-    if (!rgbMatch) return null
-    const r = Math.max(0, Math.min(255, parseInt(rgbMatch[1], 10)))
-    const g = Math.max(0, Math.min(255, parseInt(rgbMatch[2], 10)))
-    const b = Math.max(0, Math.min(255, parseInt(rgbMatch[3], 10)))
-    const a = rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1
-    if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null
-    if (a === 0) return null
-    return `rgb(${r}, ${g}, ${b})`
+      .match(/^rgba?\(([\d.]+),([\d.]+),([\d.]+)(?:,([\d.]+))?\)$/i)
+    if (rgbMatch) {
+      const channel = (n: string) =>
+        Math.max(0, Math.min(255, Math.round(parseFloat(n))))
+      parsed = {
+        r: channel(rgbMatch[1]),
+        g: channel(rgbMatch[2]),
+        b: channel(rgbMatch[3]),
+        a: rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1
+      }
+    } else if (canvasCtx) {
+      // Paint without the "/ alpha" part so the channels read back exactly
+      const alphaMatch = value.match(/\/\s*([\d.]+)(%?)\s*\)$/)
+      canvasCtx.clearRect(0, 0, 1, 1)
+      canvasCtx.fillStyle = "rgba(0, 0, 0, 0)"
+      canvasCtx.fillStyle = value.replace(/\/[^/)]*\)$/, ")")
+      canvasCtx.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = canvasCtx.getImageData(0, 0, 1, 1).data
+      // A value the canvas can't parse leaves the transparent fill in place
+      if (a > 0) {
+        const alpha = alphaMatch
+          ? parseFloat(alphaMatch[1]) / (alphaMatch[2] ? 100 : 1)
+          : a / 255
+        parsed = { r, g, b, a: alpha }
+      }
+    }
+    parsedColors.set(value, parsed)
+    return parsed
+  }
+
+  const normalizeRgb = (value: string): string | null => {
+    const color = parseCssColor(value)
+    if (!color || color.a === 0) return null
+    return `rgb(${color.r}, ${color.g}, ${color.b})`
   }
 
   const rgbToHex = (rgb: string): string => {
@@ -202,12 +280,15 @@ const extractColorsInPage = () => {
     }))
 }
 
-export const analyzeWebpageColors = async (): Promise<AnalyzedColor[]> => {
+/** Resolves `null` when the page can't be scripted. */
+export const analyzeWebpageColors = async (): Promise<
+  AnalyzedColor[] | null
+> => {
   return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs?.[0]
       if (!tab?.id) {
-        resolve([])
+        resolve(null)
         return
       }
 
@@ -217,8 +298,11 @@ export const analyzeWebpageColors = async (): Promise<AnalyzedColor[]> => {
           func: extractColorsInPage
         },
         (results) => {
-          const colors = (results?.[0]?.result ?? []) as AnalyzedColor[]
-          resolve(colors)
+          if (chrome.runtime.lastError || !results?.[0]) {
+            resolve(null)
+            return
+          }
+          resolve((results[0].result ?? []) as AnalyzedColor[])
         }
       )
     })
@@ -240,7 +324,11 @@ export const highlightWebpageColor = async (color: AnalyzedColor) => {
           func: highlightColorInPage,
           args: [color.rgb]
         },
-        () => resolve()
+        () => {
+          // Reading lastError stops "Unchecked runtime.lastError" console noise
+          void chrome.runtime.lastError
+          resolve()
+        }
       )
     })
   })
@@ -249,6 +337,8 @@ export const highlightWebpageColor = async (color: AnalyzedColor) => {
 export interface ContrastPair {
   foreground: string
   background: string
+  /** WCAG large text (≥ 24px, or ≥ 18.66px bold), judged at 3:1 / 4.5:1 */
+  largeText: boolean
   count: number
   selectors: string[]
 }
@@ -260,62 +350,114 @@ export interface WCAGAnalysisData {
   pairs: ContrastPair[]
 }
 
-const extractContrastPairsInPage = (): Array<{
-  foreground: string
-  background: string
-  count: number
-  selectors: string[]
-}> => {
-  const normalizeRgb = (value: string): string | null => {
+const extractContrastPairsInPage = (): ContrastPair[] => {
+  // Computed styles keep oklch(), lab() and color() as written, so anything
+  // that isn't rgb() is resolved to sRGB by painting it on a 1×1 canvas
+  const canvas = document.createElement("canvas")
+  canvas.width = canvas.height = 1
+  const canvasCtx = canvas.getContext("2d", { willReadFrequently: true })
+  const parsedColors = new Map<string, PageColor | null>()
+  const parseCssColor = (value: string): PageColor | null => {
+    const cached = parsedColors.get(value)
+    if (cached !== undefined) return cached
+    let parsed: PageColor | null = null
     const rgbMatch = value
       .replace(/\s+/g, "")
-      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,(\d*\.?\d+))?\)$/i)
-    if (!rgbMatch) return null
-    const r = Math.max(0, Math.min(255, parseInt(rgbMatch[1], 10)))
-    const g = Math.max(0, Math.min(255, parseInt(rgbMatch[2], 10)))
-    const b = Math.max(0, Math.min(255, parseInt(rgbMatch[3], 10)))
-    const alpha = rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1
-    if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null
-    if (alpha === 0) return null
-    return `rgb(${r}, ${g}, ${b})`
-  }
-
-  const rgbToHex = (rgb: string): string => {
-    const match = rgb
-      .replace(/\s+/g, "")
-      .match(/^rgb\((\d+),(\d+),(\d+)\)$/i)
-    if (!match) return "#000000"
-    const r = parseInt(match[1], 10)
-    const g = parseInt(match[2], 10)
-    const b = parseInt(match[3], 10)
-    return (
-      "#" +
-      [r, g, b]
-        .map((x) => x.toString(16).padStart(2, "0"))
-        .join("")
-        .toUpperCase()
-    )
-  }
-
-  const isTransparent = (value: string): boolean => {
-    if (!value || value === "transparent") return true
-    const m = value.replace(/\s+/g, "").match(/^rgba?\(\d+,\d+,\d+,?(\d*\.?\d+)?\)$/i)
-    if (!m) return false
-    const a = m[1] !== undefined ? parseFloat(m[1]) : 1
-    return a === 0
-  }
-
-  const getEffectiveBg = (el: Element): string => {
-    let current: Element | null = el
-    while (current) {
-      const bg = window.getComputedStyle(current).backgroundColor
-      if (!isTransparent(bg)) {
-        const normalized = normalizeRgb(bg)
-        if (normalized) return normalized
+      .match(/^rgba?\(([\d.]+),([\d.]+),([\d.]+)(?:,([\d.]+))?\)$/i)
+    if (rgbMatch) {
+      const channel = (n: string) =>
+        Math.max(0, Math.min(255, Math.round(parseFloat(n))))
+      parsed = {
+        r: channel(rgbMatch[1]),
+        g: channel(rgbMatch[2]),
+        b: channel(rgbMatch[3]),
+        a: rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1
       }
-      current = current.parentElement
+    } else if (canvasCtx) {
+      // Paint without the "/ alpha" part so the channels read back exactly
+      const alphaMatch = value.match(/\/\s*([\d.]+)(%?)\s*\)$/)
+      canvasCtx.clearRect(0, 0, 1, 1)
+      canvasCtx.fillStyle = "rgba(0, 0, 0, 0)"
+      canvasCtx.fillStyle = value.replace(/\/[^/)]*\)$/, ")")
+      canvasCtx.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = canvasCtx.getImageData(0, 0, 1, 1).data
+      // A value the canvas can't parse leaves the transparent fill in place
+      if (a > 0) {
+        const alpha = alphaMatch
+          ? parseFloat(alphaMatch[1]) / (alphaMatch[2] ? 100 : 1)
+          : a / 255
+        parsed = { r, g, b, a: alpha }
+      }
     }
-    return "rgb(255, 255, 255)"
+    parsedColors.set(value, parsed)
+    return parsed
+  }
+
+  // Premultiplied RGBA, so compositing is a weighted sum
+  type Layer = [number, number, number, number]
+  const premultiply = ({ r, g, b, a }: PageColor): Layer => [
+    r * a,
+    g * a,
+    b * a,
+    a
+  ]
+  // Porter-Duff "source over": `top` painted onto `bottom`
+  const over = (top: Layer, bottom: Layer): Layer =>
+    top.map((v, i) => v + bottom[i] * (1 - top[3])) as Layer
+  const fade = (layer: Layer, opacity: number): Layer =>
+    layer.map((v) => v * opacity) as Layer
+  const toHex = (layer: Layer): string =>
+    "#" +
+    layer
+      .slice(0, 3)
+      .map((v) =>
+        Math.max(0, Math.min(255, Math.round(v)))
+          .toString(16)
+          .padStart(2, "0")
+      )
+      .join("")
+      .toUpperCase()
+
+  const elementLayers = new Map<
+    Element,
+    { background: Layer; opacity: number }
+  >()
+  const getElementLayer = (el: Element) => {
+    let layer = elementLayers.get(el)
+    if (!layer) {
+      const styles = window.getComputedStyle(el)
+      const background = parseCssColor(styles.backgroundColor)
+      const opacity = parseFloat(styles.opacity)
+      layer = {
+        background: background ? premultiply(background) : [0, 0, 0, 0],
+        opacity: Number.isNaN(opacity) ? 1 : opacity
+      }
+      elementLayers.set(el, layer)
+    }
+    return layer
+  }
+
+  // Composite the text and the backgrounds behind it the way the browser
+  // paints them: each ancestor's background sits under everything inside it,
+  // its opacity fades that whole group, and the page canvas is white.
+  // Background images are not taken into account.
+  const resolveRenderedColors = (el: Element, textColor: PageColor) => {
+    let text = premultiply(textColor)
+    let background: Layer = [0, 0, 0, 0]
+    for (let node: Element | null = el; node; node = node.parentElement) {
+      const layer = getElementLayer(node)
+      text = over(text, layer.background)
+      background = over(background, layer.background)
+      if (layer.opacity < 1) {
+        text = fade(text, layer.opacity)
+        background = fade(background, layer.opacity)
+      }
+    }
+    const white: Layer = [255, 255, 255, 1]
+    return {
+      foreground: toHex(over(text, white)),
+      background: toHex(over(background, white))
+    }
   }
 
   const buildRawSelector = (el: Element): string => {
@@ -364,6 +506,7 @@ const extractContrastPairsInPage = (): Array<{
     {
       foreground: string
       background: string
+      largeText: boolean
       count: number
       selectors: Map<string, string>
     }
@@ -384,15 +527,20 @@ const extractContrastPairsInPage = (): Array<{
     if (!hasText) continue
 
     const styles = window.getComputedStyle(el)
-    const fgRgb = normalizeRgb(styles.color)
-    if (!fgRgb) continue
+    const textColor = parseCssColor(styles.color)
+    if (!textColor || textColor.a === 0) continue
 
-    const bgRgb = getEffectiveBg(el)
-    if (fgRgb === bgRgb) continue
+    const { foreground: fgHex, background: bgHex } = resolveRenderedColors(
+      el,
+      textColor
+    )
+    if (fgHex === bgHex) continue
 
-    const fgHex = rgbToHex(fgRgb)
-    const bgHex = rgbToHex(bgRgb)
-    const key = `${fgHex}|${bgHex}`
+    const fontSize = parseFloat(styles.fontSize)
+    const isBold = parseInt(styles.fontWeight, 10) >= 700
+    const largeText = fontSize >= 24 || (isBold && fontSize >= 18.66)
+
+    const key = `${fgHex}|${bgHex}|${largeText}`
     const rawSelector = buildRawSelector(el)
     const readableSelector = buildReadableSelector(el)
 
@@ -406,6 +554,7 @@ const extractContrastPairsInPage = (): Array<{
       pairs.set(key, {
         foreground: fgHex,
         background: bgHex,
+        largeText,
         selectors,
         count: 1
       })
@@ -421,6 +570,7 @@ const extractContrastPairsInPage = (): Array<{
     }))
 }
 
+/** Resolves `null` when the page can't be scripted. */
 export const analyzeWebpageContrastPairs =
   async (): Promise<WCAGAnalysisData | null> => {
     return new Promise((resolve) => {
@@ -440,7 +590,12 @@ export const analyzeWebpageContrastPairs =
             func: extractContrastPairsInPage
           },
           async (results) => {
-            const pairs = (results?.[0]?.result ?? []) as ContrastPair[]
+            // Keep the previous report instead of overwriting it with nothing
+            if (chrome.runtime.lastError || !results?.[0]) {
+              resolve(null)
+              return
+            }
+            const pairs = (results[0].result ?? []) as ContrastPair[]
             const data: WCAGAnalysisData = {
               url,
               title,
@@ -469,7 +624,11 @@ export const clearWebpageHighlights = async () => {
           target: { tabId: tab.id },
           func: clearHighlightsInPage
         },
-        () => resolve()
+        () => {
+          // Reading lastError stops "Unchecked runtime.lastError" console noise
+          void chrome.runtime.lastError
+          resolve()
+        }
       )
     })
   })

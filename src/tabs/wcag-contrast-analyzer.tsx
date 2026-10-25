@@ -16,7 +16,7 @@ import ColorHubLogo from "~components/color hub/logo"
 import { Dropdown, type DropdownOption } from "~components/dropdown"
 import type { WCAGAnalysisData } from "~features/webpage-color-analyzer"
 import { getContrastRatio } from "~utils/color-utils"
-import { calculateWCAGCompliance } from "~utils/wcag-utils"
+import { calculateWCAGCompliance, formatRatio } from "~utils/wcag-utils"
 
 type FilterKey = "all" | "fail-aa" | "pass-aa" | "pass-aaa"
 type SortKey = "ratio-desc" | "ratio-asc" | "count"
@@ -37,6 +37,10 @@ interface AnalyzedPair {
   normalAAA: boolean
   largeAA: boolean
   largeAAA: boolean
+  largeText: boolean
+  /** AA / AAA at the thresholds that apply to this pair's text size */
+  passAA: boolean
+  passAAA: boolean
 }
 
 const Badge = ({ pass, label }: { pass: boolean; label: string }) => (
@@ -55,10 +59,15 @@ const Badge = ({ pass, label }: { pass: boolean; label: string }) => (
   </span>
 )
 
-const RatioPill = ({ ratio }: { ratio: number }) => {
-  const passAA = ratio >= 4.5
-  const passAAA = ratio >= 7
-
+const RatioPill = ({
+  ratio,
+  passAA,
+  passAAA
+}: {
+  ratio: number
+  passAA: boolean
+  passAAA: boolean
+}) => {
   return (
     <span
       className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-sm font-extrabold tabular-nums shadow-sm ${
@@ -68,7 +77,7 @@ const RatioPill = ({ ratio }: { ratio: number }) => {
             ? "bg-sky-100 text-sky-800 ring-1 ring-sky-200/80"
             : "bg-red-100 text-red-700 ring-1 ring-red-200/80"
       }`}>
-      {ratio.toFixed(2)}:1
+      {formatRatio(ratio)}:1
     </span>
   )
 }
@@ -129,12 +138,13 @@ const StatCard = ({
   )
 }
 
-const openInContrastChecker = (fg: string, bg: string) => {
+const openInContrastChecker = (fg: string, bg: string, largeText: boolean) => {
   const fgParam = fg.replace("#", "")
   const bgParam = bg.replace("#", "")
+  // Without the flag the checker judges a large-text pair as normal text
   const url =
     chrome.runtime.getURL("tabs/contrast-checker.html") +
-    `?fg=${fgParam}&bg=${bgParam}`
+    `?fg=${fgParam}&bg=${bgParam}${largeText ? "&large=1" : ""}`
   chrome.tabs.create({ url })
 }
 
@@ -167,22 +177,27 @@ export default function WCAGContrastAnalyzerPage() {
     return data.pairs.map((pair) => {
       const ratio = getContrastRatio(pair.foreground, pair.background)
       const wcag = calculateWCAGCompliance(ratio)
+      // Reports saved before large text was detected have no flag
+      const largeText = pair.largeText === true
       return {
         ...pair,
         ratio,
         normalAA: wcag.normalAA,
         normalAAA: wcag.normalAAA,
         largeAA: wcag.largeAA,
-        largeAAA: wcag.largeAAA
+        largeAAA: wcag.largeAAA,
+        largeText,
+        passAA: largeText ? wcag.largeAA : wcag.normalAA,
+        passAAA: largeText ? wcag.largeAAA : wcag.normalAAA
       }
     })
   }, [data])
 
   const filtered = useMemo(() => {
     let result = analyzedPairs
-    if (filter === "fail-aa") result = result.filter((p) => !p.normalAA)
-    else if (filter === "pass-aa") result = result.filter((p) => p.normalAA)
-    else if (filter === "pass-aaa") result = result.filter((p) => p.normalAAA)
+    if (filter === "fail-aa") result = result.filter((p) => !p.passAA)
+    else if (filter === "pass-aa") result = result.filter((p) => p.passAA)
+    else if (filter === "pass-aaa") result = result.filter((p) => p.passAAA)
 
     return [...result].sort((a, b) => {
       if (sortBy === "ratio-asc") return a.ratio - b.ratio
@@ -193,9 +208,9 @@ export default function WCAGContrastAnalyzerPage() {
 
   const stats = useMemo(() => {
     const total = analyzedPairs.length
-    const failAA = analyzedPairs.filter((p) => !p.normalAA).length
-    const passAA = analyzedPairs.filter((p) => p.normalAA).length
-    const passAAA = analyzedPairs.filter((p) => p.normalAAA).length
+    const failAA = analyzedPairs.filter((p) => !p.passAA).length
+    const passAA = analyzedPairs.filter((p) => p.passAA).length
+    const passAAA = analyzedPairs.filter((p) => p.passAAA).length
     return { total, failAA, passAA, passAAA }
   }, [analyzedPairs])
 
@@ -366,9 +381,18 @@ export default function WCAGContrastAnalyzerPage() {
                 key={`${pair.foreground}-${pair.background}-${i}`}
                 className="relative z-0 rounded-3xl border border-slate-200/80 bg-white shadow-sm hover:z-20 hover:shadow-lg hover:-translate-y-0.5 transition overflow-visible flex flex-col">
                 <div className="flex items-center justify-between rounded-t-[calc(1.5rem-1px)] border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-slate-500">
-                    Pair {i + 1}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-slate-500">
+                      Pair {i + 1}
+                    </p>
+                    {pair.largeText && (
+                      <span
+                        title="WCAG large text: judged at 3:1 (AA) and 4.5:1 (AAA)"
+                        className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-200/80">
+                        Large text
+                      </span>
+                    )}
+                  </div>
                   <div className="relative group/uses">
                     <span className="inline-flex cursor-help items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600 transition-colors group-hover/uses:bg-slate-200">
                       {pair.count} {pair.count === 1 ? "use" : "uses"}
@@ -406,7 +430,11 @@ export default function WCAGContrastAnalyzerPage() {
                         foreground={pair.foreground}
                         background={pair.background}
                       />
-                      <RatioPill ratio={pair.ratio} />
+                      <RatioPill
+                        ratio={pair.ratio}
+                        passAA={pair.passAA}
+                        passAAA={pair.passAAA}
+                      />
                     </div>
                   </div>
 
@@ -422,7 +450,11 @@ export default function WCAGContrastAnalyzerPage() {
                   <button
                     type="button"
                     onClick={() =>
-                      openInContrastChecker(pair.foreground, pair.background)
+                      openInContrastChecker(
+                        pair.foreground,
+                        pair.background,
+                        pair.largeText
+                      )
                     }
                     className="mt-auto w-full flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-colors">
                     <TestTubes className="size-3.5" />
