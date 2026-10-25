@@ -18,7 +18,8 @@ pnpm exec prettier --write <files>
 ```
 
 - There is no test suite and no linter.
-- CI (`.github/workflows/ci.yml`, Node 20 / pnpm 9) runs only `pnpm install --frozen-lockfile` and `pnpm build`, so keep `pnpm-lock.yaml` in sync with `package.json`.
+- CI (`.github/workflows/ci.yml`, Node 20 / pnpm 9) runs only `pnpm install --frozen-lockfile` and `pnpm build`, so keep `pnpm-lock.yaml` in sync with `package.json`. pnpm 9 rejects a lockfile with more than one YAML document, which pnpm 11+ creates by prepending a `packageManagerDependencies` block. Don't commit that block.
+- `.github/workflows/release.yml` publishes the GitHub release on every push to `main` whose `package.json` version has no tag yet (see Releases below).
 - Prettier is not enforced, and several existing files are unformatted. Format only the files you touch so diffs stay small.
 
 ## Architecture
@@ -83,4 +84,5 @@ The code calls `chrome.storage.local` directly. `@plasmohq/storage` and `@plasmo
 - **Releases:**
   - Bump `version` in `package.json`.
   - Add an entry to `CHANGELOG.md` (Keep a Changelog format).
-  - Add an entry to `RELEASE_NOTES.md`.
+  - Add an entry to `RELEASE_NOTES.md` under a `## X.Y.Z (YYYY-MM-DD)` heading. The release workflow uses that section as the release description, falling back to GitHub's generated notes when it's missing.
+  - Merge to `main`. The release workflow then creates tag `vX.Y.Z` and a release with the built zip attached. Don't tag by hand, or the workflow skips that version.
