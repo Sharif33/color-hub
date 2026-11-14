@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
 ## [Unreleased]
+### Added
+- Gradient Studio, a page for making and editing CSS gradients, opened from the gradient button next to `Adjust` in the popup (it starts from the current color).
+  - Linear, radial and conic gradients. Drag stops along a strip, click it to add one, and set each stop's color, opacity and position. Arrow keys move a focused stop and Delete removes it.
+  - Blend in sRGB, OKLab or OKLCH (shorter or longer hue), with the three shown side by side so sRGB's gray middle is plain to see.
+  - In OKLCH, gray stops are written with their neighbor's hue, because Chrome otherwise gives them an arbitrary one and white to blue turns cyan.
+  - Ease in, ease out or ease in-out between stops, for overlays that fade out without a hard edge, and an optional grain layer against banding.
+  - Stop colors from the eyedropper (`Pick start & end` picks the first and last), your color history or saved palettes, or any CSS color typed in, names and `lab()` included.
+  - The address keeps the gradient, so reloading or sharing the link opens it again. Paste a gradient from your code to edit it.
+- Gradient ideas: analogous, complementary, triadic, monochrome or random gradients built on the selected stop in OKLCH, or from your history or a saved palette. Shuffle (or Space) applies a new one and keeps locked stops. Presets, and mesh backgrounds made of the gradient's colors as layered radial gradients.
+- Gradient code as CSS (with a plain sRGB fallback line for `in oklab`/`in oklch`), Tailwind v4 and v3 classes (palette names within ΔE 2), SwiftUI, Jetpack Compose, Flutter, Android XML and SVG. Each format says what it can't reproduce exactly, such as Android's three-color limit.
+- Gradient checks: whether text stays readable across the gradient (the lowest WCAG ratio and where it is, the weakest APCA Lc, and whether white or dark text works better), plus warnings for a gray middle, look-alike stops, ends that look the same with color blindness, and banding. Most come with a one-click fix.
+- Save gradients in Gradient Studio, rename them, and delete them with Undo. They're included in backups.
+- `Page colors` in the popup lists the page's gradients, including those on `::before` and `::after` and older `-webkit-` ones. Click one to outline its elements, copy its CSS, or edit it in Gradient Studio.
+- The hover inspector shows an element's gradient. Once pinned, copy it or open it in Gradient Studio.
+
 ### Changed
+- The WCAG report and the hover inspector measure text on a gradient against the gradient's lowest-contrast color behind the text, instead of the color under the gradient. Such pairs are marked `On gradient`.
 - Redesigned the popup. The home screen shows the current color as a full-width band with its HEX, OKLCH and nearest Tailwind color (each copies on click), Pick from screen and Adjust, recent colors, and the page tools with a one-line description each. Results, the color editor, history, saved palettes and vision simulation each open as their own screen with a Back button, instead of expanding inside one long list.
 - The popup follows the system's light or dark mode.
 - The popup is 360px wide (was 300px), and the color editor's hue slider is horizontal.

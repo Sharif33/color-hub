@@ -128,7 +128,7 @@ const mergeColorScans = (scans: ColorScan[]): ColorAnalysis => {
  * (some frames can't be scripted), runs it in the top frame only. Resolves
  * `null` when the page can't be scripted at all.
  */
-const runInAllFrames = <Args extends unknown[], Result>(
+export const runInAllFrames = <Args extends unknown[], Result>(
   tabId: number,
   func: (...args: Args) => Result,
   args: Args
@@ -153,7 +153,7 @@ const runInAllFrames = <Args extends unknown[], Result>(
     run(true, () => run(false, () => resolve(null)))
   })
 
-const getActiveTab = (): Promise<chrome.tabs.Tab | null> =>
+export const getActiveTab = (): Promise<chrome.tabs.Tab | null> =>
   new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       resolve(tabs?.[0] ?? null)
@@ -595,6 +595,11 @@ export interface ContrastPair {
   background: string
   /** WCAG large text (≥ 24px, or ≥ 18.66px bold), judged at 3:1 / 4.5:1 */
   largeText: boolean
+  /**
+   * The text is on a gradient, and `background` is the gradient's
+   * lowest-contrast color behind it. Missing before 1.3
+   */
+  onGradient?: boolean
   count: number
   selectors: string[]
 }
@@ -631,6 +636,7 @@ const mergeContrastScans = (
         existing.selectors = Array.from(
           new Set([...existing.selectors, ...pair.selectors])
         )
+        if (pair.onGradient) existing.onGradient = true
       } else {
         merged.set(key, { ...pair, selectors: [...pair.selectors] })
       }
@@ -713,9 +719,302 @@ const extractContrastPairsInPage = (): ContrastScan => {
       .join("")
       .toUpperCase()
 
+  // WCAG 2 contrast ratio of two opaque hex colors
+  const contrastOf = (a: string, b: string) => {
+    const luminance = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((i) => {
+        const n = parseInt(hex.slice(i, i + 2), 16) / 255
+        return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4)
+      })
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+    const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+    return (high + 0.05) / (low + 0.05)
+  }
+
+  // The index of the ")" that closes the "(" at `open`
+  const closingParen = (text: string, open: number): number => {
+    let depth = 0
+    for (let i = open; i < text.length; i += 1) {
+      if (text[i] === "(") depth += 1
+      else if (text[i] === ")") {
+        depth -= 1
+        if (depth === 0) return i
+      }
+    }
+    return -1
+  }
+
+  // Splits on commas outside parentheses
+  const splitArgs = (text: string): string[] => {
+    const parts: string[] = []
+    let depth = 0
+    let current = ""
+    for (const char of text) {
+      if (char === "(") depth += 1
+      else if (char === ")") depth -= 1
+      if (char === "," && depth === 0) {
+        parts.push(current.trim())
+        current = ""
+      } else current += char
+    }
+    if (current.trim()) parts.push(current.trim())
+    return parts
+  }
+
+  /**
+   * The colors the top gradient of a `background-image` shows behind
+   * `textRect`, premultiplied. For a linear gradient that's the stretch of
+   * it under the text; for radial, conic and repeating gradients, all of its
+   * colors. Blends are worked out in sRGB, so a gradient blended `in oklch`
+   * comes out close, not exact. Empty when there's no gradient to read.
+   */
+  const gradientColorsBehind = (
+    value: string,
+    box: DOMRect,
+    textRect: DOMRect
+  ): Layer[] => {
+    const start =
+      /(-webkit-)?(repeating-)?(linear|radial|conic)-gradient\(/i.exec(value)
+    if (!start) return []
+    const open = start.index + start[0].length - 1
+    const close = closingParen(value, open)
+    if (close === -1) return []
+    const args = splitArgs(value.slice(open + 1, close))
+    const colorStart =
+      /^(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix)\(/i
+    const config = args.length && !colorStart.test(args[0]) ? args.shift()! : ""
+    const linear = start[3].toLowerCase() === "linear" && !start[2]
+    // A -webkit- gradient names the side it starts from (`top` is today's
+    // `to bottom`), and its angles start at 3 o'clock, counterclockwise
+    const legacy = Boolean(start[1])
+    const opposite: Record<string, string> = {
+      top: "bottom",
+      bottom: "top",
+      left: "right",
+      right: "left"
+    }
+
+    // The direction as an angle, 0 pointing up. A corner's angle depends on
+    // the box: the line is at right angles to the other diagonal
+    let angle = 180
+    if (linear) {
+      const side = legacy
+        ? config.match(/^\s*((?:top|bottom|left|right)(?:\s+[a-z]+)?)\s*$/i)
+        : config.match(/\bto\s+([a-z\s]+?)(?:\s+in\s|$)/i)
+      const degrees = config.match(/(-?[\d.]+)(deg|turn|rad|grad)/i)
+      if (side) {
+        const words = side[1]
+          .toLowerCase()
+          .split(/\s+/)
+          .map((word) => (legacy ? opposite[word] ?? word : word))
+        const v = words.includes("top")
+          ? "top"
+          : words.includes("bottom")
+            ? "bottom"
+            : ""
+        const h = words.includes("left")
+          ? "left"
+          : words.includes("right")
+            ? "right"
+            : ""
+        const corner = (Math.atan2(box.height, box.width) * 180) / Math.PI
+        const corners: Record<string, number> = {
+          "top right": corner,
+          "bottom right": 180 - corner,
+          "bottom left": 180 + corner,
+          "top left": 360 - corner
+        }
+        // An old -webkit- corner points straight along the diagonal
+        const diagonal =
+          (Math.atan2(
+            h === "right" ? box.width : -box.width,
+            v === "bottom" ? -box.height : box.height
+          ) *
+            180) /
+          Math.PI
+        angle =
+          v && h
+            ? legacy
+              ? diagonal
+              : corners[`${v} ${h}`]
+            : v === "top"
+              ? 0
+              : v === "bottom"
+                ? 180
+                : h === "left"
+                  ? 270
+                  : 90
+      } else if (degrees) {
+        const n = parseFloat(degrees[1])
+        const unit = degrees[2].toLowerCase()
+        const degreesValue =
+          unit === "turn"
+            ? n * 360
+            : unit === "rad"
+              ? (n * 180) / Math.PI
+              : unit === "grad"
+                ? n * 0.9
+                : n
+        angle = legacy ? 90 - degreesValue : degreesValue
+      }
+    }
+    const radians = (angle * Math.PI) / 180
+    const dx = Math.sin(radians)
+    const dy = -Math.cos(radians)
+    // Long enough that the corners are at 0% and 100%
+    const length = Math.abs(box.width * dx) + Math.abs(box.height * dy) || 1
+
+    // Splits on spaces outside parentheses, so a calc() stays one word
+    const splitSpaces = (text: string): string[] => {
+      const words: string[] = []
+      let depth = 0
+      let current = ""
+      for (const char of text) {
+        if (char === "(") depth += 1
+        else if (char === ")") depth -= 1
+        if (depth === 0 && /\s/.test(char)) {
+          if (current) words.push(current)
+          current = ""
+        } else current += char
+      }
+      if (current) words.push(current)
+      return words
+    }
+
+    // A stop position as a fraction of the gradient: %, px (linear only),
+    // deg or turn, or a calc() adding and subtracting them, which computed
+    // styles keep as written. Null when it can't be read, which spreads the
+    // stop out like one without a position
+    const toFraction = (word: string): number | null => {
+      const calc = word.match(/^calc\((.*)\)$/i)
+      const terms = calc ? calc[1].trim().split(/\s+([+-])\s+/) : [word]
+      let total = 0
+      for (let i = 0; i < terms.length; i += 2) {
+        const term = terms[i].match(/^(-?[\d.]+)(%|px|deg|turn)?$/i)
+        if (!term) return null
+        const n = parseFloat(term[1])
+        const unit = (term[2] ?? "").toLowerCase()
+        const fraction =
+          unit === "%"
+            ? n / 100
+            : unit === "px"
+              ? linear
+                ? n / length
+                : null
+              : unit === "deg"
+                ? n / 360
+                : unit === "turn"
+                  ? n
+                  : n === 0
+                    ? 0
+                    : null
+        if (fraction === null || !Number.isFinite(fraction)) return null
+        total += (i > 0 && terms[i - 1] === "-" ? -1 : 1) * fraction
+      }
+      return total
+    }
+
+    const stops: Array<{ color: Layer; at: number | null }> = []
+    for (const arg of args) {
+      const colorMatch = colorStart.exec(arg)
+      // A color hint; the blend around it is taken as straight
+      if (!colorMatch) continue
+      const end = closingParen(arg, colorMatch[0].length - 1)
+      const color = parseCssColor(arg.slice(0, end + 1))
+      if (!color) return []
+      const positions = splitSpaces(arg.slice(end + 1))
+        .slice(0, 2)
+        .map(toFraction)
+      for (const at of positions.length ? positions : [null])
+        stops.push({ color: premultiply(color), at })
+    }
+    if (stops.length === 0) return []
+    // Missing positions, filled in the way CSS does
+    if (stops[0].at === null) stops[0].at = 0
+    if (stops[stops.length - 1].at === null) stops[stops.length - 1].at = 1
+    let max = 0
+    for (const stop of stops) {
+      if (stop.at === null) continue
+      stop.at = Math.max(stop.at, max)
+      max = stop.at
+    }
+    for (let i = 1; i < stops.length; i += 1) {
+      if (stops[i].at !== null) continue
+      let j = i
+      while (stops[j].at === null) j += 1
+      const from = stops[i - 1].at as number
+      const to = stops[j].at as number
+      for (let k = i; k < j; k += 1)
+        stops[k].at = from + ((to - from) * (k - i + 1)) / (j - i + 1)
+      i = j
+    }
+    const at = (index: number) => stops[index].at as number
+    const colorAt = (t: number): Layer => {
+      if (t <= at(0)) return stops[0].color
+      for (let i = 1; i < stops.length; i += 1) {
+        if (t < at(i)) {
+          const u = (t - at(i - 1)) / (at(i) - at(i - 1) || 1)
+          return stops[i - 1].color.map(
+            (v, k) => v + (stops[i].color[k] - v) * u
+          ) as Layer
+        }
+      }
+      return stops[stops.length - 1].color
+    }
+
+    if (!linear) {
+      // Every stop, and halfway between neighbors
+      return stops.flatMap((stop, i) =>
+        i === 0 ? [stop.color] : [colorAt((at(i - 1) + at(i)) / 2), stop.color]
+      )
+    }
+    // Where the text's corners fall along the gradient line
+    const cx = box.left + box.width / 2
+    const cy = box.top + box.height / 2
+    const along = [
+      [textRect.left, textRect.top],
+      [textRect.right, textRect.top],
+      [textRect.left, textRect.bottom],
+      [textRect.right, textRect.bottom]
+    ].map(([x, y]) => ((x - cx) * dx + (y - cy) * dy) / length + 0.5)
+    const low = Math.min(1, Math.max(0, Math.min(...along)))
+    const high = Math.max(low, Math.min(1, Math.max(...along)))
+    const points = [low, high]
+    for (let i = 0; i < stops.length; i += 1)
+      if (at(i) > low && at(i) < high) points.push(at(i))
+    for (let i = 1; i < 8; i += 1) points.push(low + ((high - low) * i) / 8)
+    return points.map(colorAt)
+  }
+
+  // Where the element's own text is drawn: its text nodes' bounds, which
+  // for a block can be much narrower than the block itself
+  const textBounds = (el: Element): DOMRect => {
+    const range = document.createRange()
+    let bounds: DOMRect | null = null
+    for (const node of Array.from(el.childNodes)) {
+      if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim())
+        continue
+      range.selectNodeContents(node)
+      const rect = range.getBoundingClientRect()
+      if (rect.width === 0 && rect.height === 0) continue
+      bounds = bounds
+        ? new DOMRect(
+            Math.min(bounds.left, rect.left),
+            Math.min(bounds.top, rect.top),
+            Math.max(bounds.right, rect.right) -
+              Math.min(bounds.left, rect.left),
+            Math.max(bounds.bottom, rect.bottom) -
+              Math.min(bounds.top, rect.top)
+          )
+        : rect
+    }
+    return bounds ?? el.getBoundingClientRect()
+  }
+
   const elementLayers = new Map<
     Element,
-    { background: Layer; opacity: number }
+    { background: Layer; opacity: number; hasGradient: boolean; image: string }
   >()
   const getElementLayer = (el: Element) => {
     let layer = elementLayers.get(el)
@@ -725,7 +1024,9 @@ const extractContrastPairsInPage = (): ContrastScan => {
       const opacity = parseFloat(styles.opacity)
       layer = {
         background: background ? premultiply(background) : [0, 0, 0, 0],
-        opacity: Number.isNaN(opacity) ? 1 : opacity
+        opacity: Number.isNaN(opacity) ? 1 : opacity,
+        hasGradient: styles.backgroundImage.includes("gradient("),
+        image: styles.backgroundImage
       }
       elementLayers.set(el, layer)
     }
@@ -743,15 +1044,24 @@ const extractContrastPairsInPage = (): ContrastScan => {
 
   // Composite the text and the backgrounds behind it the way the browser
   // paints them: each ancestor's background sits under everything inside it,
-  // its opacity fades that whole group, and the page canvas is white.
-  // Background images are not taken into account.
-  const resolveRenderedColors = (el: Element, textColor: PageColor) => {
+  // its opacity fades that whole group, and the page canvas is white. Images
+  // are left out, except that `gradient` paints one color of a gradient
+  // background over that element's background color.
+  const resolveRenderedColors = (
+    el: Element,
+    textColor: PageColor,
+    gradient?: { node: Element; color: Layer }
+  ) => {
     let text = premultiply(textColor)
     let background: Layer = [0, 0, 0, 0]
     for (let node: Element | null = el; node; node = flatParent(node)) {
       const layer = getElementLayer(node)
-      text = over(text, layer.background)
-      background = over(background, layer.background)
+      const fill =
+        gradient && gradient.node === node
+          ? over(gradient.color, layer.background)
+          : layer.background
+      text = over(text, fill)
+      background = over(background, fill)
       if (layer.opacity < 1) {
         text = fade(text, layer.opacity)
         background = fade(background, layer.opacity)
@@ -820,6 +1130,7 @@ const extractContrastPairsInPage = (): ContrastScan => {
       foreground: string
       background: string
       largeText: boolean
+      onGradient: boolean
       count: number
       selectors: Map<string, string>
     }
@@ -909,11 +1220,43 @@ const extractContrastPairsInPage = (): ContrastScan => {
     const textColor = parseCssColor(styles.color)
     if (!textColor || textColor.a === 0) continue
 
-    const { foreground: fgHex, background: bgHex } = resolveRenderedColors(
+    let { foreground: fgHex, background: bgHex } = resolveRenderedColors(
       el,
       textColor
     )
-    if (fgHex === bgHex) continue
+    // On a gradient, judge the text by the lowest-contrast color of the part
+    // of the gradient behind it, not by the color under the gradient
+    let onGradient = false
+    let gradientNode: Element | null = el
+    while (gradientNode && !getElementLayer(gradientNode).hasGradient)
+      gradientNode = flatParent(gradientNode)
+    if (gradientNode) {
+      const colors = gradientColorsBehind(
+        getElementLayer(gradientNode).image,
+        gradientNode.getBoundingClientRect(),
+        textBounds(el)
+      )
+      let worst = Infinity
+      const backgrounds = new Set<string>()
+      for (const color of colors) {
+        const rendered = resolveRenderedColors(el, textColor, {
+          node: gradientNode,
+          color
+        })
+        backgrounds.add(rendered.background)
+        const ratio = contrastOf(rendered.foreground, rendered.background)
+        if (ratio < worst) {
+          worst = ratio
+          fgHex = rendered.foreground
+          bgHex = rendered.background
+        }
+      }
+      // An opaque background between the text and the gradient hides it
+      onGradient = backgrounds.size > 1
+    }
+    // Text in its background's color is usually hidden on purpose, but on a
+    // gradient it's text that vanishes where the colors meet
+    if (fgHex === bgHex && !onGradient) continue
 
     const fontSize = parseFloat(styles.fontSize)
     const isBold = parseInt(styles.fontWeight, 10) >= 700
@@ -927,6 +1270,7 @@ const extractContrastPairsInPage = (): ContrastScan => {
       const existing = pairs.get(key)!
       existing.count++
       if (rawSelector) existing.selectors.set(rawSelector, readableSelector)
+      if (onGradient) existing.onGradient = true
     } else {
       const selectors = new Map<string, string>()
       if (rawSelector) selectors.set(rawSelector, readableSelector)
@@ -934,6 +1278,7 @@ const extractContrastPairsInPage = (): ContrastScan => {
         foreground: fgHex,
         background: bgHex,
         largeText,
+        onGradient,
         selectors,
         count: 1
       })

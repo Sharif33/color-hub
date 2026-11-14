@@ -1,4 +1,9 @@
 import { COLOR_HISTORY_LIMIT } from "./constants"
+import {
+  parseSavedGradients,
+  SAVED_GRADIENTS_LIMIT,
+  type SavedGradient
+} from "./saved-gradients"
 import { parseSettings } from "./settings"
 
 const BACKUP_APP = "color-hub"
@@ -10,6 +15,7 @@ const BACKUP_KEYS = [
   "lastPickedColor",
   "WEBPAGES_COLORS",
   "savedContrastPairs",
+  "savedGradients",
   "settings"
 ] as const
 
@@ -26,6 +32,7 @@ export interface BackupSummary {
   historyColors: number
   palettes: number
   savedPairs: number
+  savedGradients: number
   settings: boolean
 }
 
@@ -98,6 +105,9 @@ export const parseBackup = (
   if (Array.isArray(source.savedContrastPairs)) {
     data.savedContrastPairs = source.savedContrastPairs.filter(isSavedPair)
   }
+  if (Array.isArray(source.savedGradients)) {
+    data.savedGradients = parseSavedGradients(source.savedGradients)
+  }
   if (isObject(source.settings)) {
     data.settings = parseSettings(source.settings)
   }
@@ -115,6 +125,8 @@ export const parseBackup = (
         .length,
       savedPairs:
         (data.savedContrastPairs as unknown[] | undefined)?.length ?? 0,
+      savedGradients:
+        (data.savedGradients as unknown[] | undefined)?.length ?? 0,
       settings: data.settings !== undefined
     }
   }
@@ -122,9 +134,10 @@ export const parseBackup = (
 
 /**
  * Writes a parsed backup to storage. `merge` adds the backup's history,
- * palettes and pairs to what's here (a backup palette replaces the saved one
- * for the same site) and keeps the current settings. `replace` makes storage
- * match the backup.
+ * palettes, pairs and gradients to what's here (a backup palette replaces
+ * the saved one for the same site; of two copies of a gradient, the one
+ * changed last is kept) and keeps the current settings. `replace` makes
+ * storage match the backup.
  */
 export const applyBackup = async (
   backup: Backup,
@@ -174,6 +187,22 @@ export const applyBackup = async (
       ...existing,
       ...(data.savedContrastPairs as Entry[]).filter(isNew)
     ]
+  }
+  if (data.savedGradients) {
+    // One entry per id: whichever copy was changed last, so an old backup
+    // doesn't undo newer edits. Then newest first, as the list is kept, so
+    // the cap drops the oldest
+    const byId = new Map<string, SavedGradient>()
+    for (const entry of [
+      ...parseSavedGradients(current.savedGradients),
+      ...(data.savedGradients as SavedGradient[])
+    ]) {
+      const kept = byId.get(entry.id)
+      if (!kept || entry.updatedAt > kept.updatedAt) byId.set(entry.id, entry)
+    }
+    next.savedGradients = Array.from(byId.values())
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, SAVED_GRADIENTS_LIMIT)
   }
   if (data.settings && !current.settings) {
     next.settings = data.settings

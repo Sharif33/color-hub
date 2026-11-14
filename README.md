@@ -19,8 +19,13 @@ Extract colors, analyze palettes, and enhance your design workflow.
 - Export a page's contrast report as a GitHub issue, Markdown, CSV or JSON
 - Simulate color vision deficiencies and blurred vision on any page
 - Hover any element to inspect its colors, contrast and CSS variables
+- Make gradients in Gradient Studio: linear, radial and conic, blended in sRGB, OKLab or OKLCH, with easing and grain
+- Generate gradient ideas from a color or a palette, presets and mesh backgrounds
+- Export gradients as CSS, Tailwind v4/v3, SwiftUI, Compose, Flutter, Android XML or SVG
+- Check text contrast across a gradient, and catch gray middles, color-blind clashes and banding
+- List a page's gradients, and measure text on gradients in the WCAG report and the inspector
 - Right-click menu for the page tools, and for checking the contrast of a selected color code
-- Back up and restore your history, palettes, contrast pairs and settings as a JSON file
+- Back up and restore your history, palettes, contrast pairs, gradients and settings as a JSON file
 - Fast access in a compact popup UI
 
 ## Install (Development)

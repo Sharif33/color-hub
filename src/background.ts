@@ -1,8 +1,15 @@
-import { contrastCheckerUrl } from "~features/color-inspector"
+import {
+  contrastCheckerUrl,
+  gradientFromMessage
+} from "~features/color-inspector"
 import {
   handleContextMenuClick,
   registerContextMenus
 } from "~features/context-menu"
+import {
+  encodeGradient,
+  openGradientStudio
+} from "~features/gradient-studio/open"
 import { COLOR_HISTORY_LIMIT } from "~lib/constants"
 import { hexToRgb } from "~utils/color-utils"
 
@@ -29,6 +36,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "OPEN_CONTRAST_CHECKER") {
     const url = contrastCheckerUrl(message)
     if (url) void chrome.tabs.create({ url })
+  }
+  if (message.type === "OPEN_GRADIENT_STUDIO") {
+    const gradient = gradientFromMessage(message)
+    if (gradient) openGradientStudio({ g: encodeGradient(gradient) })
   }
   return false
 })

@@ -29,7 +29,7 @@ pnpm exec prettier --write <files>
   - `src/popup.tsx` → the action popup.
   - `src/background.ts` → the service worker.
   - `src/options.tsx` → the options page (Settings), opened with `chrome.runtime.openOptionsPage()`.
-  - `src/tabs/<name>.tsx` → an extension page at `tabs/<name>.html`, opened with `chrome.tabs.create({ url: chrome.runtime.getURL("tabs/<name>.html") })`. The pages are `contrast-checker`, `wcag-contrast-analyzer` and `palette-studio`. Palette Studio is opened with `openPaletteStudio()` from `~features/palette-studio/pending`, and takes `?domain=` or `?pending=1`, plus an optional `&view=colors|export|lint|compare`.
+  - `src/tabs/<name>.tsx` → an extension page at `tabs/<name>.html`, opened with `chrome.tabs.create({ url: chrome.runtime.getURL("tabs/<name>.html") })`. The pages are `contrast-checker`, `wcag-contrast-analyzer`, `palette-studio` and `gradient-studio`. Palette Studio is opened with `openPaletteStudio()` from `~features/palette-studio/pending`, and takes `?domain=` or `?pending=1`, plus an optional `&view=colors|export|lint|compare`. Gradient Studio is opened with `openGradientStudio()` from `~features/gradient-studio/open`, and takes `?color=RRGGBB` (start from one color) or `?g=` (a gradient from `encodeGradient`, base64url JSON, checked with `normalizeGradient`), plus `&id=` for the saved gradient being edited. It keeps `?g=` up to date as you edit.
 - The manifest is generated from the `manifest` field in `package.json`, so change permissions there. Per CONTRIBUTING, permission or privacy changes also need a `README.md` update. `contextMenus` is used by the right-click menu (`~features/context-menu`), which the background registers on install and shows only on http(s) and file pages.
 - `.plasmo/` and `build/` are generated. Don't edit them.
 - The path alias `~` maps to `src/` (e.g. `~utils/color-utils`). Images are imported as `data-base64:~assets/...`. One directory name contains a space: `src/components/color hub/`.
@@ -41,6 +41,7 @@ The extension has no content scripts. All work on the page goes through `chrome.
 - Page scans run in every frame (`runInAllFrames`, which falls back to the top frame if a frame can't be scripted) and walk into open and closed shadow roots. Each frame returns raw counts that `mergeColorScans` / `mergeContrastScans` add up, so ranking and limits are applied after merging.
 - CSS variables are matched to colors by value: `scanColorsInPage` reads custom property names from same-origin stylesheets (cross-origin ones throw and are skipped) and resolves them on `:root`, then `body`. Variables defined only on deeper elements aren't found.
 - `scanColorsInPage` both extracts colors and highlights one, so the two always agree on which elements use a color. A color's key is its `AnalyzedColor.rgb` value: `rgb(r, g, b)`, or `rgba(r, g, b, a)` with alpha rounded to two decimals.
+- Page gradients (`~features/page-gradients`) are found by their own scan, run next to the color scan: each gradient layer of `background-image`, on elements and their `::before`/`::after`, with its colors rewritten as `rgb()`/`rgba()` through the canvas so the extension side can parse it. Highlighting a gradient uses the same overlay markers as colors.
 - The hover inspector (`~features/color-inspector`) runs in the top frame only. Its UI is in a closed shadow root under `[data-ecp-inspector]`. Calling `toggleInspectorInPage` again stops it, through `window.__ecpInspector` in the isolated world.
 - The vision simulation (`~features/vision-simulation`) adds a `<style>` and an SVG filter, both marked `[data-ecp-vision="<mode>"]`, to the top frame. Its filter on `html` covers iframes too. It isn't cleared when the popup closes, only by choosing Off or reloading. The color matrices are duplicated inside the injected function.
 - `chrome://`, `edge://`, `about:` and similar pages can't be scripted (see `src/utils/restricted-urls.ts`). The popup disables page-based features on them.
@@ -56,6 +57,7 @@ The code calls `chrome.storage.local` directly. `@plasmohq/storage` and `@plasmo
 | `savedContrastPairs` | `SavedPair[]` | Contrast checker's saved pairs (`~hooks/use-saved-pairs`). |
 | `WCAG_ANALYSIS_PENDING` | `WCAGAnalysisData` | Handoff from the popup to the `wcag-contrast-analyzer` tab. |
 | `PALETTE_PENDING` | `PendingPalette` | Handoff of unsaved analyzer results from the popup to Palette Studio, which can save them into `WEBPAGES_COLORS`. |
+| `savedGradients` | `SavedGradient[]` | Gradient Studio's saved gradients, newest first (`~lib/saved-gradients`, `useSavedGradients`). Always read through `parseSavedGradients`, which checks each gradient. |
 | `settings` | `Settings` | User preferences (`~lib/settings`, `~hooks/use-settings`). Always read through `parseSettings`, which fills in defaults. |
 
 Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING` handoffs. A new persistent key should be added to `BACKUP_KEYS`, with a shape check in `parseBackup`.
@@ -64,6 +66,7 @@ Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING`
 - Messages go to the background with raw `chrome.runtime.sendMessage`:
   - `COLOR_PICKED` saves the color to history and to `lastPickedColor`.
   - `OPEN_CONTRAST_CHECKER` (`{ foreground, background, largeText }`, from the hover inspector in the page) opens the Contrast Checker. `contrastCheckerUrl()` validates the hex values first, because the message comes from page context.
+  - `OPEN_GRADIENT_STUDIO` (`{ css, width, height }`, from the inspector) opens a gradient in Gradient Studio, after `gradientFromMessage()` parses it.
 - The analyzer's `save()` and `cancel()` clear the page overlays themselves (`clearWebpageHighlights()` in the analyzer).
 - The popup opens a port named `"popup"` and posts `{ highlightedTabId }` on it when it highlights a page. When the port disconnects (the popup closes), the background clears highlights on that tab. It doesn't query the active tab, because the user may have switched tabs.
 - **Pick Color** uses the EyeDropper API from the popup (`features/pick-outside-browser-color`):
@@ -73,16 +76,22 @@ Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING`
 
 ### Feature flows
 - **WCAG analysis:**
-  1. The popup calls `analyzeWebpageContrastPairs()`. It scans text elements and composites the text color over every ancestor's background color and `opacity` up to the root, on a white canvas, to get the colors actually rendered (background images are ignored). Each pair is flagged `largeText` (≥ 24px, or ≥ 18.66px bold) and judged at 3:1 / 4.5:1. It resolves `null` and writes nothing when the page can't be scripted.
+  1. The popup calls `analyzeWebpageContrastPairs()`. It scans text elements and composites the text color over every ancestor's background color and `opacity` up to the root, on a white canvas, to get the colors actually rendered. On a gradient background, the text is judged by the gradient's lowest-contrast color behind it (`onGradient` on the pair): for a linear gradient, the stretch under the text's own bounds; for radial, conic and repeating ones, all of its colors. Gradient blends are taken in sRGB there, so `in oklch` gradients come out close, not exact. Other background images are ignored. The inspector does the same. Each pair is flagged `largeText` (≥ 24px, or ≥ 18.66px bold) and judged at 3:1 / 4.5:1. It resolves `null` and writes nothing when the page can't be scripted.
   2. It writes the result to `WCAG_ANALYSIS_PENDING`.
   3. It opens `tabs/wcag-contrast-analyzer.html`.
 - **Contrast checker** (`tabs/contrast-checker.tsx`) reads `?fg=RRGGBB&bg=RRGGBB` (no `#`), plus `&large=1` to start at 24px so the pair is judged as large text. The WCAG analyzer links into it this way.
-- **Color math** is in pure functions in `src/utils/color-utils.ts` (parsing, conversion including OKLab/OKLCH and CIE Lab, CIEDE2000 `deltaE2000`, alpha blending, relative luminance, contrast ratio), `src/utils/color-formats.ts` (writing a color as CSS or platform code), `src/utils/tailwind-match.ts` (nearest Tailwind color), `src/utils/apca.ts` (APCA Lc) and `src/utils/wcag-utils.ts` (AA/AAA thresholds, the large-text rule, accessible-color suggestions). Use them from extension pages, but not inside injected functions.
+- **Color math** is in pure functions in `src/utils/color-utils.ts` (parsing, conversion including OKLab/OKLCH and CIE Lab, CIEDE2000 `deltaE2000`, alpha blending, relative luminance, contrast ratio), `src/utils/color-formats.ts` (writing a color as CSS or platform code), `src/utils/tailwind-match.ts` (nearest Tailwind color), `src/utils/apca.ts` (APCA Lc), `src/utils/wcag-utils.ts` (AA/AAA thresholds, the large-text rule, accessible-color suggestions) and `src/utils/gradient.ts` (gradients: parsing CSS, sampling as CSS Color 4 does, and writing CSS). Use them from extension pages, but not inside injected functions.
+- **Gradients** (`src/utils/gradient.ts`):
+  - A `Gradient` is one linear, radial or conic layer with `#rrggbb(aa)` stops, an interpolation space (`srgb`, `oklab`, `oklch`), a hue method, an easing and grain. Easing and other platforms' sRGB-only blending are written as extra sampled stops (`srgbStops`, `gradientToCss`), added until straight blends match the curve.
+  - In OKLCH, Chrome gives gray stops an arbitrary hue (white to blue turns cyan) instead of treating it as missing, so `gradientToCss` writes grays as `oklch(L 0.001 H)` with the neighbor's hue. Keep that, or the CSS won't match the preview's sampling.
+  - Exports for Tailwind, SwiftUI, Compose, Flutter, Android XML and SVG are in `~features/gradient-studio/export`, each with notes on what it can't do exactly.
+  - `parseGradient` needs the box the gradient paints (`box`, plus `viewport` for vw/vh) to resolve lengths, `calc()` and radial sizes. Computed styles keep those as written, apart from em/rem. The page scan and the inspector send the layer's `background-size` tile, and pasted CSS uses the preview's size. Radial gradients are always farthest-corner in the model, so a radial size is kept by scaling the stops.
 
 ### Popup
 - `src/popup.tsx` keeps all state (current color, picker, history, analyzer, vision mode, the highlight port) and shows one screen at a time: `home`, `adjust`, `history`, `results`, `saved` or `vision`. Every screen except home starts with `ScreenHeader` (Back plus a title).
 - Leaving `results` calls `analyzer.cancel()`, which discards the results and clears the page highlights.
 - Shared popup pieces are in `src/features/popup/`: `HomeScreen`, `ColorHero` (the current-color band), `ScreenHeader`, `ColorSwatchButton` and `ConfirmDialog` (`useConfirm`). Each feature's screen lives in its feature folder (`PageColorsScreen`, `SavedPalettesScreen`, `HistoryScreen`, `AdjustScreen`, `VisionScreen`).
+- The gradient button next to Adjust opens Gradient Studio with the current color. It's icon-only because with a label, Pick from screen no longer fits on one line. Page gradients are listed at the bottom of `PageColorsScreen` (`PageGradientsSection`).
 - Only the popup supports dark mode. It uses `dark:` classes and sets `color-scheme: light dark` on its own document. The tab pages and the options page are light only.
 - The home screen must fit in Chrome's 600px popup height without scrolling. Check its height after adding anything to it.
 - The current color is the only strong color in the popup. Primary buttons are slate rather than blue, so they don't compete with it.
@@ -91,7 +100,7 @@ Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING`
 ### Code layout
 - `src/features/<feature>/` holds a feature's components and its hooks.
 - `src/hooks/` holds hooks shared by the contrast checker tab.
-- **Background-safe modules:** the background imports the analyzer, inspector, vision, screenshot, context-menu and `~features/palette-studio/pending` modules. Keep those free of React. Screenshot decoding uses `createImageBitmap` and `OffscreenCanvas` because the service worker has no DOM.
+- **Background-safe modules:** the background imports the analyzer, inspector, vision, screenshot, context-menu, `~features/palette-studio/pending` and `~features/gradient-studio/open` modules, and the popup imports `~features/page-gradients`. Keep those free of React. Screenshot decoding uses `createImageBitmap` and `OffscreenCanvas` because the service worker has no DOM.
 - **Tailwind palettes** live in `src/lib/tailwind-palettes.ts`, which is generated. Regenerate it with `node scripts/gen-tailwind-palettes.mjs <v4 theme.css> <v4 version>` instead of editing it. v3 is read from the installed `tailwindcss`. v4 isn't installed, so download its `theme.css` from `https://unpkg.com/tailwindcss@<version>/theme.css`.
 
 ## Conventions

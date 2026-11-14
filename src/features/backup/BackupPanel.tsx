@@ -17,6 +17,7 @@ const describe = (summary: BackupSummary) =>
     `${summary.historyColors} history ${summary.historyColors === 1 ? "color" : "colors"}`,
     `${summary.palettes} ${summary.palettes === 1 ? "palette" : "palettes"}`,
     `${summary.savedPairs} saved ${summary.savedPairs === 1 ? "pair" : "pairs"}`,
+    `${summary.savedGradients} ${summary.savedGradients === 1 ? "gradient" : "gradients"}`,
     ...(summary.settings ? ["settings"] : [])
   ].join(" · ")
 
@@ -32,7 +33,7 @@ const MODES: Array<{ value: ImportMode; label: string; description: string }> =
       value: "replace",
       label: "Replace",
       description:
-        "Delete your current history, palettes, saved pairs and settings, then restore the backup."
+        "Delete your current history, palettes, saved pairs, gradients and settings, then restore the backup."
     }
   ]
 

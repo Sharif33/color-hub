@@ -8,6 +8,12 @@ import { useColorHistory } from "~features/color-history/useColorHistory"
 import { toggleColorInspector } from "~features/color-inspector"
 import { AdjustScreen } from "~features/color-picker/AdjustScreen"
 import { useColorPicker } from "~features/color-picker/useColorPicker"
+import {
+  colorParam,
+  encodeGradient,
+  openGradientStudio
+} from "~features/gradient-studio/open"
+import { toEditableGradient } from "~features/page-gradients"
 import { openPaletteStudio } from "~features/palette-studio/pending"
 import { pickOutsideBrowserColor } from "~features/pick-outside-browser-color"
 import { ColorHero } from "~features/popup/ColorHero"
@@ -159,20 +165,23 @@ function IndexPopup() {
     })
   }, [])
 
+  // Tells the background which tab to clear highlights on when we close
+  const reportHighlight = () => {
+    if (activeTabIdRef.current === null) return
+    highlightedTabIdRef.current = activeTabIdRef.current
+    portRef.current?.postMessage({ highlightedTabId: activeTabIdRef.current })
+  }
+
   const analyzer = useWebpageAnalyzer({
     onAnalyzeFailed: () => {
       setPageRestricted(true)
       setScreen("home")
     },
     onSelectColor: (color) => {
-      if (activeTabIdRef.current !== null) {
-        highlightedTabIdRef.current = activeTabIdRef.current
-        portRef.current?.postMessage({
-          highlightedTabId: activeTabIdRef.current
-        })
-      }
+      reportHighlight()
       showColor(toColorEntry(color))
-    }
+    },
+    onHighlightGradient: reportHighlight
   })
 
   const goHome = () => setScreen("home")
@@ -351,6 +360,8 @@ function IndexPopup() {
             domain={analyzer.analyzedDomain}
             colors={analyzer.analyzedColors}
             selected={analyzer.selectedAnalyzedColor}
+            gradients={analyzer.analyzedGradients}
+            selectedGradient={analyzer.selectedGradient}
             isAnalyzing={analyzer.isAnalyzing}
             truncatedScan={analyzer.truncatedScan}
             isSaving={analyzer.isSaving}
@@ -360,6 +371,11 @@ function IndexPopup() {
             copiedField={copiedField}
             onCopy={copyToClipboard}
             onSelect={analyzer.selectColor}
+            onSelectGradient={analyzer.selectGradient}
+            onEditGradient={(pageGradient) => {
+              const gradient = toEditableGradient(pageGradient)
+              if (gradient) openGradientStudio({ g: encodeGradient(gradient) })
+            }}
             onSave={() => void saveResults()}
             onOpenInStudio={(view) => void analyzer.openInStudio(view)}
             onBack={closeResults}
@@ -423,6 +439,11 @@ function IndexPopup() {
             onVision={() => setScreen("vision")}
             onOpenSaved={() => setScreen("saved")}
             onOpenStudio={() => openPaletteStudio()}
+            onOpenGradients={() =>
+              openGradientStudio(
+                currentHex ? { color: colorParam(currentHex) } : {}
+              )
+            }
             onOpenChecker={() =>
               chrome.tabs.create({
                 url: chrome.runtime.getURL("tabs/contrast-checker.html")
