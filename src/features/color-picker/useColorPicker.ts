@@ -39,9 +39,9 @@ export const useColorPicker = (initial: HSV) => {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    const { height } = canvas
-    const gradient = ctx.createLinearGradient(0, 0, 0, height)
-    // Top to bottom must follow hue 0 → 360, matching handleHueInteraction
+    const { width } = canvas
+    const gradient = ctx.createLinearGradient(0, 0, width, 0)
+    // Left to right must follow hue 0 → 360, matching handleHueInteraction
     gradient.addColorStop(0, "#ff0000")
     gradient.addColorStop(1 / 6, "#ffff00")
     gradient.addColorStop(2 / 6, "#00ff00")
@@ -50,7 +50,7 @@ export const useColorPicker = (initial: HSV) => {
     gradient.addColorStop(5 / 6, "#ff00ff")
     gradient.addColorStop(1, "#ff0000")
     ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, canvas.width, height)
+    ctx.fillRect(0, 0, width, canvas.height)
   }, [])
 
   const handleGradientInteraction = (
@@ -72,9 +72,16 @@ export const useColorPicker = (initial: HSV) => {
     const canvas = hueRef.current
     if (!canvas) return
     const rect = canvas.getBoundingClientRect()
-    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height))
-    setHsv((prev) => ({ ...prev, h: (y / rect.height) * 360 }))
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
+    setHsv((prev) => ({ ...prev, h: (x / rect.width) * 360 }))
   }
+
+  // The canvases mount when the picker's screen opens, after the drawing
+  // effect has already run for the current hue
+  const redraw = useCallback(() => {
+    drawGradient()
+    drawHueSlider()
+  }, [drawGradient, drawHueSlider])
 
   useEffect(() => {
     drawGradient()
@@ -99,8 +106,8 @@ export const useColorPicker = (initial: HSV) => {
         const canvas = hueRef.current
         if (!canvas) return
         const rect = canvas.getBoundingClientRect()
-        const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height))
-        setHsv((prev) => ({ ...prev, h: (y / rect.height) * 360 }))
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
+        setHsv((prev) => ({ ...prev, h: (x / rect.width) * 360 }))
       }
     }
     const handleMouseUp = () => {
@@ -125,6 +132,7 @@ export const useColorPicker = (initial: HSV) => {
     setIsDraggingGradient,
     setIsDraggingHue,
     handleGradientInteraction,
-    handleHueInteraction
+    handleHueInteraction,
+    redraw
   }
 }

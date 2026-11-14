@@ -6,6 +6,7 @@ import "~style.css"
 import ColorHubLogo from "~components/color hub/logo"
 import { Dropdown } from "~components/dropdown"
 import { AlphaIndicator } from "~features/contrast-checker/AlphaIndicator"
+import { ApcaPanel } from "~features/contrast-checker/ApcaPanel"
 import { ColorCard } from "~features/contrast-checker/ColorCard"
 import { ColorPreview } from "~features/contrast-checker/ColorPreview"
 import { ColorSuggestions } from "~features/contrast-checker/ColorSuggestions"
@@ -47,6 +48,7 @@ function ContrastCheckerPage() {
     effectiveForeground,
     effectiveBackground,
     ratio,
+    apcaLc,
     foregroundTextColor,
     backgroundTextColor,
     previewMetaColor,
@@ -247,6 +249,8 @@ function ContrastCheckerPage() {
                 wcag={wcag}
                 largeText={largeText}
               />
+              <div className="h-px bg-slate-100/80 w-full" />
+              <ApcaPanel lc={apcaLc} />
               <div className="h-px bg-slate-100/80 w-full" />
               <ColorSuggestions
                 suggestions={suggestions}

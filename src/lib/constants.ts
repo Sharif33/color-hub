@@ -1,3 +1,6 @@
+/** Picked colors kept in `colorHistory`, newest first */
+export const COLOR_HISTORY_LIMIT = 35
+
 export type PaletteSource =
   | "color-history"
   | "webpage-colors"

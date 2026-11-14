@@ -1,3 +1,13 @@
+import { contrastCheckerUrl } from "~features/color-inspector"
+import {
+  handleContextMenuClick,
+  registerContextMenus
+} from "~features/context-menu"
+import { COLOR_HISTORY_LIMIT } from "~lib/constants"
+import { hexToRgb } from "~utils/color-utils"
+
+import { isRestrictedUrl } from "./utils/restricted-urls"
+
 export {}
 
 interface ColorEntry {
@@ -7,9 +17,6 @@ interface ColorEntry {
   timestamp: number
 }
 
-import { hexToRgb } from "~utils/color-utils"
-import { isRestrictedUrl } from "./utils/restricted-urls"
-
 void initializeBadgeState()
 
 // Listen for color picked events from injected script
@@ -18,11 +25,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     void savePickedColor(message.color as ColorEntry)
     sendResponse({ success: true })
   }
+  // From the hover inspector, running in the page
+  if (message.type === "OPEN_CONTRAST_CHECKER") {
+    const url = contrastCheckerUrl(message)
+    if (url) void chrome.tabs.create({ url })
+  }
   return false
 })
 
 chrome.runtime.onInstalled.addListener(() => {
   void initializeBadgeState()
+  registerContextMenus()
+})
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  void handleContextMenuClick(info, tab)
 })
 
 chrome.runtime.onStartup.addListener(() => {
@@ -32,7 +49,8 @@ chrome.runtime.onStartup.addListener(() => {
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") return
   if (!Object.prototype.hasOwnProperty.call(changes, "lastPickedColor")) return
-  const nextColor = (changes.lastPickedColor?.newValue as ColorEntry | undefined) ?? null
+  const nextColor =
+    (changes.lastPickedColor?.newValue as ColorEntry | undefined) ?? null
   void updateBadgeColor(nextColor)
 })
 
@@ -58,17 +76,17 @@ async function clearWebpageHighlights(tabId: number) {
     if (isRestrictedUrl(url)) {
       return
     }
-    await chrome.scripting.executeScript({
-      target: { tabId },
-      func: () => {
-        const existing = document.querySelectorAll(
-          "[data-ecp-highlight=\"true\"]"
-        )
-        existing.forEach((node) => node.remove())
-        const root = document.getElementById("ecp-highlight-root")
-        if (root) root.remove()
-      }
-    })
+    const func = () => {
+      const existing = document.querySelectorAll('[data-ecp-highlight="true"]')
+      existing.forEach((node) => node.remove())
+      const root = document.getElementById("ecp-highlight-root")
+      if (root) root.remove()
+    }
+    // Highlights are drawn in iframes too. If some frame can't be scripted,
+    // still clear the top frame
+    await chrome.scripting
+      .executeScript({ target: { tabId, allFrames: true }, func })
+      .catch(() => chrome.scripting.executeScript({ target: { tabId }, func }))
   } catch (error) {
     console.error("Error clearing highlights:", error)
   }
@@ -85,7 +103,7 @@ async function savePickedColor(color: ColorEntry) {
     const updated = [
       color,
       ...history.filter((c) => c.hex.toLowerCase() !== hex)
-    ].slice(0, 35)
+    ].slice(0, COLOR_HISTORY_LIMIT)
 
     await chrome.storage.local.set({
       colorHistory: updated,
@@ -122,9 +140,10 @@ async function updateBadgeColor(color: ColorEntry | null) {
     await chrome.action.setBadgeText({ text: " " })
     await chrome.action.setBadgeBackgroundColor({ color: [r, g, b, 255] })
     await chrome.action.setBadgeTextColor({ color: textColor })
-    await chrome.action.setTitle({ title: `Color Hub • Last picked ${color.hex}` })
+    await chrome.action.setTitle({
+      title: `Color Hub • Last picked ${color.hex}`
+    })
   } catch (error) {
     console.error("Error updating badge:", error)
   }
 }
-
