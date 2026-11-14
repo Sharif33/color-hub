@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react"
 
+import {
+  analyzePageGradients,
+  highlightPageGradient,
+  type PageGradient
+} from "~features/page-gradients"
 import { openPendingPalette } from "~features/palette-studio/pending"
 import { analyzeScreenshotColors } from "~features/screenshot-colors"
 
@@ -12,15 +17,22 @@ import {
 
 interface UseWebpageAnalyzerOptions {
   onSelectColor: (color: AnalyzedColor) => void
+  /** Called when a gradient's elements are highlighted on the page */
+  onHighlightGradient?: () => void
   /** Called when the active page can't be scripted. */
   onAnalyzeFailed?: () => void
 }
 
 export const useWebpageAnalyzer = ({
   onSelectColor,
+  onHighlightGradient,
   onAnalyzeFailed
 }: UseWebpageAnalyzerOptions) => {
   const [analyzedColors, setAnalyzedColors] = useState<AnalyzedColor[]>([])
+  const [analyzedGradients, setAnalyzedGradients] = useState<PageGradient[]>([])
+  const [selectedGradient, setSelectedGradient] = useState<PageGradient | null>(
+    null
+  )
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [selectedAnalyzedColor, setSelectedAnalyzedColor] =
     useState<AnalyzedColor | null>(null)
@@ -81,7 +93,10 @@ export const useWebpageAnalyzer = ({
     setIsAnalyzing(true)
     setSaveError(null)
     const domain = await getActiveHostname()
-    const analysis = await analyzeWebpageColors()
+    const [analysis, gradientAnalysis] = await Promise.all([
+      analyzeWebpageColors(),
+      analyzePageGradients()
+    ])
     setIsAnalyzing(false)
     if (!analysis) {
       onAnalyzeFailed?.()
@@ -89,6 +104,8 @@ export const useWebpageAnalyzer = ({
     }
     const { colors, scanned, total } = analysis
     setAnalyzedColors(colors)
+    setAnalyzedGradients(gradientAnalysis?.gradients ?? [])
+    setSelectedGradient(null)
     setSelectedAnalyzedColor(colors[0] ?? null)
     setAnalyzedDomain(domain)
     setAnalysisSource("css")
@@ -108,6 +125,9 @@ export const useWebpageAnalyzer = ({
       return
     }
     setAnalyzedColors(colors)
+    // A screenshot has pixels, not CSS, so it has no gradients to list
+    setAnalyzedGradients([])
+    setSelectedGradient(null)
     setSelectedAnalyzedColor(colors[0] ?? null)
     setAnalyzedDomain(domain ? `${domain} (screenshot)` : null)
     setAnalysisSource("screenshot")
@@ -116,9 +136,17 @@ export const useWebpageAnalyzer = ({
 
   const selectColor = async (color: AnalyzedColor) => {
     setSelectedAnalyzedColor(color)
+    setSelectedGradient(null)
     // Screenshot colors aren't CSS values, so there's nothing to highlight
     if (analysisSource === "css") void highlightWebpageColor(color)
     onSelectColor(color)
+  }
+
+  /** Outlines the elements that use `gradient` on the page */
+  const selectGradient = (gradient: PageGradient) => {
+    setSelectedGradient(gradient)
+    void highlightPageGradient(gradient)
+    onHighlightGradient?.()
   }
 
   /** Resolves `false` when the storage write fails. */
@@ -167,6 +195,8 @@ export const useWebpageAnalyzer = ({
 
   const cancel = () => {
     setAnalyzedColors([])
+    setAnalyzedGradients([])
+    setSelectedGradient(null)
     setSelectedAnalyzedColor(null)
     setAnalyzedDomain(null)
     setTruncatedScan(null)
@@ -184,6 +214,8 @@ export const useWebpageAnalyzer = ({
 
   return {
     analyzedColors,
+    analyzedGradients,
+    selectedGradient,
     selectedAnalyzedColor,
     isAnalyzing,
     analyzedDomain,
@@ -195,6 +227,7 @@ export const useWebpageAnalyzer = ({
     analyze,
     analyzeScreenshot,
     selectColor,
+    selectGradient,
     save,
     cancel,
     openInStudio,

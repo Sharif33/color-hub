@@ -1,5 +1,6 @@
 import {
   ArrowUpRight,
+  Blend,
   Camera,
   ChevronRight,
   Crosshair,
@@ -91,6 +92,7 @@ interface HomeScreenProps {
   onVision: () => void
   onOpenSaved: () => void
   onOpenStudio: () => void
+  onOpenGradients: () => void
   onOpenChecker: () => void
   onOpenSettings: () => void
 }
@@ -168,6 +170,15 @@ export const HomeScreen = (props: HomeScreenProps) => {
           className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
           <SlidersHorizontal className="size-4" />
           Adjust
+        </button>
+        {/* Icon only: with a label, Pick from screen wouldn't fit on one line */}
+        <button
+          type="button"
+          onClick={props.onOpenGradients}
+          title="Make a gradient in Gradient Studio"
+          aria-label="Make a gradient in Gradient Studio"
+          className="flex items-center rounded-lg border border-slate-200 px-2.5 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
+          <Blend className="size-4" />
         </button>
       </div>
 

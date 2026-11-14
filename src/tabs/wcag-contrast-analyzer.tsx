@@ -44,6 +44,8 @@ interface AnalyzedPair {
   largeAA: boolean
   largeAAA: boolean
   largeText: boolean
+  /** Background is the lowest-contrast color of a gradient behind the text */
+  onGradient: boolean
   /** AA / AAA at the thresholds that apply to this pair's text size */
   passAA: boolean
   passAAA: boolean
@@ -193,6 +195,7 @@ export default function WCAGContrastAnalyzerPage() {
         largeAA: wcag.largeAA,
         largeAAA: wcag.largeAAA,
         largeText,
+        onGradient: pair.onGradient === true,
         passAA: largeText ? wcag.largeAA : wcag.normalAA,
         passAAA: largeText ? wcag.largeAAA : wcag.normalAAA
       }
@@ -419,6 +422,13 @@ export default function WCAGContrastAnalyzerPage() {
                         title="WCAG large text: judged at 3:1 (AA) and 4.5:1 (AAA)"
                         className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-200/80">
                         Large text
+                      </span>
+                    )}
+                    {pair.onGradient && (
+                      <span
+                        title="The text is on a gradient. The background shown is the gradient's lowest-contrast color behind the text"
+                        className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-700 ring-1 ring-violet-200/80">
+                        On gradient
                       </span>
                     )}
                   </div>

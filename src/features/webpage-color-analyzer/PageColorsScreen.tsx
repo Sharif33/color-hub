@@ -1,6 +1,8 @@
 import { Loader2, PanelsTopLeft, Save } from "lucide-react"
 import { useMemo } from "react"
 
+import type { PageGradient } from "~features/page-gradients"
+import { PageGradientsSection } from "~features/page-gradients/PageGradientsSection"
 import { findNearDuplicates } from "~features/palette-studio/lint"
 import { ColorSwatchButton } from "~features/popup/ColorSwatchButton"
 import { ScreenHeader } from "~features/popup/ScreenHeader"
@@ -16,6 +18,8 @@ interface PageColorsScreenProps {
   domain: string | null
   colors: AnalyzedColor[]
   selected: AnalyzedColor | null
+  gradients: PageGradient[]
+  selectedGradient: PageGradient | null
   isAnalyzing: boolean
   truncatedScan: { scanned: number; total: number } | null
   isSaving: boolean
@@ -25,6 +29,8 @@ interface PageColorsScreenProps {
   copiedField: string | null
   onCopy: (text: string, field: string) => void
   onSelect: (color: AnalyzedColor) => void
+  onSelectGradient: (gradient: PageGradient) => void
+  onEditGradient: (gradient: PageGradient) => void
   onSave: () => void
   onOpenInStudio: (view?: string) => void
   onBack: () => void
@@ -38,6 +44,8 @@ export const PageColorsScreen = ({
   domain,
   colors,
   selected,
+  gradients,
+  selectedGradient,
   isAnalyzing,
   truncatedScan,
   isSaving,
@@ -47,6 +55,8 @@ export const PageColorsScreen = ({
   copiedField,
   onCopy,
   onSelect,
+  onSelectGradient,
+  onEditGradient,
   onSave,
   onOpenInStudio,
   onBack
@@ -196,6 +206,17 @@ export const PageColorsScreen = ({
                 </details>
               )}
             </div>
+          )}
+
+          {gradients.length > 0 && (
+            <PageGradientsSection
+              gradients={gradients}
+              selected={selectedGradient}
+              copiedField={copiedField}
+              onSelect={onSelectGradient}
+              onCopy={onCopy}
+              onEdit={onEditGradient}
+            />
           )}
         </div>
       )}

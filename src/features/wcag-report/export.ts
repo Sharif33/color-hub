@@ -81,7 +81,7 @@ const toMarkdown = (pairs: ReportPair[], info: ReportInfo): string => {
     "|---|---|---|---|---|---|---|---|---|",
     ...rows.map((row) => `| ${row} |`),
     "",
-    "Ratios are measured on the colors as rendered: text and backgrounds are blended through every ancestor's background color and opacity. Background images aren't considered. Large text (24px, or 18.66px bold) needs 3:1 for AA; other text needs 4.5:1.",
+    "Ratios are measured on the colors as rendered: text and backgrounds are blended through every ancestor's background color and opacity. On a gradient, the background is the gradient's lowest-contrast color behind the text; other background images aren't considered. Large text (24px, or 18.66px bold) needs 3:1 for AA; other text needs 4.5:1.",
     ""
   ].join("\n")
 }

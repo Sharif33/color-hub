@@ -142,7 +142,7 @@ function OptionsPage() {
         <SectionCard
           icon={Archive}
           title="Backup"
-          description="Save your color history, saved palettes, contrast pairs and settings to a file, or restore them on another browser.">
+          description="Save your color history, saved palettes, contrast pairs, gradients and settings to a file, or restore them on another browser.">
           <BackupPanel />
         </SectionCard>
       </main>
