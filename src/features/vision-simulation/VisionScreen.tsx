@@ -1,7 +1,7 @@
 import { Check } from "lucide-react"
 
-import { ScreenHeader } from "~features/popup/ScreenHeader"
-import { cn } from "~lib/cn"
+import { ScreenHeader } from "~/features/popup/ScreenHeader"
+import { cn } from "~/lib/cn"
 
 import { VISION_MODES, type VisionMode } from "./index"
 
@@ -38,7 +38,7 @@ export const VisionScreen = ({ mode, onChange, onBack }: VisionScreenProps) => (
             aria-checked={selected}
             onClick={() => onChange(option.value)}
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500",
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500",
               selected
                 ? "bg-blue-50 dark:bg-blue-950/50"
                 : "hover:bg-slate-100 dark:hover:bg-slate-800"

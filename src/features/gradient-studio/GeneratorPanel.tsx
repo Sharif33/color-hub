@@ -1,10 +1,10 @@
 import { Check, Copy, Moon, Shuffle, Sun } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import { Dropdown } from "~components/dropdown"
-import { cn } from "~lib/cn"
-import { parseColorWithAlpha } from "~utils/color-utils"
-import { backgroundImageCss, sortStops, type Gradient } from "~utils/gradient"
+import { Dropdown } from "~/components/dropdown"
+import { cn } from "~/lib/cn"
+import { parseColorWithAlpha } from "~/utils/color-utils"
+import { backgroundImageCss, sortStops, type Gradient } from "~/utils/gradient"
 
 import {
   generateMesh,
@@ -56,7 +56,7 @@ const Thumbnail = ({
     title={label}
     aria-label={label}
     onClick={onClick}
-    className="relative h-16 overflow-hidden rounded-xl ring-1 ring-black/10 transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:scale-100"
+    className="relative h-16 overflow-hidden rounded-xl ring-1 ring-black/10 transition-transform hover:scale-[1.03] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:scale-100"
     style={CHECKERBOARD}>
     <span
       className="absolute inset-0"
@@ -178,10 +178,10 @@ export const GeneratorPanel = ({
             onClick={tab === "ideas" ? shuffle : shuffleMesh}
             disabled={tab === "ideas" && paletteEmpty}
             title="Shuffle (Space)"
-            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50">
+            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50">
             <Shuffle className="size-3.5" />
             Shuffle
-            <kbd className="rounded bg-white/20 px-1.5 font-sans text-[10px] font-semibold">
+            <kbd className="rounded-sm bg-white/20 px-1.5 font-sans text-[10px] font-semibold">
               Space
             </kbd>
           </button>
@@ -258,7 +258,7 @@ export const GeneratorPanel = ({
                     onChange={(event) =>
                       setRandomizeAngle(event.target.checked)
                     }
-                    className="size-4 rounded accent-blue-600"
+                    className="size-4 rounded-sm accent-blue-600"
                   />
                   Random direction
                 </label>
@@ -329,7 +329,7 @@ export const GeneratorPanel = ({
                     ? "Use the lightest color as the base"
                     : "Use the darkest color as the base"
                 }
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm hover:border-slate-300">
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-xs hover:border-slate-300">
                 {meshDark ? (
                   <Moon className="size-3.5" />
                 ) : (
@@ -341,7 +341,7 @@ export const GeneratorPanel = ({
                 type="button"
                 onClick={() => void copyMesh()}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold shadow-sm",
+                  "flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold shadow-xs",
                   meshCopied
                     ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                     : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"

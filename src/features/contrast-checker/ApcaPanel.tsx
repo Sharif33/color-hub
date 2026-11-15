@@ -1,6 +1,6 @@
 import { Check, X } from "lucide-react"
 
-import { APCA_LEVELS, formatLc } from "~utils/apca"
+import { APCA_LEVELS, formatLc } from "~/utils/apca"
 
 interface ApcaPanelProps {
   lc: number

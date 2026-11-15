@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
 
 import { PALETTE_PENDING_KEY, type PendingPalette } from "./pending"
 
@@ -18,8 +18,10 @@ export const usePalettes = () => {
     chrome.storage.local.get(
       ["WEBPAGES_COLORS", PALETTE_PENDING_KEY],
       (result) => {
-        setSaved(result.WEBPAGES_COLORS || {})
-        setPending(result[PALETTE_PENDING_KEY] ?? null)
+        setSaved((result.WEBPAGES_COLORS as SavedPalettes | undefined) || {})
+        setPending(
+          (result[PALETTE_PENDING_KEY] as PendingPalette | undefined) ?? null
+        )
         setLoaded(true)
       }
     )
@@ -30,10 +32,15 @@ export const usePalettes = () => {
     ) => {
       if (area !== "local") return
       if (changes.WEBPAGES_COLORS) {
-        setSaved(changes.WEBPAGES_COLORS.newValue || {})
+        setSaved(
+          (changes.WEBPAGES_COLORS.newValue as SavedPalettes | undefined) || {}
+        )
       }
       if (changes[PALETTE_PENDING_KEY]) {
-        setPending(changes[PALETTE_PENDING_KEY].newValue ?? null)
+        setPending(
+          (changes[PALETTE_PENDING_KEY].newValue as
+            PendingPalette | undefined) ?? null
+        )
       }
     }
     chrome.storage.onChanged.addListener(listener)

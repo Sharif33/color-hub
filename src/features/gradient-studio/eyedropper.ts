@@ -1,4 +1,4 @@
-import { parseColor } from "~utils/color-utils"
+import { parseColor } from "~/utils/color-utils"
 
 /**
  * Opens the browser's eyedropper. Resolves `#rrggbb`, or null when it's

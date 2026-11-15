@@ -4,9 +4,9 @@ import {
   analyzePageGradients,
   highlightPageGradient,
   type PageGradient
-} from "~features/page-gradients"
-import { openPendingPalette } from "~features/palette-studio/pending"
-import { analyzeScreenshotColors } from "~features/screenshot-colors"
+} from "~/features/page-gradients"
+import { openPendingPalette } from "~/features/palette-studio/pending"
+import { analyzeScreenshotColors } from "~/features/screenshot-colors"
 
 import type { AnalyzedColor } from "./index"
 import {
@@ -54,7 +54,10 @@ export const useWebpageAnalyzer = ({
 
   useEffect(() => {
     chrome.storage.local.get(["WEBPAGES_COLORS"], (result) => {
-      setSavedWebpageColors(result.WEBPAGES_COLORS || {})
+      setSavedWebpageColors(
+        (result.WEBPAGES_COLORS as
+          Record<string, AnalyzedColor[]> | undefined) || {}
+      )
     })
   }, [])
 
@@ -65,7 +68,10 @@ export const useWebpageAnalyzer = ({
     ) => {
       if (area !== "local") return
       if (changes.WEBPAGES_COLORS?.newValue) {
-        setSavedWebpageColors(changes.WEBPAGES_COLORS.newValue || {})
+        setSavedWebpageColors(
+          (changes.WEBPAGES_COLORS.newValue as
+            Record<string, AnalyzedColor[]> | undefined) || {}
+        )
       }
     }
     chrome.storage.onChanged.addListener(listener)
@@ -207,7 +213,10 @@ export const useWebpageAnalyzer = ({
   /** Deletes without asking; callers confirm first */
   const deleteDomain = async (domain: string) => {
     const existing = await chrome.storage.local.get(["WEBPAGES_COLORS"])
-    const next = { ...(existing.WEBPAGES_COLORS || {}) }
+    const next = {
+      ...((existing.WEBPAGES_COLORS as
+        Record<string, AnalyzedColor[]> | undefined) || {})
+    }
     delete next[domain]
     await chrome.storage.local.set({ WEBPAGES_COLORS: next })
   }

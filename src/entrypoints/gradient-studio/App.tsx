@@ -8,33 +8,33 @@ import {
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
-import "~style.css"
+import "~/style.css"
 
-import ColorHubLogo from "~components/color hub/logo"
-import { BlendControls } from "~features/gradient-studio/BlendControls"
-import type { LintIssue } from "~features/gradient-studio/checks"
-import { ChecksPanel } from "~features/gradient-studio/ChecksPanel"
+import ColorHubLogo from "~/components/color hub/logo"
+import { BlendControls } from "~/features/gradient-studio/BlendControls"
+import type { LintIssue } from "~/features/gradient-studio/checks"
+import { ChecksPanel } from "~/features/gradient-studio/ChecksPanel"
 import {
   CssPanel,
   gradientDeclarations
-} from "~features/gradient-studio/CssPanel"
-import { pickScreenColor } from "~features/gradient-studio/eyedropper"
+} from "~/features/gradient-studio/CssPanel"
+import { pickScreenColor } from "~/features/gradient-studio/eyedropper"
 import {
   starterGradient,
   vividMiddle
-} from "~features/gradient-studio/generate"
-import { GeneratorPanel } from "~features/gradient-studio/GeneratorPanel"
-import { GradientStopBar } from "~features/gradient-studio/GradientStopBar"
-import { decodeGradient, encodeGradient } from "~features/gradient-studio/open"
-import { SavedGradientsPanel } from "~features/gradient-studio/SavedGradientsPanel"
-import { ShapeControls } from "~features/gradient-studio/ShapeControls"
-import { StopEditor } from "~features/gradient-studio/StopEditor"
-import { SwatchPicker } from "~features/gradient-studio/SwatchPicker"
-import { CHECKERBOARD, iconButton, Panel } from "~features/gradient-studio/ui"
-import { useColorSources } from "~features/gradient-studio/useColorSources"
-import { useSavedGradients } from "~features/gradient-studio/useSavedGradients"
-import { cn } from "~lib/cn"
-import { hexToRgb, parseColor, parseColorWithAlpha } from "~utils/color-utils"
+} from "~/features/gradient-studio/generate"
+import { GeneratorPanel } from "~/features/gradient-studio/GeneratorPanel"
+import { GradientStopBar } from "~/features/gradient-studio/GradientStopBar"
+import { decodeGradient, encodeGradient } from "~/features/gradient-studio/open"
+import { SavedGradientsPanel } from "~/features/gradient-studio/SavedGradientsPanel"
+import { ShapeControls } from "~/features/gradient-studio/ShapeControls"
+import { StopEditor } from "~/features/gradient-studio/StopEditor"
+import { SwatchPicker } from "~/features/gradient-studio/SwatchPicker"
+import { CHECKERBOARD, iconButton, Panel } from "~/features/gradient-studio/ui"
+import { useColorSources } from "~/features/gradient-studio/useColorSources"
+import { useSavedGradients } from "~/features/gradient-studio/useSavedGradients"
+import { cn } from "~/lib/cn"
+import { hexToRgb, parseColor, parseColorWithAlpha } from "~/utils/color-utils"
 import {
   backgroundImageCss,
   DEFAULT_GRADIENT,
@@ -44,7 +44,7 @@ import {
   sortStops,
   type Gradient,
   type GradientStop
-} from "~utils/gradient"
+} from "~/utils/gradient"
 
 /** Stops the editor lets you add up to */
 const MAX_STOPS = 10
@@ -71,7 +71,7 @@ function GradientStudioPage() {
   const [shuffleSignal, setShuffleSignal] = useState(0)
   // Null picks white or dark, whichever reads better on the gradient
   const [textColor, setTextColor] = useState<string | null>(null)
-  const copiedTimer = useRef<ReturnType<typeof setTimeout>>()
+  const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const previewRef = useRef<HTMLDivElement>(null)
   const sources = useColorSources()
   const savedGradients = useSavedGradients()
@@ -310,7 +310,7 @@ function GradientStudioPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
-      <nav className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-xl">
+      <nav className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 shadow-xs backdrop-blur-xl">
         <div className="container mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-4 px-6">
           <div className="flex items-center gap-3">
             <ColorHubLogo size={28} className="text-blue-600" />
@@ -331,7 +331,7 @@ function GradientStudioPage() {
                     : "Save this gradient in this browser"
               }
               className={cn(
-                "flex items-center gap-2 rounded-xl border px-5 py-2 text-sm font-bold shadow-sm transition-all",
+                "flex items-center gap-2 rounded-xl border px-5 py-2 text-sm font-bold shadow-xs transition-all",
                 isSaved
                   ? "cursor-default border-emerald-200 bg-emerald-50 text-emerald-700"
                   : "border-slate-200 bg-white text-slate-700 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md active:translate-y-0"
@@ -347,7 +347,7 @@ function GradientStudioPage() {
               type="button"
               onClick={() => void copy(gradientDeclarations(gradient))}
               className={cn(
-                "flex items-center gap-2 rounded-xl border px-5 py-2 text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0",
+                "flex items-center gap-2 rounded-xl border px-5 py-2 text-sm font-bold shadow-xs transition-all hover:-translate-y-0.5 active:translate-y-0",
                 copied
                   ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                   : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-md"
@@ -443,7 +443,7 @@ function GradientStudioPage() {
             </Panel>
           </div>
 
-          <div className="order-first flex flex-col gap-8 lg:order-none lg:col-span-7 xl:col-span-8">
+          <div className="order-first flex flex-col gap-8 lg:order-0 lg:col-span-7 xl:col-span-8">
             <div
               ref={previewRef}
               className={cn(

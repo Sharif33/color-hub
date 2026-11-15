@@ -1,4 +1,4 @@
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
 
 // Kept apart from the React hooks, so the background script can use it
 
@@ -17,7 +17,7 @@ export interface PendingPalette {
 export const openPaletteStudio = (params: Record<string, string> = {}) => {
   const query = new URLSearchParams(params).toString()
   const url = chrome.runtime.getURL(
-    `tabs/palette-studio.html${query ? `?${query}` : ""}`
+    `palette-studio.html${query ? `?${query}` : ""}`
   )
   void chrome.tabs.create({ url })
 }

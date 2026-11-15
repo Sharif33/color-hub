@@ -6,7 +6,7 @@ import {
   readSettings,
   SETTINGS_KEY,
   type Settings
-} from "~lib/settings"
+} from "~/lib/settings"
 
 export const useSettings = (): Settings => {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)

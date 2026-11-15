@@ -6,8 +6,8 @@ import {
   SAVED_GRADIENTS_KEY,
   SAVED_GRADIENTS_LIMIT,
   type SavedGradient
-} from "~lib/saved-gradients"
-import type { Gradient } from "~utils/gradient"
+} from "~/lib/saved-gradients"
+import type { Gradient } from "~/utils/gradient"
 
 const read = async (): Promise<SavedGradient[]> => {
   const result = await chrome.storage.local.get([SAVED_GRADIENTS_KEY])

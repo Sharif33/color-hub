@@ -2,7 +2,7 @@ import {
   formatRatio,
   type ColorSuggestion,
   type SuggestionTarget
-} from "~utils/wcag-utils"
+} from "~/utils/wcag-utils"
 
 interface ColorSuggestionsProps {
   suggestions: ColorSuggestion[]
@@ -51,7 +51,7 @@ export function ColorSuggestions({
             <h2 className="text-sm font-bold tracking-widest text-slate-400 uppercase">
               Reach Excellent (AAA)
             </h2>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-700 uppercase shadow-sm shadow-emerald-100/50">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-700 uppercase shadow-xs shadow-emerald-100/50">
               AA passed
             </span>
           </div>
@@ -81,11 +81,11 @@ export function ColorSuggestions({
               key={`${s.hex}-${s.level}-${s.target}`}
               type="button"
               onClick={() => onApply(s.hex, s.target)}
-              className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 text-left shadow-sm transition-all hover:border-blue-400 hover:shadow-md hover:ring-1 hover:ring-blue-400 active:scale-[0.98]">
+              className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 text-left shadow-xs transition-all hover:border-blue-400 hover:shadow-md hover:ring-1 hover:ring-blue-400 active:scale-[0.98]">
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex items-center justify-center rounded-xl size-10 text-base font-bold shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-105"
+                    className="flex items-center justify-center rounded-xl size-10 text-base font-bold shadow-xs ring-1 ring-black/5 transition-transform group-hover:scale-105"
                     style={{
                       backgroundColor: previewBg,
                       color: previewFg

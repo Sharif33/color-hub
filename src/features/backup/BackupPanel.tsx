@@ -7,8 +7,8 @@ import {
   parseBackup,
   type Backup,
   type BackupSummary
-} from "~lib/backup"
-import { cn } from "~lib/cn"
+} from "~/lib/backup"
+import { cn } from "~/lib/cn"
 
 type ImportMode = "merge" | "replace"
 
@@ -104,14 +104,14 @@ export const BackupPanel = () => {
         <button
           type="button"
           onClick={() => void handleExport()}
-          className="flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700">
+          className="flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-slate-700">
           <Download className="size-4" />
           Export backup
         </button>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-slate-300">
+          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-xs hover:border-slate-300">
           <Upload className="size-4" />
           Import backup…
         </button>
@@ -167,7 +167,7 @@ export const BackupPanel = () => {
               type="button"
               onClick={() => void handleImport()}
               className={cn(
-                "rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm",
+                "rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-xs",
                 mode === "replace"
                   ? "bg-red-600 hover:bg-red-700"
                   : "bg-blue-600 hover:bg-blue-700"

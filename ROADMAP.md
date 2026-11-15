@@ -4,7 +4,7 @@ Gradient tools for Color Hub, built one at a time. Each item is checked off when
 it builds, type-checks and has been tried in the browser.
 
 Ground rules:
-- Gradient Studio is a new tab page (`tabs/gradient-studio.html`), styled like
+- Gradient Studio is a new tab page (`gradient-studio.html`), styled like
   Palette Studio. The popup only gets one link to it, so the popup's design and
   the home screen's 600px height stay as they are.
 - Gradient math lives in pure functions in `src/utils/gradient.ts`, used by

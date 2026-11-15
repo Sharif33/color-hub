@@ -1,5 +1,5 @@
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
-import { deltaE2000, hexToLab, parseColorWithAlpha } from "~utils/color-utils"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
+import { deltaE2000, hexToLab, parseColorWithAlpha } from "~/utils/color-utils"
 
 /** Up to this ΔE, a color missing from one palette counts as changed */
 export const SHIFT_THRESHOLD = 5

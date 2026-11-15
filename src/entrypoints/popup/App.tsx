@@ -1,49 +1,49 @@
 import { Pipette } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import "~style.css"
+import "~/style.css"
 
-import { HistoryScreen } from "~features/color-history/HistoryScreen"
-import { useColorHistory } from "~features/color-history/useColorHistory"
-import { toggleColorInspector } from "~features/color-inspector"
-import { AdjustScreen } from "~features/color-picker/AdjustScreen"
-import { useColorPicker } from "~features/color-picker/useColorPicker"
+import { HistoryScreen } from "~/features/color-history/HistoryScreen"
+import { useColorHistory } from "~/features/color-history/useColorHistory"
+import { toggleColorInspector } from "~/features/color-inspector"
+import { AdjustScreen } from "~/features/color-picker/AdjustScreen"
+import { useColorPicker } from "~/features/color-picker/useColorPicker"
 import {
   colorParam,
   encodeGradient,
   openGradientStudio
-} from "~features/gradient-studio/open"
-import { toEditableGradient } from "~features/page-gradients"
-import { openPaletteStudio } from "~features/palette-studio/pending"
-import { pickOutsideBrowserColor } from "~features/pick-outside-browser-color"
-import { ColorHero } from "~features/popup/ColorHero"
-import { useConfirm } from "~features/popup/ConfirmDialog"
-import { HomeScreen } from "~features/popup/HomeScreen"
+} from "~/features/gradient-studio/open"
+import { toEditableGradient } from "~/features/page-gradients"
+import { openPaletteStudio } from "~/features/palette-studio/pending"
+import { pickOutsideBrowserColor } from "~/features/pick-outside-browser-color"
+import { ColorHero } from "~/features/popup/ColorHero"
+import { useConfirm } from "~/features/popup/ConfirmDialog"
+import { HomeScreen } from "~/features/popup/HomeScreen"
 import {
   getVisionSimulation,
   setVisionSimulation,
   VISION_MODES,
   type VisionMode
-} from "~features/vision-simulation"
-import { VisionScreen } from "~features/vision-simulation/VisionScreen"
+} from "~/features/vision-simulation"
+import { VisionScreen } from "~/features/vision-simulation/VisionScreen"
 import {
   analyzeWebpageContrastPairs,
   type AnalyzedColor
-} from "~features/webpage-color-analyzer"
-import { PageColorsScreen } from "~features/webpage-color-analyzer/PageColorsScreen"
-import { SavedPalettesScreen } from "~features/webpage-color-analyzer/SavedPalettesScreen"
-import { useWebpageAnalyzer } from "~features/webpage-color-analyzer/useWebpageAnalyzer"
-import { useSettings } from "~hooks/use-settings"
-import { cn } from "~lib/cn"
-import { COLOR_HISTORY_LIMIT } from "~lib/constants"
-import { formatColor } from "~utils/color-formats"
+} from "~/features/webpage-color-analyzer"
+import { PageColorsScreen } from "~/features/webpage-color-analyzer/PageColorsScreen"
+import { SavedPalettesScreen } from "~/features/webpage-color-analyzer/SavedPalettesScreen"
+import { useWebpageAnalyzer } from "~/features/webpage-color-analyzer/useWebpageAnalyzer"
+import { useSettings } from "~/hooks/use-settings"
+import { cn } from "~/lib/cn"
+import { COLOR_HISTORY_LIMIT } from "~/lib/constants"
+import { formatColor } from "~/utils/color-formats"
 import {
   colorToHsv,
   getColorFromHsv,
   hsvToRgb,
   type ColorEntry
-} from "~utils/color-utils"
-import { isRestrictedUrl } from "~utils/restricted-urls"
+} from "~/utils/color-utils"
+import { isRestrictedUrl } from "~/utils/restricted-urls"
 
 type Screen = "home" | "adjust" | "history" | "results" | "saved" | "vision"
 
@@ -225,7 +225,7 @@ function IndexPopup() {
         return
       }
       chrome.tabs.create({
-        url: chrome.runtime.getURL("tabs/wcag-contrast-analyzer.html")
+        url: chrome.runtime.getURL("wcag-contrast-analyzer.html")
       })
     } catch (error) {
       console.warn("WCAG analysis failed:", error)
@@ -446,7 +446,7 @@ function IndexPopup() {
             }
             onOpenChecker={() =>
               chrome.tabs.create({
-                url: chrome.runtime.getURL("tabs/contrast-checker.html")
+                url: chrome.runtime.getURL("contrast-checker.html")
               })
             }
             onOpenSettings={() => chrome.runtime.openOptionsPage()}

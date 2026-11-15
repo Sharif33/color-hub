@@ -5,13 +5,13 @@ import {
   rgbToOklab,
   rgbToOklch,
   type Oklch
-} from "~utils/color-utils"
+} from "~/utils/color-utils"
 import {
   DEFAULT_GRADIENT,
   sortStops,
   type Gradient,
   type GradientStop
-} from "~utils/gradient"
+} from "~/utils/gradient"
 
 /**
  * The OKLCH color as sRGB hex. Out-of-gamut colors keep their lightness and

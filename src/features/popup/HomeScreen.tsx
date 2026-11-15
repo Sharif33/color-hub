@@ -17,9 +17,9 @@ import {
   type LucideIcon
 } from "lucide-react"
 
-import ColorHubLogo from "~components/color hub/logo"
-import { cn } from "~lib/cn"
-import type { ColorEntry } from "~utils/color-utils"
+import ColorHubLogo from "~/components/color hub/logo"
+import { cn } from "~/lib/cn"
+import type { ColorEntry } from "~/utils/color-utils"
 
 import { ColorSwatchButton } from "./ColorSwatchButton"
 
@@ -46,7 +46,7 @@ const ToolRow = ({ tool, disabled }: { tool: Tool; disabled: boolean }) => {
       type="button"
       onClick={onClick}
       disabled={disabled || busy}
-      className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:hover:bg-slate-800">
+      className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left hover:bg-slate-100 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:hover:bg-slate-800">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
         <Icon className="size-4" />
       </span>
@@ -149,7 +149,7 @@ export const HomeScreen = (props: HomeScreenProps) => {
           title="Settings"
           aria-label="Settings"
           onClick={props.onOpenSettings}
-          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100">
+          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100">
           <Settings className="size-4" />
         </button>
       </header>
@@ -160,14 +160,14 @@ export const HomeScreen = (props: HomeScreenProps) => {
         <button
           type="button"
           onClick={props.onPick}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
           <Pipette className="size-4" />
           Pick from screen
         </button>
         <button
           type="button"
           onClick={props.onAdjust}
-          className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
+          className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-100 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
           <SlidersHorizontal className="size-4" />
           Adjust
         </button>
@@ -177,7 +177,7 @@ export const HomeScreen = (props: HomeScreenProps) => {
           onClick={props.onOpenGradients}
           title="Make a gradient in Gradient Studio"
           aria-label="Make a gradient in Gradient Studio"
-          className="flex items-center rounded-lg border border-slate-200 px-2.5 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
+          className="flex items-center rounded-lg border border-slate-200 px-2.5 hover:bg-slate-100 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
           <Blend className="size-4" />
         </button>
       </div>
@@ -204,7 +204,7 @@ export const HomeScreen = (props: HomeScreenProps) => {
           <button
             type="button"
             onClick={props.onOpenHistory}
-            className="flex shrink-0 items-center rounded-md px-1 py-0.5 text-xs font-medium text-slate-500 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-400 dark:hover:text-slate-100">
+            className="flex shrink-0 items-center rounded-md px-1 py-0.5 text-xs font-medium text-slate-500 hover:text-slate-900 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-400 dark:hover:text-slate-100">
             History
             <ChevronRight className="size-3.5" />
           </button>
@@ -264,7 +264,7 @@ export const HomeScreen = (props: HomeScreenProps) => {
             title={title}
             onClick={onClick}
             className={cn(
-              "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100",
+              "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100",
               label === "Saved palettes" && "mr-auto"
             )}>
             <Icon className="size-3.5" />

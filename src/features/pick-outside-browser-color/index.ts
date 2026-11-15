@@ -1,6 +1,6 @@
-import { readSettings } from "~lib/settings"
-import { formatColor } from "~utils/color-formats"
-import { formatHsl, hexToRgb, type ColorEntry } from "~utils/color-utils"
+import { readSettings } from "~/lib/settings"
+import { formatColor } from "~/utils/color-formats"
+import { formatHsl, hexToRgb, type ColorEntry } from "~/utils/color-utils"
 
 export const pickOutsideBrowserColor = async (): Promise<ColorEntry | null> => {
   if (!("EyeDropper" in window)) {

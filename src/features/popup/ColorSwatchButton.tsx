@@ -1,7 +1,7 @@
 import { Check } from "lucide-react"
 
-import { cn } from "~lib/cn"
-import { getReadableTextColor } from "~utils/color-utils"
+import { cn } from "~/lib/cn"
+import { getReadableTextColor } from "~/utils/color-utils"
 
 // Translucent colors are shown over a checkerboard, so their alpha is visible
 const CHECKERBOARD = {
@@ -34,9 +34,9 @@ export const ColorSwatchButton = ({
     aria-pressed={selected || undefined}
     onClick={onClick}
     className={cn(
-      "relative shrink-0 overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500",
+      "relative shrink-0 overflow-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500",
       selected &&
-        "outline outline-2 outline-offset-1 outline-slate-900 dark:outline-white",
+        "outline-solid outline-2 outline-offset-1 outline-slate-900 dark:outline-white",
       className
     )}
     style={CHECKERBOARD}>

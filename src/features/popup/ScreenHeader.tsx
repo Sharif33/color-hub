@@ -15,12 +15,12 @@ export const ScreenHeader = ({
   onBack,
   action
 }: ScreenHeaderProps) => (
-  <header className="sticky top-0 z-10 flex h-12 items-center gap-1 border-b border-slate-200 bg-white/95 px-2 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+  <header className="sticky top-0 z-10 flex h-12 items-center gap-1 border-b border-slate-200 bg-white/95 px-2 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95">
     <button
       type="button"
       onClick={onBack}
       aria-label="Back"
-      className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100">
+      className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100">
       <ChevronLeft className="size-5" />
     </button>
     <div className="min-w-0 flex-1">

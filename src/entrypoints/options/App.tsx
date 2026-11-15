@@ -1,18 +1,18 @@
 import { Archive, ClipboardCopy, Wind } from "lucide-react"
 
-import "~style.css"
+import "~/style.css"
 
-import ColorHubLogo from "~components/color hub/logo"
-import { BackupPanel } from "~features/backup/BackupPanel"
-import { useSettings } from "~hooks/use-settings"
-import { cn } from "~lib/cn"
-import { updateSettings } from "~lib/settings"
+import ColorHubLogo from "~/components/color hub/logo"
+import { BackupPanel } from "~/features/backup/BackupPanel"
+import { useSettings } from "~/hooks/use-settings"
+import { cn } from "~/lib/cn"
+import { updateSettings } from "~/lib/settings"
 import {
   TAILWIND_V3_VERSION,
   TAILWIND_V4_VERSION
-} from "~lib/tailwind-palettes"
-import { COLOR_FORMATS, formatColor } from "~utils/color-formats"
-import { TAILWIND_VERSIONS } from "~utils/tailwind-match"
+} from "~/lib/tailwind-palettes"
+import { COLOR_FORMATS, formatColor } from "~/utils/color-formats"
+import { TAILWIND_VERSIONS } from "~/utils/tailwind-match"
 
 const SAMPLE_COLOR = "#2563eb"
 
@@ -32,7 +32,7 @@ const SectionCard = ({
   description: string
   children: React.ReactNode
 }) => (
-  <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm">
+  <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-xs">
     <div className="mb-5 flex items-start gap-3">
       <div className="rounded-xl bg-blue-50 p-2 text-blue-600 ring-1 ring-blue-100">
         <Icon className="size-4" />
@@ -51,7 +51,7 @@ function OptionsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
-      <nav className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-sm">
+      <nav className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-xs">
         <div className="container mx-auto flex h-16 max-w-3xl items-center gap-3 px-6">
           <ColorHubLogo size={28} className="text-blue-600" />
           <h1 className="text-lg font-extrabold tracking-tight text-slate-800">
@@ -90,7 +90,7 @@ function OptionsPage() {
                       <span className="h-2 w-2 rounded-full bg-blue-600" />
                     )}
                   </span>
-                  <code className="break-words font-mono text-[11px] text-slate-500">
+                  <code className="wrap-break-word font-mono text-[11px] text-slate-500">
                     {formatColor(SAMPLE_COLOR, value)}
                   </code>
                 </button>

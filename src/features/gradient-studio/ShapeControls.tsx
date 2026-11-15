@@ -1,5 +1,5 @@
-import { cn } from "~lib/cn"
-import { GRADIENT_TYPES, type Gradient } from "~utils/gradient"
+import { cn } from "~/lib/cn"
+import { GRADIENT_TYPES, type Gradient } from "~/utils/gradient"
 
 import { Segmented, SliderField } from "./ui"
 
@@ -47,7 +47,7 @@ export const ShapeControls = ({ gradient, onChange }: ShapeControlsProps) => {
                 aria-pressed={gradient.angle === angle}
                 onClick={() => onChange({ angle })}
                 className={cn(
-                  "flex size-7 items-center justify-center rounded-lg text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500",
+                  "flex size-7 items-center justify-center rounded-lg text-sm font-semibold transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500",
                   // Leave the middle cell empty
                   index === 4 && "col-start-3",
                   gradient.angle === angle
@@ -127,7 +127,7 @@ export const ShapeControls = ({ gradient, onChange }: ShapeControlsProps) => {
           type="checkbox"
           checked={gradient.repeating}
           onChange={(event) => onChange({ repeating: event.target.checked })}
-          className="size-4 rounded accent-blue-600"
+          className="size-4 rounded-sm accent-blue-600"
         />
         Repeat the stops
         <span className="font-normal text-slate-400">

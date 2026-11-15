@@ -1,7 +1,7 @@
 import { ArrowRight, Check, CheckCircle2, Copy } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
 
 import { ColorSwatch } from "./ColorSwatch"
 import {
@@ -70,7 +70,7 @@ export const LintPanel = ({ colors }: LintPanelProps) => {
           <button
             type="button"
             onClick={handleCopy}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:border-slate-300">
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300">
             {copied ? (
               <Check className="size-3.5 text-emerald-600" strokeWidth={3} />
             ) : (
@@ -122,7 +122,7 @@ export const LintPanel = ({ colors }: LintPanelProps) => {
                       className="flex items-center gap-2 text-xs text-slate-600">
                       <ColorSwatch
                         hex={color.hex}
-                        className="h-5 w-5 rounded"
+                        className="h-5 w-5 rounded-sm"
                       />
                       <span className="font-mono">{color.hex}</span>
                       <ArrowRight className="size-3 text-slate-400" />

@@ -1,5 +1,5 @@
-import { VISION_MATRICES } from "~features/vision-simulation"
-import { apcaContrast } from "~utils/apca"
+import { VISION_MATRICES } from "~/features/vision-simulation"
+import { apcaContrast } from "~/utils/apca"
 import {
   alphaBlend,
   deltaE2000,
@@ -8,13 +8,13 @@ import {
   hexToRgb,
   rgbToHex,
   rgbToOklch
-} from "~utils/color-utils"
+} from "~/utils/color-utils"
 import {
   rgbaToHex,
   sampleGradient,
   sortStops,
   type Gradient
-} from "~utils/gradient"
+} from "~/utils/gradient"
 
 // --- Text contrast ---
 

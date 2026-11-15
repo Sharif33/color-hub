@@ -1,6 +1,6 @@
-import { ColorSwatchButton } from "~features/popup/ColorSwatchButton"
-import { ScreenHeader } from "~features/popup/ScreenHeader"
-import type { ColorEntry } from "~utils/color-utils"
+import { ColorSwatchButton } from "~/features/popup/ColorSwatchButton"
+import { ScreenHeader } from "~/features/popup/ScreenHeader"
+import type { ColorEntry } from "~/utils/color-utils"
 
 interface HistoryScreenProps {
   history: ColorEntry[]

@@ -1,18 +1,18 @@
 import { Check, Copy } from "lucide-react"
 import { useMemo } from "react"
 
-import { cn } from "~lib/cn"
+import { cn } from "~/lib/cn"
 import {
   formatColor,
   getColorFormatLabel,
   type ColorFormat
-} from "~utils/color-formats"
-import { getReadableTextColor } from "~utils/color-utils"
+} from "~/utils/color-formats"
+import { getReadableTextColor } from "~/utils/color-utils"
 import {
   isExactTailwindMatch,
   nearestTailwindColor,
   type TailwindVersion
-} from "~utils/tailwind-match"
+} from "~/utils/tailwind-match"
 
 interface ColorHeroProps {
   /** The current color, or null before any color was picked or chosen */
@@ -54,7 +54,7 @@ export const ColorHero = ({
   const secondValue = formatColor(hex.toUpperCase(), secondFormat)
 
   const valueButton = cn(
-    "block max-w-full truncate rounded px-1 -mx-1 text-left focus-visible:outline focus-visible:outline-2",
+    "block max-w-full truncate rounded-sm px-1 -mx-1 text-left focus-visible:outline-solid focus-visible:outline-2",
     onDark
       ? "hover:bg-white/15 focus-visible:outline-white"
       : "hover:bg-black/10 focus-visible:outline-slate-900"
@@ -83,7 +83,7 @@ export const ColorHero = ({
             onCopy(formatColor(hex.toUpperCase(), copyFormat), "hero-default")
           }
           className={cn(
-            "mt-1 flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus-visible:outline focus-visible:outline-2",
+            "mt-1 flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus-visible:outline-solid focus-visible:outline-2",
             onDark
               ? "bg-white/15 hover:bg-white/25 focus-visible:outline-white"
               : "bg-black/10 hover:bg-black/15 focus-visible:outline-slate-900"

@@ -1,4 +1,4 @@
-import { parseGradient, type Gradient } from "~utils/gradient"
+import { parseGradient, type Gradient } from "~/utils/gradient"
 
 interface PageColor {
   r: number
@@ -1058,6 +1058,6 @@ export const contrastCheckerUrl = (message: {
   const bg = hex(message.background)
   if (!fg || !bg) return null
   return chrome.runtime.getURL(
-    `tabs/contrast-checker.html?fg=${fg}&bg=${bg}${message.largeText === true ? "&large=1" : ""}`
+    `contrast-checker.html?fg=${fg}&bg=${bg}${message.largeText === true ? "&large=1" : ""}`
   )
 }

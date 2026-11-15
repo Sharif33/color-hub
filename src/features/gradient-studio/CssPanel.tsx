@@ -1,8 +1,8 @@
 import { Check, ClipboardPaste, Copy } from "lucide-react"
 import { useState } from "react"
 
-import { cn } from "~lib/cn"
-import type { Gradient } from "~utils/gradient"
+import { cn } from "~/lib/cn"
+import type { Gradient } from "~/utils/gradient"
 
 import { parsePastedGradient } from "./css-color"
 import {
@@ -87,14 +87,14 @@ export const CssPanel = ({
         onChange={chooseFormat}
       />
       <div className="relative">
-        <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-2xl bg-slate-900 p-4 pr-24 font-mono text-xs leading-relaxed text-slate-100">
+        <pre className="max-h-80 overflow-auto whitespace-pre-wrap wrap-break-word rounded-2xl bg-slate-900 p-4 pr-24 font-mono text-xs leading-relaxed text-slate-100">
           {code}
         </pre>
         <button
           type="button"
           onClick={() => void copy()}
           className={cn(
-            "absolute right-3 top-3 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400",
+            "absolute right-3 top-3 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-400",
             copied
               ? "bg-emerald-500/20 text-emerald-200"
               : "bg-white/10 text-slate-100 hover:bg-white/20"
@@ -138,12 +138,12 @@ export const CssPanel = ({
               setPasted(event.target.value)
               setError(false)
             }}
-            className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white/50 px-3 font-mono text-xs text-slate-700 outline-none transition-all placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 aria-[invalid=true]:border-red-400"
+            className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white/50 px-3 font-mono text-xs text-slate-700 outline-hidden transition-all placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 aria-invalid:border-red-400"
           />
           <button
             type="submit"
             disabled={!pasted.trim()}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-sm hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-50">
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-xs hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-50">
             <ClipboardPaste className="size-3.5" />
             Open
           </button>

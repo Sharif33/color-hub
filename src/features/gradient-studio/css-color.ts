@@ -1,9 +1,9 @@
-import { parseColorWithAlpha, type ParsedColor } from "~utils/color-utils"
+import { parseColorWithAlpha, type ParsedColor } from "~/utils/color-utils"
 import {
   findGradientFunctions,
   parseGradient,
   type Gradient
-} from "~utils/gradient"
+} from "~/utils/gradient"
 
 let context: CanvasRenderingContext2D | null | undefined
 

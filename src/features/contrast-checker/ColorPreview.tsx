@@ -6,8 +6,8 @@ import {
   VISION_MATRICES,
   VISION_MODES,
   type VisionMode
-} from "~features/vision-simulation"
-import { formatRatio } from "~utils/wcag-utils"
+} from "~/features/vision-simulation"
+import { formatRatio } from "~/utils/wcag-utils"
 
 interface ColorPreviewProps {
   background: string
@@ -37,7 +37,7 @@ export function ColorPreview({
         : undefined
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm transition-all duration-200 hover:shadow-md">
+    <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-xs transition-all duration-200 hover:shadow-md">
       <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-4 flex items-center justify-between">
         <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">
           Live Preview
@@ -94,7 +94,7 @@ export function ColorPreview({
         <div className="flex flex-wrap gap-6 mt-auto">
           {/* Card Component */}
           <div
-            className="rounded-2xl border p-5 shadow-sm min-w-[240px] flex-1 transition-transform hover:-translate-y-1"
+            className="rounded-2xl border p-5 shadow-xs min-w-[240px] flex-1 transition-transform hover:-translate-y-1"
             style={{
               borderColor: foreground,
               backgroundColor: background,
@@ -103,7 +103,7 @@ export function ColorPreview({
             <div className="flex items-start justify-between mb-4">
               <div className="flex gap-3 items-center">
                 <div
-                  className="h-10 w-10 rounded-full flex items-center justify-center shadow-sm"
+                  className="h-10 w-10 rounded-full flex items-center justify-center shadow-xs"
                   style={{ backgroundColor: foreground, color: background }}>
                   <Star className="h-5 w-5" fill="currentColor" />
                 </div>
@@ -143,7 +143,7 @@ export function ColorPreview({
           <div className="flex flex-col justify-center gap-3 min-w-[200px] flex-1">
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-bold shadow-sm transition-all hover:opacity-90 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-bold shadow-xs transition-all hover:opacity-90 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
               style={{ backgroundColor: foreground, color: background }}>
               <Heart className="h-4 w-4" fill="currentColor" />
               Primary Action
@@ -151,7 +151,7 @@ export function ColorPreview({
 
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 px-5 py-3.5 text-sm font-bold shadow-sm transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 px-5 py-3.5 text-sm font-bold shadow-xs transition-all hover:bg-black/5 hover:-translate-y-0.5 active:translate-y-0"
               style={{ borderColor: foreground, color: foreground }}>
               <Share2 className="h-4 w-4" />
               Secondary Action

@@ -1,4 +1,4 @@
-import { rgbToHex, rgbToOklab, type Oklab } from "~utils/color-utils"
+import { rgbToHex, rgbToOklab, type Oklab } from "~/utils/color-utils"
 
 export interface QuantizedColor {
   hex: string

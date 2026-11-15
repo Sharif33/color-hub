@@ -10,18 +10,18 @@ import {
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import "~style.css"
+import "~/style.css"
 
-import ColorHubLogo from "~components/color hub/logo"
-import { ColorSwatch } from "~features/palette-studio/ColorSwatch"
-import { ColorTable } from "~features/palette-studio/ColorTable"
-import { ComparePanel } from "~features/palette-studio/ComparePanel"
-import { ExportPanel } from "~features/palette-studio/ExportPanel"
-import { LintPanel } from "~features/palette-studio/LintPanel"
-import { usePalettes } from "~features/palette-studio/usePalettes"
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
-import { useSettings } from "~hooks/use-settings"
-import { cn } from "~lib/cn"
+import ColorHubLogo from "~/components/color hub/logo"
+import { ColorSwatch } from "~/features/palette-studio/ColorSwatch"
+import { ColorTable } from "~/features/palette-studio/ColorTable"
+import { ComparePanel } from "~/features/palette-studio/ComparePanel"
+import { ExportPanel } from "~/features/palette-studio/ExportPanel"
+import { LintPanel } from "~/features/palette-studio/LintPanel"
+import { usePalettes } from "~/features/palette-studio/usePalettes"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
+import { useSettings } from "~/hooks/use-settings"
+import { cn } from "~/lib/cn"
 
 const PENDING_ID = "pending"
 
@@ -133,7 +133,7 @@ function PaletteStudioPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
-      <nav className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-sm">
+      <nav className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-xs">
         <div className="container mx-auto flex h-16 max-w-7xl items-center gap-3 px-6">
           <ColorHubLogo size={28} className="text-blue-600" />
           <h1 className="text-lg font-extrabold tracking-tight text-slate-800">
@@ -171,7 +171,7 @@ function PaletteStudioPage() {
                   aria-selected={entry.id === selected.id}
                   onClick={() => setSelectedId(entry.id)}
                   className={cn(
-                    "flex w-56 flex-col gap-2 rounded-2xl border px-3 py-2.5 text-left shadow-sm transition-colors",
+                    "flex w-56 flex-col gap-2 rounded-2xl border px-3 py-2.5 text-left shadow-xs transition-colors",
                     entry.id === selected.id
                       ? "border-blue-200 bg-blue-50 ring-1 ring-blue-200"
                       : "border-slate-200/80 bg-white/80 hover:border-slate-300"
@@ -200,7 +200,7 @@ function PaletteStudioPage() {
             </div>
 
             <section className="flex min-w-0 flex-col gap-6">
-              <div className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-xs">
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     {selected.pending ? "Unsaved analysis" : "Saved palette"}
@@ -253,7 +253,7 @@ function PaletteStudioPage() {
                           ? `Save as ${pending.domain}`
                           : "Pages without a hostname can't be saved"
                       }
-                      className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+                      className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-xs hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
                       <Save className="size-4" />
                       Save palette
                     </button>
@@ -271,7 +271,7 @@ function PaletteStudioPage() {
                 )}
               </div>
 
-              <div className="flex w-fit rounded-2xl border border-slate-200/80 bg-white/80 p-1 shadow-sm">
+              <div className="flex w-fit rounded-2xl border border-slate-200/80 bg-white/80 p-1 shadow-xs">
                 {VIEWS.map(({ value, label, icon: Icon }) => (
                   <button
                     key={value}
@@ -280,7 +280,7 @@ function PaletteStudioPage() {
                     className={cn(
                       "flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-colors",
                       view === value
-                        ? "bg-blue-600 text-white shadow-sm"
+                        ? "bg-blue-600 text-white shadow-xs"
                         : "text-slate-600 hover:text-slate-900"
                     )}>
                     <Icon className="size-3.5" />
@@ -289,7 +289,7 @@ function PaletteStudioPage() {
                 ))}
               </div>
 
-              <div className="rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm">
+              <div className="rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-xs">
                 {view === "colors" && (
                   <ColorTable
                     colors={selected.colors}

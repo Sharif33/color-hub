@@ -1,5 +1,5 @@
-import { isColorFormat, type ColorFormat } from "~utils/color-formats"
-import { isTailwindVersion, type TailwindVersion } from "~utils/tailwind-match"
+import { isColorFormat, type ColorFormat } from "~/utils/color-formats"
+import { isTailwindVersion, type TailwindVersion } from "~/utils/tailwind-match"
 
 export interface Settings {
   /** Format used when clicking a color copies it */

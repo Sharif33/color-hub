@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import "~style.css"
+import "~/style.css"
 
 import {
   AlertTriangle,
@@ -12,13 +12,13 @@ import {
   XCircle
 } from "lucide-react"
 
-import ColorHubLogo from "~components/color hub/logo"
-import { Dropdown, type DropdownOption } from "~components/dropdown"
-import { ExportMenu } from "~features/wcag-report/ExportMenu"
-import type { WCAGAnalysisData } from "~features/webpage-color-analyzer"
-import { apcaContrast, formatLc } from "~utils/apca"
-import { getContrastRatio } from "~utils/color-utils"
-import { calculateWCAGCompliance, formatRatio } from "~utils/wcag-utils"
+import ColorHubLogo from "~/components/color hub/logo"
+import { Dropdown, type DropdownOption } from "~/components/dropdown"
+import { ExportMenu } from "~/features/wcag-report/ExportMenu"
+import type { WCAGAnalysisData } from "~/features/webpage-color-analyzer"
+import { apcaContrast, formatLc } from "~/utils/apca"
+import { getContrastRatio } from "~/utils/color-utils"
+import { calculateWCAGCompliance, formatRatio } from "~/utils/wcag-utils"
 
 type FilterKey = "all" | "fail-aa" | "pass-aa" | "pass-aaa"
 type SortKey = "ratio-desc" | "ratio-asc" | "apca-desc" | "apca-asc" | "count"
@@ -78,7 +78,7 @@ const RatioPill = ({
 }) => {
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-sm font-extrabold tabular-nums shadow-sm ${
+      className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-sm font-extrabold tabular-nums shadow-xs ${
         passAAA
           ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80"
           : passAA
@@ -93,7 +93,7 @@ const RatioPill = ({
 const ColorSwatch = ({ hex, label }: { hex: string; label: string }) => (
   <div className="flex flex-col items-center gap-1.5">
     <div
-      className="h-10 w-16 rounded-xl border border-black/10 shadow-sm"
+      className="h-10 w-16 rounded-xl border border-black/10 shadow-xs"
       style={{ backgroundColor: hex }}
     />
     <span className="font-mono text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
@@ -111,7 +111,7 @@ const PreviewChip = ({
   background: string
 }) => (
   <div
-    className="flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold border border-black/10 min-w-[108px] shadow-sm"
+    className="flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold border border-black/10 min-w-[108px] shadow-xs"
     style={{ backgroundColor: background, color: foreground }}>
     WCAG
   </div>
@@ -136,7 +136,7 @@ const StatCard = ({
           : "bg-slate-50/80 ring-slate-200/90 text-slate-700"
 
   return (
-    <div className={`rounded-2xl px-4 py-3 ring-1 shadow-sm ${toneClass}`}>
+    <div className={`rounded-2xl px-4 py-3 ring-1 shadow-xs ${toneClass}`}>
       <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
         {label}
       </p>
@@ -150,7 +150,7 @@ const openInContrastChecker = (fg: string, bg: string, largeText: boolean) => {
   const bgParam = bg.replace("#", "")
   // Without the flag the checker judges a large-text pair as normal text
   const url =
-    chrome.runtime.getURL("tabs/contrast-checker.html") +
+    chrome.runtime.getURL("contrast-checker.html") +
     `?fg=${fgParam}&bg=${bgParam}${largeText ? "&large=1" : ""}`
   chrome.tabs.create({ url })
 }
@@ -265,10 +265,10 @@ export default function WCAGContrastAnalyzerPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/40 via-slate-50/30 to-slate-50 pointer-events-none -z-10" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50/40 via-slate-50/30 to-slate-50 pointer-events-none -z-10" />
 
       {/* Nav */}
-      <nav className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-sm">
+      <nav className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-xs">
         <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <ColorHubLogo size={28} />
         </div>
@@ -276,7 +276,7 @@ export default function WCAGContrastAnalyzerPage() {
 
       <main className="container mx-auto max-w-7xl px-6 py-8">
         {/* Header */}
-        <div className="mb-8 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm">
+        <div className="mb-8 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-xs">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
@@ -340,7 +340,7 @@ export default function WCAGContrastAnalyzerPage() {
         </div>
 
         {/* Controls */}
-        <div className="relative z-30 mb-6 rounded-2xl border border-slate-200/80 bg-white/80 p-3 shadow-sm">
+        <div className="relative z-30 mb-6 rounded-2xl border border-slate-200/80 bg-white/80 p-3 shadow-xs">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-slate-500">
               <ListFilter className="size-4" />
@@ -357,7 +357,7 @@ export default function WCAGContrastAnalyzerPage() {
                   onClick={() => setFilter(key)}
                   className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all ${
                     filter === key
-                      ? "border-blue-200 bg-blue-600 text-white shadow-sm shadow-blue-200/70"
+                      ? "border-blue-200 bg-blue-600 text-white shadow-xs shadow-blue-200/70"
                       : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800"
                   }`}>
                   {label}
@@ -411,8 +411,8 @@ export default function WCAGContrastAnalyzerPage() {
             {filtered.map((pair, i) => (
               <div
                 key={`${pair.foreground}-${pair.background}-${i}`}
-                className="relative z-0 rounded-3xl border border-slate-200/80 bg-white shadow-sm hover:z-20 hover:shadow-lg hover:-translate-y-0.5 transition overflow-visible flex flex-col">
-                <div className="flex items-center justify-between rounded-t-[calc(1.5rem-1px)] border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3">
+                className="relative z-0 rounded-3xl border border-slate-200/80 bg-white shadow-xs hover:z-20 hover:shadow-lg hover:-translate-y-0.5 transition overflow-visible flex flex-col">
+                <div className="flex items-center justify-between rounded-t-[calc(1.5rem-1px)] border-b border-slate-100 bg-linear-to-r from-slate-50/80 to-white px-5 py-3">
                   <div className="flex items-center gap-2">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-slate-500">
                       Pair {i + 1}
@@ -437,7 +437,7 @@ export default function WCAGContrastAnalyzerPage() {
                       {pair.count} {pair.count === 1 ? "use" : "uses"}
                     </span>
                     {pair.selectors.length > 0 && (
-                      <div className="invisible absolute right-0 top-full z-[9999] w-[320px] max-w-[78vw] rounded-2xl border border-slate-200/90 bg-white p-3.5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.14)] ring-1 ring-black/5 opacity-0 translate-y-1 scale-[0.98] transition-all duration-150 ease-out pointer-events-auto group-hover/uses:visible group-hover/uses:opacity-100 group-hover/uses:translate-y-0 group-hover/uses:scale-100 hover:visible hover:opacity-100 hover:translate-y-0 hover:scale-100">
+                      <div className="invisible absolute right-0 top-full z-9999 w-[320px] max-w-[78vw] rounded-2xl border border-slate-200/90 bg-white p-3.5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.14)] ring-1 ring-black/5 opacity-0 translate-y-1 scale-[0.98] transition-all duration-150 ease-out pointer-events-auto group-hover/uses:visible group-hover/uses:opacity-100 group-hover/uses:translate-y-0 group-hover/uses:scale-100 hover:visible hover:opacity-100 hover:translate-y-0 hover:scale-100">
                         <div className="absolute -top-1 right-4 size-2 rotate-45 border-l border-t border-slate-200 bg-white" />
                         <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                           Found elements ({pair.selectors.length})

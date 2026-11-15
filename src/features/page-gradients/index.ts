@@ -1,5 +1,5 @@
-import { getActiveTab, runInAllFrames } from "~features/webpage-color-analyzer"
-import { parseGradient, type Gradient } from "~utils/gradient"
+import { getActiveTab, runInAllFrames } from "~/features/webpage-color-analyzer"
+import { parseGradient, type Gradient } from "~/utils/gradient"
 
 // Kept free of React, like the other page modules
 
@@ -245,7 +245,7 @@ const scanGradientsInPage = (highlightKey: string | null): GradientScan => {
     const elements: Element[] = []
     let total = 0
     const dom = (
-      globalThis as {
+      globalThis as unknown as {
         chrome?: {
           dom?: { openOrClosedShadowRoot?: (el: Element) => ShadowRoot | null }
         }

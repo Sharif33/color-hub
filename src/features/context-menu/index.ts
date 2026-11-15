@@ -1,19 +1,19 @@
-import { toggleColorInspector } from "~features/color-inspector"
+import { toggleColorInspector } from "~/features/color-inspector"
 import {
   hostnameOf,
   openPendingPalette
-} from "~features/palette-studio/pending"
-import { analyzeScreenshotColors } from "~features/screenshot-colors"
+} from "~/features/palette-studio/pending"
+import { analyzeScreenshotColors } from "~/features/screenshot-colors"
 import {
   setVisionSimulation,
   VISION_MODES,
   type VisionMode
-} from "~features/vision-simulation"
+} from "~/features/vision-simulation"
 import {
   analyzeWebpageColors,
   analyzeWebpageContrastPairs
-} from "~features/webpage-color-analyzer"
-import { parseColor } from "~utils/color-utils"
+} from "~/features/webpage-color-analyzer"
+import { parseColor } from "~/utils/color-utils"
 
 const ROOT = "color-hub"
 const ANALYZE_COLORS = "analyze-colors"
@@ -30,7 +30,9 @@ const CONTRAST_CHECKER = "contrast-checker"
 // menu at all. file:// pages need "Allow access to file URLs"
 const DOCUMENT_URL_PATTERNS = ["http://*/*", "https://*/*", "file:///*"]
 
-const ALL_CONTEXTS: chrome.contextMenus.ContextType[] = [
+const ALL_CONTEXTS: NonNullable<
+  chrome.contextMenus.CreateProperties["contexts"]
+> = [
   "page",
   "frame",
   "selection",
@@ -94,7 +96,7 @@ export const registerContextMenus = () => {
 const openContrastChecker = (foreground?: string) => {
   const query = foreground ? `?fg=${foreground.slice(1)}` : ""
   void chrome.tabs.create({
-    url: chrome.runtime.getURL(`tabs/contrast-checker.html${query}`)
+    url: chrome.runtime.getURL(`contrast-checker.html${query}`)
   })
 }
 
@@ -134,7 +136,7 @@ export const handleContextMenuClick = async (
       const report = await analyzeWebpageContrastPairs(tab)
       if (report) {
         void chrome.tabs.create({
-          url: chrome.runtime.getURL("tabs/wcag-contrast-analyzer.html")
+          url: chrome.runtime.getURL("wcag-contrast-analyzer.html")
         })
       }
       return

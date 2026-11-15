@@ -1,4 +1,4 @@
-import { cn } from "~lib/cn"
+import { cn } from "~/lib/cn"
 
 /** Shows through translucent stops */
 export const CHECKERBOARD: React.CSSProperties = {
@@ -20,7 +20,7 @@ export const Panel = ({
   <section
     aria-label={title}
     className={cn(
-      "flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white/60 p-6 shadow-sm backdrop-blur-sm",
+      "flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white/60 p-6 shadow-xs backdrop-blur-xs",
       className
     )}>
     <div className="flex min-h-7 items-center justify-between gap-3 border-b border-slate-100/80 pb-3">
@@ -48,7 +48,7 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className="flex w-fit flex-wrap rounded-xl border border-slate-200/80 bg-white/80 p-1 shadow-sm">
+      className="flex w-fit flex-wrap rounded-xl border border-slate-200/80 bg-white/80 p-1 shadow-xs">
       {options.map((option) => (
         <button
           key={option.value}
@@ -58,9 +58,9 @@ export function Segmented<T extends string>({
           title={option.title}
           onClick={() => onChange(option.value)}
           className={cn(
-            "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500",
+            "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500",
             value === option.value
-              ? "bg-blue-600 text-white shadow-sm"
+              ? "bg-blue-600 text-white shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           )}>
           {option.label}
@@ -112,7 +112,7 @@ export const SliderField = ({
             onChange(Math.min(max, Math.max(min, next)))
         }}
         aria-label={`${label} (${unit})`}
-        className="w-16 rounded-lg border border-slate-200 bg-white/50 px-2 py-1 text-right font-mono text-xs text-slate-700 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+        className="w-16 rounded-lg border border-slate-200 bg-white/50 px-2 py-1 text-right font-mono text-xs text-slate-700 outline-hidden focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
       />
       <span className="w-3 text-slate-400">{unit}</span>
     </span>
@@ -120,4 +120,4 @@ export const SliderField = ({
 )
 
 export const iconButton =
-  "rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+  "rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"

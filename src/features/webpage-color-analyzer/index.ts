@@ -366,7 +366,7 @@ const scanColorsInPage = (highlightKey: string | null): ColorScan => {
     const elements: Element[] = []
     let total = 0
     const dom = (
-      globalThis as {
+      globalThis as unknown as {
         chrome?: {
           dom?: { openOrClosedShadowRoot?: (el: Element) => ShadowRoot | null }
         }
@@ -1175,7 +1175,7 @@ const extractContrastPairsInPage = (): ContrastScan => {
     const elements: Element[] = []
     let total = 0
     const dom = (
-      globalThis as {
+      globalThis as unknown as {
         chrome?: {
           dom?: { openOrClosedShadowRoot?: (el: Element) => ShadowRoot | null }
         }

@@ -1,7 +1,7 @@
 import { Pipette } from "lucide-react"
 
-import { pickOutsideBrowserColor } from "~features/pick-outside-browser-color"
-import { isValidPartialHex, parseColorWithAlpha } from "~utils/color-utils"
+import { pickOutsideBrowserColor } from "~/features/pick-outside-browser-color"
+import { isValidPartialHex, parseColorWithAlpha } from "~/utils/color-utils"
 
 interface ColorCardProps {
   label: "Foreground" | "Background"
@@ -87,7 +87,7 @@ export function ColorCard({
       </div>
 
       <div className="relative flex items-center gap-3">
-        <div className="relative h-12 w-12 shrink-0 rounded-xl shadow-sm ring-1 ring-black/5 overflow-hidden group-hover:shadow transition-shadow">
+        <div className="relative h-12 w-12 shrink-0 rounded-xl shadow-xs ring-1 ring-black/5 overflow-hidden group-hover:shadow-sm transition-shadow">
           {hasAlpha && (
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZTJlOGYwIj48L3JlY3Q+CjxyZWN0IHg9IjQiIHk9IjQiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNlMmU4ZjAiPjwvcmVjdD4KPC9zdmc+')] opacity-50" />
           )}
@@ -105,7 +105,7 @@ export function ColorCard({
             onPaste={handlePaste}
             placeholder="#000000"
             spellCheck={false}
-            className="w-full h-12 rounded-xl border border-slate-200 bg-white/50 pl-4 pr-11 text-sm font-semibold font-mono text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300"
+            className="w-full h-12 rounded-xl border border-slate-200 bg-white/50 pl-4 pr-11 text-sm font-semibold font-mono text-slate-700 outline-hidden transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300"
           />
           <button
             type="button"
@@ -125,7 +125,7 @@ export function ColorCard({
               type="button"
               onClick={() => onInputChange(swatch)}
               aria-label={`Set ${label.toLowerCase()} ${swatch}`}
-              className={`h-6 w-6 rounded-lg shadow-sm transition-all hover:scale-110 active:scale-95 ${
+              className={`h-6 w-6 rounded-lg shadow-xs transition-all hover:scale-110 active:scale-95 ${
                 color === swatch
                   ? "ring-2 ring-blue-500 ring-offset-1 border-transparent scale-110 z-10"
                   : "border border-black/5 hover:border-black/10"

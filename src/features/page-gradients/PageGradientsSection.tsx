@@ -1,6 +1,6 @@
 import { ArrowUpRight, Check, Copy } from "lucide-react"
 
-import { cn } from "~lib/cn"
+import { cn } from "~/lib/cn"
 
 import { toEditableGradient, type PageGradient } from "./index"
 
@@ -14,7 +14,7 @@ interface PageGradientsSectionProps {
 }
 
 const iconButton =
-  "flex size-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+  "flex size-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
 
 /**
  * The page's gradients, most used first. Click one to outline its elements
@@ -47,9 +47,9 @@ export const PageGradientsSection = ({
             aria-pressed={selected?.css === gradient.css}
             onClick={() => onSelect(gradient)}
             className={cn(
-              "h-7 min-w-0 flex-1 rounded-md ring-1 ring-inset ring-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:ring-white/15",
+              "h-7 min-w-0 flex-1 rounded-md ring-1 ring-inset ring-black/10 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:ring-white/15",
               selected?.css === gradient.css &&
-                "outline outline-2 outline-offset-1 outline-slate-900 dark:outline-slate-100"
+                "outline-solid outline-2 outline-offset-1 outline-slate-900 dark:outline-slate-100"
             )}
             style={{ backgroundImage: gradient.css }}
           />

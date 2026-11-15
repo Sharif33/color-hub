@@ -1,11 +1,11 @@
 import { AlertTriangle, CheckCircle2, Wand2 } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import { cn } from "~lib/cn"
-import { formatLc } from "~utils/apca"
-import { parseColor } from "~utils/color-utils"
-import { gradientToCss, type Gradient } from "~utils/gradient"
-import { formatRatio } from "~utils/wcag-utils"
+import { cn } from "~/lib/cn"
+import { formatLc } from "~/utils/apca"
+import { parseColor } from "~/utils/color-utils"
+import { gradientToCss, type Gradient } from "~/utils/gradient"
+import { formatRatio } from "~/utils/wcag-utils"
 
 import {
   bestTextColor,
@@ -93,7 +93,7 @@ export const ChecksPanel = ({
                   : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
               )}>
               <span
-                className="size-3.5 rounded ring-1 ring-black/15"
+                className="size-3.5 rounded-sm ring-1 ring-black/15"
                 style={{ backgroundColor: option.value }}
               />
               {option.label}
@@ -119,7 +119,7 @@ export const ChecksPanel = ({
                 const hex = parseColor(draft)
                 if (hex) onTextColorChange(hex)
               }}
-              className="h-8 w-36 rounded-lg border border-slate-200 bg-white/50 px-2.5 font-mono text-xs text-slate-700 outline-none placeholder:font-sans placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+              className="h-8 w-36 rounded-lg border border-slate-200 bg-white/50 px-2.5 font-mono text-xs text-slate-700 outline-hidden placeholder:font-sans placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
             />
           </form>
         </div>

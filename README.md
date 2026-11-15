@@ -29,18 +29,18 @@ Extract colors, analyze palettes, and enhance your design workflow.
 - Fast access in a compact popup UI
 
 ## Install (Development)
-1. Install dependencies: `pnpm install`
+1. Use Node 22 or newer, then install dependencies: `pnpm install`
 2. Start the dev server: `pnpm dev`
 3. Load the extension in Chrome:
    - Open `chrome://extensions`
    - Enable Developer mode
-   - Click "Load unpacked" and select `build/chrome-mv3-dev`
+   - Click "Load unpacked" and select `dist/chrome-mv3-dev`
 
 ## Build (Production)
 ```bash
 pnpm build
 ```
-This creates a production bundle in `build/`.
+This creates a production bundle in `dist/`. Run `pnpm zip` to also create the zip.
 
 ## Permissions
 - `activeTab`: read the currently active tab on demand

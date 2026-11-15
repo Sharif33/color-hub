@@ -1,11 +1,11 @@
 import { useMemo } from "react"
 
-import { parseColorWithAlpha } from "~utils/color-utils"
+import { parseColorWithAlpha } from "~/utils/color-utils"
 import {
   isExactTailwindMatch,
   nearestTailwindColor,
   type TailwindVersion
-} from "~utils/tailwind-match"
+} from "~/utils/tailwind-match"
 
 interface TailwindMatchChipProps {
   hex: string
@@ -35,9 +35,9 @@ export const TailwindMatchChip = ({
       type="button"
       onClick={() => onCopy(name)}
       title={`Nearest Tailwind ${version} color: ${name} (${match.hex}). Click to copy the name`}
-      className="flex w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
+      className="flex w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs hover:bg-slate-50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
       <span
-        className="h-3.5 w-3.5 shrink-0 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
+        className="h-3.5 w-3.5 shrink-0 rounded-xs ring-1 ring-inset ring-black/10 dark:ring-white/10"
         style={{ backgroundColor: match.hex }}
       />
       <span className="text-slate-500 dark:text-slate-400">

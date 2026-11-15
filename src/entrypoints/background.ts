@@ -1,21 +1,20 @@
+import { defineBackground } from "#imports"
+
 import {
   contrastCheckerUrl,
   gradientFromMessage
-} from "~features/color-inspector"
+} from "~/features/color-inspector"
 import {
   handleContextMenuClick,
   registerContextMenus
-} from "~features/context-menu"
+} from "~/features/context-menu"
 import {
   encodeGradient,
   openGradientStudio
-} from "~features/gradient-studio/open"
-import { COLOR_HISTORY_LIMIT } from "~lib/constants"
-import { hexToRgb } from "~utils/color-utils"
-
-import { isRestrictedUrl } from "./utils/restricted-urls"
-
-export {}
+} from "~/features/gradient-studio/open"
+import { COLOR_HISTORY_LIMIT } from "~/lib/constants"
+import { hexToRgb } from "~/utils/color-utils"
+import { isRestrictedUrl } from "~/utils/restricted-urls"
 
 interface ColorEntry {
   hex: string
@@ -24,59 +23,63 @@ interface ColorEntry {
   timestamp: number
 }
 
-void initializeBadgeState()
-
-// Listen for color picked events from injected script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === "COLOR_PICKED" && message.color) {
-    void savePickedColor(message.color as ColorEntry)
-    sendResponse({ success: true })
-  }
-  // From the hover inspector, running in the page
-  if (message.type === "OPEN_CONTRAST_CHECKER") {
-    const url = contrastCheckerUrl(message)
-    if (url) void chrome.tabs.create({ url })
-  }
-  if (message.type === "OPEN_GRADIENT_STUDIO") {
-    const gradient = gradientFromMessage(message)
-    if (gradient) openGradientStudio({ g: encodeGradient(gradient) })
-  }
-  return false
-})
-
-chrome.runtime.onInstalled.addListener(() => {
+export default defineBackground(() => {
   void initializeBadgeState()
-  registerContextMenus()
-})
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-  void handleContextMenuClick(info, tab)
-})
-
-chrome.runtime.onStartup.addListener(() => {
-  void initializeBadgeState()
-})
-
-chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName !== "local") return
-  if (!Object.prototype.hasOwnProperty.call(changes, "lastPickedColor")) return
-  const nextColor =
-    (changes.lastPickedColor?.newValue as ColorEntry | undefined) ?? null
-  void updateBadgeColor(nextColor)
-})
-
-// The popup reports the tab it highlighted. Querying the active tab on
-// disconnect would miss it when the popup closed because the user switched tabs
-chrome.runtime.onConnect.addListener((port) => {
-  if (port.name !== "popup") return
-  let highlightedTabId: number | null = null
-  port.onMessage.addListener((message) => {
-    if (typeof message?.highlightedTabId === "number") {
-      highlightedTabId = message.highlightedTabId
+  // Listen for color picked events from injected script
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "COLOR_PICKED" && message.color) {
+      void savePickedColor(message.color as ColorEntry)
+      sendResponse({ success: true })
     }
+    // From the hover inspector, running in the page
+    if (message.type === "OPEN_CONTRAST_CHECKER") {
+      const url = contrastCheckerUrl(message)
+      if (url) void chrome.tabs.create({ url })
+    }
+    if (message.type === "OPEN_GRADIENT_STUDIO") {
+      const gradient = gradientFromMessage(message)
+      if (gradient) openGradientStudio({ g: encodeGradient(gradient) })
+    }
+    return false
   })
-  port.onDisconnect.addListener(() => {
-    if (highlightedTabId !== null) void clearWebpageHighlights(highlightedTabId)
+
+  chrome.runtime.onInstalled.addListener(() => {
+    void initializeBadgeState()
+    registerContextMenus()
+  })
+
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    void handleContextMenuClick(info, tab)
+  })
+
+  chrome.runtime.onStartup.addListener(() => {
+    void initializeBadgeState()
+  })
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local") return
+    if (!Object.prototype.hasOwnProperty.call(changes, "lastPickedColor"))
+      return
+    const nextColor =
+      (changes.lastPickedColor?.newValue as ColorEntry | undefined) ?? null
+    void updateBadgeColor(nextColor)
+  })
+
+  // The popup reports the tab it highlighted. Querying the active tab on
+  // disconnect would miss it when the popup closed because the user switched tabs
+  chrome.runtime.onConnect.addListener((port) => {
+    if (port.name !== "popup") return
+    let highlightedTabId: number | null = null
+    port.onMessage.addListener((message) => {
+      if (typeof message?.highlightedTabId === "number") {
+        highlightedTabId = message.highlightedTabId
+      }
+    })
+    port.onDisconnect.addListener(() => {
+      if (highlightedTabId !== null)
+        void clearWebpageHighlights(highlightedTabId)
+    })
   })
 })
 

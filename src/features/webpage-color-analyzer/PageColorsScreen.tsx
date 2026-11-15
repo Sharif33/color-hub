@@ -1,14 +1,14 @@
 import { Loader2, PanelsTopLeft, Save } from "lucide-react"
 import { useMemo } from "react"
 
-import type { PageGradient } from "~features/page-gradients"
-import { PageGradientsSection } from "~features/page-gradients/PageGradientsSection"
-import { findNearDuplicates } from "~features/palette-studio/lint"
-import { ColorSwatchButton } from "~features/popup/ColorSwatchButton"
-import { ScreenHeader } from "~features/popup/ScreenHeader"
-import { TailwindMatchChip } from "~features/tailwind-match/TailwindMatchChip"
-import { formatColor, type ColorFormat } from "~utils/color-formats"
-import type { TailwindVersion } from "~utils/tailwind-match"
+import type { PageGradient } from "~/features/page-gradients"
+import { PageGradientsSection } from "~/features/page-gradients/PageGradientsSection"
+import { findNearDuplicates } from "~/features/palette-studio/lint"
+import { ColorSwatchButton } from "~/features/popup/ColorSwatchButton"
+import { ScreenHeader } from "~/features/popup/ScreenHeader"
+import { TailwindMatchChip } from "~/features/tailwind-match/TailwindMatchChip"
+import { formatColor, type ColorFormat } from "~/utils/color-formats"
+import type { TailwindVersion } from "~/utils/tailwind-match"
 
 import type { AnalyzedColor } from "./index"
 
@@ -222,7 +222,7 @@ export const PageColorsScreen = ({
       )}
 
       {!isAnalyzing && colors.length > 0 && (
-        <footer className="sticky bottom-0 flex flex-col gap-1.5 border-t border-slate-200 bg-white/95 p-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+        <footer className="sticky bottom-0 flex flex-col gap-1.5 border-t border-slate-200 bg-white/95 p-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95">
           {saveError && (
             <p className="text-xs text-red-600 dark:text-red-400">
               {saveError}
@@ -233,7 +233,7 @@ export const PageColorsScreen = ({
               type="button"
               onClick={() => onOpenInStudio()}
               title="Export as code, find near-duplicates and compare"
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-100 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
               <PanelsTopLeft className="size-4" />
               Open in Studio
             </button>
@@ -246,7 +246,7 @@ export const PageColorsScreen = ({
                   ? `Save as ${domain}`
                   : "Pages without a hostname can't be saved"
               }
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
               <Save className="size-4" />
               {isSaving ? "Saving…" : "Save palette"}
             </button>

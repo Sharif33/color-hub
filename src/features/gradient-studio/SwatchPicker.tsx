@@ -1,8 +1,8 @@
 import { useState } from "react"
 
-import { Dropdown } from "~components/dropdown"
-import { usePaletteColors } from "~hooks/use-palette-colors"
-import type { PaletteSource } from "~lib/constants"
+import { Dropdown } from "~/components/dropdown"
+import { usePaletteColors } from "~/hooks/use-palette-colors"
+import type { PaletteSource } from "~/lib/constants"
 
 type SwatchSource = Exclude<PaletteSource, "saved-pairs">
 
@@ -29,7 +29,7 @@ export const SwatchPicker = ({ currentColor, onPick }: SwatchPickerProps) => {
       title={label}
       aria-label={label}
       onClick={() => onPick(hex)}
-      className="size-6 rounded-lg border border-black/5 shadow-sm transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 active:scale-95"
+      className="size-6 rounded-lg border border-black/5 shadow-xs transition-transform hover:scale-110 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 active:scale-95"
       style={{ backgroundColor: hex }}
     />
   )

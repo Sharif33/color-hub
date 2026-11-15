@@ -1,9 +1,9 @@
 import { ArrowRight } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import { Dropdown } from "~components/dropdown"
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
-import { cn } from "~lib/cn"
+import { Dropdown } from "~/components/dropdown"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
+import { cn } from "~/lib/cn"
 
 import { ColorSwatch } from "./ColorSwatch"
 import { comparePalettes, SHIFT_THRESHOLD, type DiffKind } from "./compare"
