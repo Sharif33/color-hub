@@ -1,9 +1,9 @@
 import { Trash2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
-import { cn } from "~lib/cn"
-import type { SavedGradient } from "~lib/saved-gradients"
-import { backgroundImageCss } from "~utils/gradient"
+import { cn } from "~/lib/cn"
+import type { SavedGradient } from "~/lib/saved-gradients"
+import { backgroundImageCss } from "~/utils/gradient"
 
 import { CHECKERBOARD, iconButton } from "./ui"
 
@@ -50,7 +50,7 @@ const NameField = ({
           event.currentTarget.blur()
         }
       }}
-      className="min-w-0 flex-1 truncate rounded-md bg-transparent px-1 py-0.5 text-xs font-medium text-slate-700 outline-none hover:bg-slate-100 focus:bg-white focus:ring-2 focus:ring-blue-500/30"
+      className="min-w-0 flex-1 truncate rounded-md bg-transparent px-1 py-0.5 text-xs font-medium text-slate-700 outline-hidden hover:bg-slate-100 focus:bg-white focus:ring-2 focus:ring-blue-500/30"
     />
   )
 }
@@ -68,7 +68,7 @@ export const SavedGradientsPanel = ({
     entry: SavedGradient
     index: number
   } | null>(null)
-  const undoTimer = useRef<ReturnType<typeof setTimeout>>()
+  const undoTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => () => clearTimeout(undoTimer.current), [])
 
@@ -117,7 +117,7 @@ export const SavedGradientsPanel = ({
                 title={`Open ${entry.name}`}
                 aria-label={`Open ${entry.name}`}
                 onClick={() => onOpen(entry)}
-                className="relative h-16 overflow-hidden rounded-xl ring-1 ring-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                className="relative h-16 overflow-hidden rounded-xl ring-1 ring-black/10 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 style={CHECKERBOARD}>
                 <span
                   className="absolute inset-0"

@@ -1,8 +1,8 @@
 import { useRef } from "react"
 
-import { cn } from "~lib/cn"
-import { parseColorWithAlpha } from "~utils/color-utils"
-import { gradientToCss, type Gradient } from "~utils/gradient"
+import { cn } from "~/lib/cn"
+import { parseColorWithAlpha } from "~/utils/color-utils"
+import { gradientToCss, type Gradient } from "~/utils/gradient"
 
 import { CHECKERBOARD } from "./ui"
 
@@ -140,9 +140,9 @@ export const GradientStopBar = ({
             onFocus={() => onSelect(index)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "absolute top-12 size-6 -translate-x-1/2 cursor-grab rounded-lg border-2 shadow-sm outline-none active:cursor-grabbing",
+              "absolute top-12 size-6 -translate-x-1/2 cursor-grab rounded-lg border-2 shadow-xs outline-hidden active:cursor-grabbing",
               // A tick from the stop up to the strip
-              "before:absolute before:-top-[9px] before:left-1/2 before:h-2 before:w-0.5 before:-translate-x-1/2 before:rounded-full",
+              "before:absolute before:top-[-9px] before:left-1/2 before:h-2 before:w-0.5 before:-translate-x-1/2 before:rounded-full",
               isSelected
                 ? "z-10 border-white ring-2 ring-blue-600 before:bg-blue-600"
                 : "border-white ring-1 ring-black/25 before:bg-slate-400 focus-visible:ring-2 focus-visible:ring-blue-400"

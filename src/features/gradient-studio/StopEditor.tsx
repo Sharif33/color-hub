@@ -1,8 +1,8 @@
 import { Lock, LockOpen, Pipette, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { hexToRgb, parseColorWithAlpha } from "~utils/color-utils"
-import { rgbaToHex, type GradientStop } from "~utils/gradient"
+import { hexToRgb, parseColorWithAlpha } from "~/utils/color-utils"
+import { rgbaToHex, type GradientStop } from "~/utils/gradient"
 
 import { resolveCssColor } from "./css-color"
 import { pickScreenColor } from "./eyedropper"
@@ -64,7 +64,7 @@ export const StopEditor = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <label
-          className="relative size-11 shrink-0 cursor-pointer overflow-hidden rounded-xl shadow-sm ring-1 ring-black/10"
+          className="relative size-11 shrink-0 cursor-pointer overflow-hidden rounded-xl shadow-xs ring-1 ring-black/10"
           style={CHECKERBOARD}
           title="Choose a color">
           <span
@@ -99,7 +99,7 @@ export const StopEditor = ({
             onKeyDown={(event) => {
               if (event.key === "Enter") commit(draft)
             }}
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white/50 pl-3 pr-10 font-mono text-sm font-semibold text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 aria-[invalid=true]:border-red-400"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white/50 pl-3 pr-10 font-mono text-sm font-semibold text-slate-700 outline-hidden transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 aria-invalid:border-red-400"
           />
           <button
             type="button"
@@ -120,7 +120,7 @@ export const StopEditor = ({
               : "Lock this color, so shuffling keeps it"
           }
           aria-label="Lock this color when shuffling"
-          className={`${iconButton} ${locked ? "!text-blue-600" : ""}`}>
+          className={`${iconButton} ${locked ? "text-blue-600!" : ""}`}>
           {locked ? (
             <Lock className="size-4" />
           ) : (

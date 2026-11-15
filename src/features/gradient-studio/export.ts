@@ -1,5 +1,5 @@
-import { formatColor } from "~utils/color-formats"
-import { parseColorWithAlpha } from "~utils/color-utils"
+import { formatColor } from "~/utils/color-formats"
+import { parseColorWithAlpha } from "~/utils/color-utils"
 import {
   backgroundImageCss,
   gradientToCss,
@@ -8,11 +8,11 @@ import {
   srgbStops,
   type Gradient,
   type GradientStop
-} from "~utils/gradient"
+} from "~/utils/gradient"
 import {
   nearestTailwindColor,
   type TailwindVersion
-} from "~utils/tailwind-match"
+} from "~/utils/tailwind-match"
 
 export type GradientExportFormat =
   | "css"

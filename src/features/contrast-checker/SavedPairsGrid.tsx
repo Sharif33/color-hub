@@ -1,14 +1,14 @@
 import { Trash2 } from "lucide-react"
 
-import type { SavedPair } from "~hooks/use-saved-pairs"
+import type { SavedPair } from "~/hooks/use-saved-pairs"
 import {
   blendColorPair,
   DEFAULT_BACKGROUND,
   DEFAULT_FOREGROUND,
   getContrastRatio,
   normalizeWithAlpha
-} from "~utils/color-utils"
-import { formatRatio } from "~utils/wcag-utils"
+} from "~/utils/color-utils"
+import { formatRatio } from "~/utils/wcag-utils"
 
 const getPairRatio = (pair: SavedPair): number => {
   const { foreground, background } = blendColorPair(
@@ -32,7 +32,7 @@ export function SavedPairsGrid({
   if (pairs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-12 px-4 text-center">
-        <div className="rounded-full bg-white p-3 shadow-sm ring-1 ring-slate-100">
+        <div className="rounded-full bg-white p-3 shadow-xs ring-1 ring-slate-100">
           <div className="h-6 w-6 rounded-full bg-slate-100" />
         </div>
         <div className="flex flex-col gap-1">

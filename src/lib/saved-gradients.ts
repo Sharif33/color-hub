@@ -1,4 +1,4 @@
-import { normalizeGradient, type Gradient } from "~utils/gradient"
+import { normalizeGradient, type Gradient } from "~/utils/gradient"
 
 export const SAVED_GRADIENTS_KEY = "savedGradients"
 

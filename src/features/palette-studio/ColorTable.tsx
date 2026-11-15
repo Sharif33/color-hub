@@ -1,13 +1,13 @@
 import { useMemo } from "react"
 
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
-import { formatColor, type ColorFormat } from "~utils/color-formats"
-import { parseColorWithAlpha } from "~utils/color-utils"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
+import { formatColor, type ColorFormat } from "~/utils/color-formats"
+import { parseColorWithAlpha } from "~/utils/color-utils"
 import {
   isExactTailwindMatch,
   nearestTailwindColor,
   type TailwindVersion
-} from "~utils/tailwind-match"
+} from "~/utils/tailwind-match"
 
 import { ColorSwatch } from "./ColorSwatch"
 
@@ -170,7 +170,7 @@ export const ColorTable = ({
                   <div className="flex items-center gap-1.5">
                     <ColorSwatch
                       hex={tailwindHex}
-                      className="h-4 w-4 rounded"
+                      className="h-4 w-4 rounded-sm"
                     />
                     <CopyButton
                       text={tailwindName}

@@ -1,25 +1,19 @@
 // Generates src/lib/tailwind-palettes.ts.
 //
-// Tailwind v3 colors come from the installed `tailwindcss` package. Tailwind
-// v4 isn't installed (the extension builds with v3), so pass its theme.css and
-// version, e.g. from https://unpkg.com/tailwindcss@4.3.3/theme.css:
+// Tailwind v4 colors come from the installed `tailwindcss` package (its
+// theme.css). Tailwind v3 colors come from `tailwindcss-v3`, a devDependency
+// alias for the last v3 release, since the extension builds with v4:
 //
-//   node scripts/gen-tailwind-palettes.mjs path/to/theme.css 4.3.3
+//   node scripts/gen-tailwind-palettes.mjs
 
 import { readFileSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 
-const [themeCssPath, v4Version] = process.argv.slice(2)
-if (!themeCssPath || !v4Version) {
-  console.error(
-    "Usage: node scripts/gen-tailwind-palettes.mjs <v4 theme.css> <v4 version>"
-  )
-  process.exit(1)
-}
-
 const require = createRequire(import.meta.url)
-const v3Colors = require("tailwindcss/colors")
-const v3Version = require("tailwindcss/package.json").version
+const v3Colors = require("tailwindcss-v3/colors")
+const v3Version = require("tailwindcss-v3/package.json").version
+const themeCssPath = require.resolve("tailwindcss/theme.css")
+const v4Version = require("tailwindcss/package.json").version
 
 const v3 = {}
 for (const name of Object.keys(v3Colors)) {

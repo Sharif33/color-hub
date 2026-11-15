@@ -1,7 +1,7 @@
 import { PanelsTopLeft, Trash2 } from "lucide-react"
 
-import { ColorSwatchButton } from "~features/popup/ColorSwatchButton"
-import { ScreenHeader } from "~features/popup/ScreenHeader"
+import { ColorSwatchButton } from "~/features/popup/ColorSwatchButton"
+import { ScreenHeader } from "~/features/popup/ScreenHeader"
 
 import type { AnalyzedColor } from "./index"
 

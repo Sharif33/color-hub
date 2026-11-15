@@ -1,4 +1,4 @@
-import { cn } from "~lib/cn"
+import { cn } from "~/lib/cn"
 
 // Translucent colors are shown over a checkerboard, so their alpha is visible
 const CHECKERBOARD = {

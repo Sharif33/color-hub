@@ -1,6 +1,6 @@
-import logo from "data-base64:~assets/color-hub-logo.png"
+import logo from "~/assets/color-hub-logo.png"
 
-import { cn } from "~lib/cn"
+import { cn } from "~/lib/cn"
 
 interface ColorHubLogoProps {
   className?: string

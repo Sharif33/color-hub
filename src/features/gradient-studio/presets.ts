@@ -1,4 +1,4 @@
-import { DEFAULT_GRADIENT, type Gradient } from "~utils/gradient"
+import { DEFAULT_GRADIENT, type Gradient } from "~/utils/gradient"
 
 const preset = (
   name: string,

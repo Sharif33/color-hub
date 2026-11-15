@@ -1,10 +1,10 @@
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
-import { formatColor } from "~utils/color-formats"
-import { hexToRgb, parseColorWithAlpha } from "~utils/color-utils"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
+import { formatColor } from "~/utils/color-formats"
+import { hexToRgb, parseColorWithAlpha } from "~/utils/color-utils"
 import {
   nearestTailwindColor,
   type TailwindVersion
-} from "~utils/tailwind-match"
+} from "~/utils/tailwind-match"
 
 export type ExportFormat =
   | "css"

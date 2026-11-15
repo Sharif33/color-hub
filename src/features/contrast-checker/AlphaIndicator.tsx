@@ -15,7 +15,7 @@ export function AlphaIndicator({
   if (!hasAlpha) return null
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-blue-200/60 bg-blue-50/50 p-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-2xl border border-blue-200/60 bg-blue-50/50 p-4 shadow-xs">
       <div className="flex items-center gap-2.5">
         <div className="relative flex h-2.5 w-2.5 items-center justify-center">
           <div className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
@@ -36,7 +36,7 @@ export function AlphaIndicator({
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs">{effectiveForeground}</span>
               <span
-                className="h-4 w-4 rounded-md shadow-sm ring-1 ring-blue-200"
+                className="h-4 w-4 rounded-md shadow-xs ring-1 ring-blue-200"
                 style={{ backgroundColor: effectiveForeground }}
               />
             </div>
@@ -51,7 +51,7 @@ export function AlphaIndicator({
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs">{effectiveBackground}</span>
               <span
-                className="h-4 w-4 rounded-md shadow-sm ring-1 ring-blue-200"
+                className="h-4 w-4 rounded-md shadow-xs ring-1 ring-blue-200"
                 style={{ backgroundColor: effectiveBackground }}
               />
             </div>

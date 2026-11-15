@@ -1,10 +1,10 @@
-import { cn } from "~lib/cn"
+import { cn } from "~/lib/cn"
 import {
   GRADIENT_EASINGS,
   gradientToCss,
   INTERPOLATION_SPACES,
   type Gradient
-} from "~utils/gradient"
+} from "~/utils/gradient"
 
 import { CHECKERBOARD, Segmented, SliderField } from "./ui"
 
@@ -40,7 +40,7 @@ export const BlendControls = ({ gradient, onChange }: BlendControlsProps) => (
             aria-checked={selected}
             onClick={() => onChange({ space: space.value })}
             className={cn(
-              "flex flex-col gap-1.5 rounded-2xl border p-2.5 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500",
+              "flex flex-col gap-1.5 rounded-2xl border p-2.5 text-left transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500",
               selected
                 ? "border-blue-200 bg-blue-50 ring-1 ring-blue-200"
                 : "border-slate-200/80 bg-white/80 hover:border-slate-300"

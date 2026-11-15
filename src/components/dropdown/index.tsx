@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
-import { cn } from "~lib/cn"
+import { cn } from "~/lib/cn"
 
 export interface DropdownOption<T extends string> {
   value: T
@@ -71,7 +71,7 @@ export function Dropdown<T extends string>({
         aria-label={ariaLabel}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 border border-slate-200/80 bg-white/80 backdrop-blur-sm text-xs font-semibold text-slate-600 shadow-sm transition-all hover:border-slate-300 hover:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 active:scale-95",
+          "flex items-center gap-2 border border-slate-200/80 bg-white/80 backdrop-blur-xs text-xs font-semibold text-slate-600 shadow-xs transition-all hover:border-slate-300 hover:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 active:scale-95",
           TRIGGER_SIZES[size]
         )}>
         <span>{selectedOption?.label}</span>
@@ -103,7 +103,7 @@ export function Dropdown<T extends string>({
               )}>
               {option.label}
               {option.value === value && (
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 shadow-sm" />
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 shadow-xs" />
               )}
             </button>
           ))}

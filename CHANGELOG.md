@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
 ## [Unreleased]
+
+## [1.2.1] - 2026-11-15
 ### Added
 - Gradient Studio, a page for making and editing CSS gradients, opened from the gradient button next to `Adjust` in the popup (it starts from the current color).
   - Linear, radial and conic gradients. Drag stops along a strip, click it to add one, and set each stop's color, opacity and position. Arrow keys move a focused stop and Delete removes it.
@@ -27,6 +29,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - The popup is 360px wide (was 300px), and the color editor's hue slider is horizontal.
 - In the History screen, `Remove` takes the last picked color off the toolbar icon. This replaces the `×` next to `Last Picked`.
 - Deleting a saved palette and clearing the history now ask in the popup's own dialog instead of a browser alert. The dialog says what will be removed and names the action on its button (`Delete palette`, `Clear history`). Cancel has focus first, and Esc or a click outside the dialog cancels.
+- Rebuilt the extension with WXT and Vite instead of Plasmo. Pages now share code instead of each carrying its own copy, so the download is about a quarter of the size (0.91 MB to 0.24 MB). Features, permissions and saved data are unchanged.
+- Updated to React 19 and Tailwind CSS 4. Tailwind 4's palette is a little more vivid, so the extension's own grays and accents look slightly different.
+- Extension pages moved from `tabs/<name>.html` to `<name>.html`, e.g. `contrast-checker.html`. Bookmarks to the old addresses no longer open.
+- Building the extension needs Node 22 or newer, and `pnpm zip` writes the release zip to `dist/`.
 
 ## [1.2.0] - 2026-10-25
 ### Added

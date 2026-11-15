@@ -1,9 +1,9 @@
-import type { Gradient } from "~utils/gradient"
+import type { Gradient } from "~/utils/gradient"
 
 // Kept apart from the React components, so the popup and the background
 // script can open the studio without loading them
 
-export const GRADIENT_STUDIO_PAGE = "tabs/gradient-studio.html"
+export const GRADIENT_STUDIO_PAGE = "gradient-studio.html"
 
 /** `#rrggbb` as the `color` parameter, which has no `#` */
 export const colorParam = (hex: string) => hex.replace(/^#/, "").toLowerCase()

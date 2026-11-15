@@ -67,7 +67,7 @@ export function TypographyControls({
                 value={sizeDraft}
                 onChange={(e) => handleSizeInput(e.target.value)}
                 onBlur={() => setSizeDraft(String(fontSize))}
-                className="w-10 bg-transparent text-right font-mono text-sm font-bold text-slate-700 outline-none"
+                className="w-10 bg-transparent text-right font-mono text-sm font-bold text-slate-700 outline-hidden"
               />
               <span className="text-xs font-medium text-slate-400">px</span>
             </div>
@@ -79,7 +79,7 @@ export function TypographyControls({
               max={MAX_FONT_SIZE}
               value={fontSize}
               onChange={(event) => onFontSizeChange(Number(event.target.value))}
-              className="absolute w-full h-1.5 cursor-pointer appearance-none rounded-full bg-slate-200 outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:ring-1 [&::-webkit-slider-thumb]:ring-slate-200 [&::-webkit-slider-thumb]:transition-transform hover:[&::-webkit-slider-thumb]:scale-110 active:[&::-webkit-slider-thumb]:scale-95 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:ring-1 [&::-moz-range-thumb]:ring-slate-200 [&::-moz-range-thumb]:transition-transform hover:[&::-moz-range-thumb]:scale-110 active:[&::-moz-range-thumb]:scale-95"
+              className="absolute w-full h-1.5 cursor-pointer appearance-none rounded-full bg-slate-200 outline-hidden [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:ring-1 [&::-webkit-slider-thumb]:ring-slate-200 [&::-webkit-slider-thumb]:transition-transform hover:[&::-webkit-slider-thumb]:scale-110 active:[&::-webkit-slider-thumb]:scale-95 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:ring-1 [&::-moz-range-thumb]:ring-slate-200 [&::-moz-range-thumb]:transition-transform hover:[&::-moz-range-thumb]:scale-110 active:[&::-moz-range-thumb]:scale-95"
               style={{
                 background: `linear-gradient(to right, #3b82f6 ${((fontSize - MIN_FONT_SIZE) / (MAX_FONT_SIZE - MIN_FONT_SIZE)) * 100}%, #e2e8f0 ${((fontSize - MIN_FONT_SIZE) / (MAX_FONT_SIZE - MIN_FONT_SIZE)) * 100}%)`
               }}
@@ -92,7 +92,7 @@ export function TypographyControls({
         </div>
 
         {/* Bold Toggle */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-200/60 bg-white p-3 shadow-sm transition-colors hover:border-slate-300">
+        <div className="flex items-center justify-between rounded-xl border border-slate-200/60 bg-white p-3 shadow-xs transition-colors hover:border-slate-300">
           <span className="text-sm font-semibold text-slate-700">
             Bold Weight
           </span>
@@ -101,7 +101,7 @@ export function TypographyControls({
             role="switch"
             aria-checked={isBold}
             onClick={onBoldToggle}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-blue-500/20 ${
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-4 focus:ring-blue-500/20 ${
               isBold ? "bg-blue-500" : "bg-slate-200"
             }`}>
             <span

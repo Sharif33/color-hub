@@ -3,9 +3,9 @@
 Thanks for your interest in contributing to Color Hub.
 
 ## Development setup
-1. Install dependencies: `pnpm install`
+1. Use Node 22 or newer, then install dependencies: `pnpm install`
 2. Start the dev server: `pnpm dev`
-3. Load the unpacked extension from `build/chrome-mv3-dev`
+3. Load the unpacked extension from `dist/chrome-mv3-dev`
 
 ## Pull requests
 - Keep changes focused and small where possible.

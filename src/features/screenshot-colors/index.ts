@@ -1,4 +1,4 @@
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
 
 import { quantizePixels } from "./quantize"
 

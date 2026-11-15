@@ -1,7 +1,7 @@
 import { Check, ChevronDown, Download } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
-import { cn } from "~lib/cn"
+import { cn } from "~/lib/cn"
 
 import {
   exportReport,
@@ -106,7 +106,7 @@ export const ExportMenu = ({ pairs, info }: ExportMenuProps) => {
         aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
         disabled={pairs.length === 0}
-        className="flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:border-slate-300 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">
+        className="flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 shadow-xs transition-all hover:border-slate-300 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">
         {done ? (
           <Check className="size-3.5 text-emerald-600" strokeWidth={3} />
         ) : (

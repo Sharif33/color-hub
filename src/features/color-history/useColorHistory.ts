@@ -1,24 +1,28 @@
 import { useEffect, useRef, useState } from "react"
 
-import type { ColorEntry } from "~utils/color-utils"
+import type { ColorEntry } from "~/utils/color-utils"
 
 interface UseColorHistoryOptions {
   onPickedColor: (color: ColorEntry, source: "hydrate" | "storage") => void
 }
 
-export const useColorHistory = ({
-  onPickedColor
-}: UseColorHistoryOptions) => {
+export const useColorHistory = ({ onPickedColor }: UseColorHistoryOptions) => {
   const [colorHistory, setColorHistory] = useState<ColorEntry[]>([])
-  const [lastPickedColor, setLastPickedColor] = useState<ColorEntry | null>(null)
+  const [lastPickedColor, setLastPickedColor] = useState<ColorEntry | null>(
+    null
+  )
   // Callers pass a new callback every render. Reading it through a ref keeps
   // the effect from re-running, which re-read storage and re-rendered forever
   const onPickedColorRef = useRef(onPickedColor)
   onPickedColorRef.current = onPickedColor
 
   useEffect(() => {
-    chrome.storage.local.get(["colorHistory", "lastPickedColor"], (result) => {
-      if (Array.isArray(result.colorHistory)) setColorHistory(result.colorHistory)
+    chrome.storage.local.get<{
+      colorHistory?: ColorEntry[]
+      lastPickedColor?: ColorEntry
+    }>(["colorHistory", "lastPickedColor"], (result) => {
+      if (Array.isArray(result.colorHistory))
+        setColorHistory(result.colorHistory)
       if (result.lastPickedColor?.hex) {
         const picked = result.lastPickedColor as ColorEntry
         setLastPickedColor(picked)

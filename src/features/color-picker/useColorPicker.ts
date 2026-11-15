@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { hsvToRgb, type HSV } from "~utils/color-utils"
+import { hsvToRgb, type HSV } from "~/utils/color-utils"
 
 export const useColorPicker = (initial: HSV) => {
   const [hsv, setHsv] = useState<HSV>(initial)

@@ -1,4 +1,4 @@
-import { TAILWIND_V3, TAILWIND_V4 } from "~lib/tailwind-palettes"
+import { TAILWIND_V3, TAILWIND_V4 } from "~/lib/tailwind-palettes"
 
 import { deltaE2000, hexToLab, parseColor, type Lab } from "./color-utils"
 

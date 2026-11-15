@@ -1,5 +1,21 @@
 # Release Notes
 
+## 1.2.1 (2026-11-15)
+Gradient Studio, a redesigned popup, and a much smaller download.
+
+Highlights:
+- Gradient Studio: make and edit linear, radial and conic gradients, blend in sRGB, OKLab or OKLCH, add easing and grain, and export as CSS, Tailwind, SwiftUI, Compose, Flutter, Android XML or SVG
+- Gradient ideas and presets, readability checks for text on a gradient with one-click fixes, and saved gradients (included in backups)
+- `Page colors` lists the page's gradients, and the hover inspector shows an element's gradient. Both can open it in Gradient Studio
+- The WCAG report and the hover inspector judge text on a gradient by the gradient's lowest-contrast color behind it
+- Redesigned popup: the current color as a full-width band, each tool on its own screen, light and dark mode, and confirmations in the popup instead of browser alerts
+- Rebuilt with WXT instead of Plasmo: the download is about 4× smaller, with no change to features, permissions or saved data
+- Extension pages moved from `tabs/<name>.html` to `<name>.html`
+
+Permissions used:
+- `activeTab`, `tabs`, `storage`, `unlimitedStorage`, `scripting`, `contextMenus` (no new permissions)
+- `host_permissions`: `<all_urls>`
+
 ## 1.2.0 (2026-10-25)
 Developer tools: get a page's colors into your code as tokens, check accessibility more deeply, and trust the analysis more.
 

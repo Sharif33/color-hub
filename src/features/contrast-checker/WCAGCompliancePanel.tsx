@@ -1,4 +1,4 @@
-import { formatRatio, type WCAGCompliance } from "~utils/wcag-utils"
+import { formatRatio, type WCAGCompliance } from "~/utils/wcag-utils"
 
 import { ComplianceBadge } from "./ComplianceBadge"
 
@@ -57,7 +57,7 @@ export function WCAGCompliancePanel({
         title="Color Contrast Ratio"
         className="flex items-baseline gap-2 pb-2">
         <p
-          className={`text-6xl font-black tracking-tighter leading-none ${ratioColor} drop-shadow-sm`}>
+          className={`text-6xl font-black tracking-tighter leading-none ${ratioColor} drop-shadow-xs`}>
           {formatRatio(ratio)}
         </p>
         <span className="text-2xl font-bold text-slate-300 tracking-tight">
@@ -69,8 +69,8 @@ export function WCAGCompliancePanel({
         <div
           className={`flex flex-col gap-4 rounded-2xl border p-4 transition-all duration-300 ${
             !largeText
-              ? "border-blue-200 bg-blue-50/30 shadow-sm shadow-blue-100/50 ring-1 ring-blue-500/5"
-              : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm"
+              ? "border-blue-200 bg-blue-50/30 shadow-xs shadow-blue-100/50 ring-1 ring-blue-500/5"
+              : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-xs"
           }`}>
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-700">Normal Text</p>
@@ -99,8 +99,8 @@ export function WCAGCompliancePanel({
         <div
           className={`flex flex-col gap-4 rounded-2xl border p-4 transition-all duration-300 ${
             largeText
-              ? "border-blue-200 bg-blue-50/30 shadow-sm shadow-blue-100/50 ring-1 ring-blue-500/5"
-              : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm"
+              ? "border-blue-200 bg-blue-50/30 shadow-xs shadow-blue-100/50 ring-1 ring-blue-500/5"
+              : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-xs"
           }`}>
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-700">Large Text</p>
@@ -126,7 +126,7 @@ export function WCAGCompliancePanel({
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-4 transition-all duration-300 hover:border-slate-200 hover:shadow-sm">
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-4 transition-all duration-300 hover:border-slate-200 hover:shadow-xs">
           <p className="text-sm font-semibold text-slate-700">Graphics & UI</p>
           <div className="flex gap-3">
             <ComplianceBadge

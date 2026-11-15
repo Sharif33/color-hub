@@ -1,5 +1,5 @@
-import { formatLc } from "~utils/apca"
-import { formatRatio, suggestAccessibleColors } from "~utils/wcag-utils"
+import { formatLc } from "~/utils/apca"
+import { formatRatio, suggestAccessibleColors } from "~/utils/wcag-utils"
 
 /** A contrast pair as the report shows it */
 export interface ReportPair {

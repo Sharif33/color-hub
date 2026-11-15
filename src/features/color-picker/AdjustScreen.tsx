@@ -1,13 +1,13 @@
 import { BookmarkPlus, Check, Copy } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { ScreenHeader } from "~features/popup/ScreenHeader"
-import { TailwindMatchChip } from "~features/tailwind-match/TailwindMatchChip"
+import { ScreenHeader } from "~/features/popup/ScreenHeader"
+import { TailwindMatchChip } from "~/features/tailwind-match/TailwindMatchChip"
 import {
   COLOR_FORMATS,
   formatColor,
   type ColorFormat
-} from "~utils/color-formats"
+} from "~/utils/color-formats"
 import {
   formatHsl,
   formatOklch,
@@ -17,8 +17,8 @@ import {
   rgbToHsv,
   type ColorEntry,
   type HSV
-} from "~utils/color-utils"
-import type { TailwindVersion } from "~utils/tailwind-match"
+} from "~/utils/color-utils"
+import type { TailwindVersion } from "~/utils/tailwind-match"
 
 // The formats that don't have their own row above the "Copy as" row
 const CODE_FORMATS = COLOR_FORMATS.filter(({ value }) =>
@@ -28,8 +28,8 @@ const CODE_FORMATS = COLOR_FORMATS.filter(({ value }) =>
 interface AdjustScreenProps {
   hsv: HSV
   currentColor: ColorEntry | null
-  gradientRef: React.RefObject<HTMLCanvasElement>
-  hueRef: React.RefObject<HTMLCanvasElement>
+  gradientRef: React.RefObject<HTMLCanvasElement | null>
+  hueRef: React.RefObject<HTMLCanvasElement | null>
   onGradientMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void
   onHueMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void
   /** Paints the canvases, which only exist while this screen is open */
@@ -46,7 +46,7 @@ interface AdjustScreenProps {
 }
 
 const inputClass =
-  "h-8 w-full min-w-0 rounded-md border border-slate-200 bg-white px-2 font-mono text-xs focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-800"
+  "h-8 w-full min-w-0 rounded-md border border-slate-200 bg-white px-2 font-mono text-xs focus:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-800"
 
 const CopyButton = ({
   copied,
@@ -62,7 +62,7 @@ const CopyButton = ({
     onClick={onClick}
     aria-label={`Copy ${label}`}
     title={`Copy ${label}`}
-    className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+    className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
     {copied ? (
       <Check className="size-3.5 text-emerald-600" strokeWidth={3} />
     ) : (
@@ -376,8 +376,8 @@ export const AdjustScreen = ({
                   onClick={() => setCodeFormat(value)}
                   className={
                     codeFormat === value
-                      ? "rounded px-1 py-1 text-[11px] font-semibold shadow-sm bg-white dark:bg-slate-600"
-                      : "rounded px-1 py-1 text-[11px] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                      ? "rounded-sm px-1 py-1 text-[11px] font-semibold shadow-xs bg-white dark:bg-slate-600"
+                      : "rounded-sm px-1 py-1 text-[11px] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                   }>
                   {label.split(" / ")[0]}
                 </button>
@@ -415,7 +415,7 @@ export const AdjustScreen = ({
         <button
           type="button"
           onClick={handleSave}
-          className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-100 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:bg-slate-800">
           {saved ? (
             <Check className="size-4 text-emerald-600" strokeWidth={3} />
           ) : (

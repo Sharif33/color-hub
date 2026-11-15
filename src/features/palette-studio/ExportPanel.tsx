@@ -1,9 +1,9 @@
 import { Check, Copy, Download } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import type { AnalyzedColor } from "~features/webpage-color-analyzer"
-import { cn } from "~lib/cn"
-import type { TailwindVersion } from "~utils/tailwind-match"
+import type { AnalyzedColor } from "~/features/webpage-color-analyzer"
+import { cn } from "~/lib/cn"
+import type { TailwindVersion } from "~/utils/tailwind-match"
 
 import {
   EXPORT_FORMATS,
@@ -133,7 +133,7 @@ export const ExportPanel = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:border-slate-300">
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300">
             {copied ? (
               <Check className="size-3.5 text-emerald-600" strokeWidth={3} />
             ) : (
@@ -144,7 +144,7 @@ export const ExportPanel = ({
           <button
             type="button"
             onClick={handleDownload}
-            className="flex items-center gap-1.5 rounded-xl bg-slate-800 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-700">
+            className="flex items-center gap-1.5 rounded-xl bg-slate-800 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-700">
             <Download className="size-3.5" />
             Download .{extension}
           </button>

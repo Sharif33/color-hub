@@ -4,39 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Color Hub is a Chrome MV3 extension built with **Plasmo 0.90.5**, React 18, Tailwind 3 and `lucide-react`. Package manager is **pnpm**.
+Color Hub is a Chrome MV3 extension built with **WXT 0.21.5** (Vite 8), React 19, Tailwind 4 and `lucide-react`. Package manager is **pnpm**.
 
 ## Commands
 
 ```bash
 pnpm install
-pnpm dev                 # dev build with HMR → load build/chrome-mv3-dev via chrome://extensions "Load unpacked"
-pnpm build               # production build + zip → build/chrome-mv3-prod(.zip)
-pnpm package             # zip an existing build
-pnpm exec tsc --noEmit --incremental false   # type check (passes clean; the flag stops it writing an untracked tsconfig.tsbuildinfo)
+pnpm dev                 # dev build with HMR → load dist/chrome-mv3-dev via chrome://extensions "Load unpacked"
+pnpm build               # production build → dist/chrome-mv3
+pnpm zip                 # build + zip → dist/color-hub-v<version>-chrome.zip
+pnpm compile             # type check (tsc --noEmit)
 pnpm exec prettier --write <files>
 ```
 
+- Node 22 or newer is required (`engines`). `postinstall` runs `wxt prepare`, which generates `.wxt/`.
 - There is no test suite and no linter.
-- CI (`.github/workflows/ci.yml`, Node 20 / pnpm 9) runs only `pnpm install --frozen-lockfile` and `pnpm build`, so keep `pnpm-lock.yaml` in sync with `package.json`. pnpm 9 rejects a lockfile with more than one YAML document, which pnpm 11+ creates by prepending a `packageManagerDependencies` block. Don't commit that block.
+- CI (`.github/workflows/ci.yml`, Node 24 / pnpm 9) runs only `pnpm install --frozen-lockfile`, `pnpm compile` and `pnpm zip`, so keep `pnpm-lock.yaml` in sync with `package.json`. pnpm 9 rejects a lockfile with more than one YAML document, which pnpm 11+ creates by prepending a `packageManagerDependencies` block. Don't commit that block.
 - `.github/workflows/release.yml` publishes the GitHub release on every push to `main` whose `package.json` version has no tag yet (see Releases below).
 - Prettier is not enforced, and several existing files are unformatted. Format only the files you touch so diffs stay small.
 
 ## Architecture
 
-### Plasmo entry points and manifest
-- Plasmo routes entry points by file name:
-  - `src/popup.tsx` → the action popup.
-  - `src/background.ts` → the service worker.
-  - `src/options.tsx` → the options page (Settings), opened with `chrome.runtime.openOptionsPage()`.
-  - `src/tabs/<name>.tsx` → an extension page at `tabs/<name>.html`, opened with `chrome.tabs.create({ url: chrome.runtime.getURL("tabs/<name>.html") })`. The pages are `contrast-checker`, `wcag-contrast-analyzer`, `palette-studio` and `gradient-studio`. Palette Studio is opened with `openPaletteStudio()` from `~features/palette-studio/pending`, and takes `?domain=` or `?pending=1`, plus an optional `&view=colors|export|lint|compare`. Gradient Studio is opened with `openGradientStudio()` from `~features/gradient-studio/open`, and takes `?color=RRGGBB` (start from one color) or `?g=` (a gradient from `encodeGradient`, base64url JSON, checked with `normalizeGradient`), plus `&id=` for the saved gradient being edited. It keeps `?g=` up to date as you edit.
-- The manifest is generated from the `manifest` field in `package.json`, so change permissions there. Per CONTRIBUTING, permission or privacy changes also need a `README.md` update. `contextMenus` is used by the right-click menu (`~features/context-menu`), which the background registers on install and shows only on http(s) and file pages.
-- `.plasmo/` and `build/` are generated. Don't edit them.
-- The path alias `~` maps to `src/` (e.g. `~utils/color-utils`). Images are imported as `data-base64:~assets/...`. One directory name contains a space: `src/components/color hub/`.
+### WXT entry points and manifest
+- WXT routes entry points by folder name under `src/entrypoints/` (`srcDir` is `src`):
+  - `src/entrypoints/popup/` → the action popup.
+  - `src/entrypoints/background.ts` → the service worker. Its code must be inside `defineBackground(() => { ... })` (from `#imports`), with no runtime code at module top level, because WXT imports it in Node during the build.
+  - `src/entrypoints/options/` → the options page (Settings), opened with `chrome.runtime.openOptionsPage()`. Its `index.html` has `<meta name="manifest.open_in_tab" content="true" />`.
+  - `src/entrypoints/<name>/` → an extension page at `<name>.html`, opened with `chrome.tabs.create({ url: chrome.runtime.getURL("<name>.html") })`. Each page folder has `index.html`, `main.tsx` (mounts) and `App.tsx` (the component). To add a page, create those three files. `main.tsx` files don't use `<StrictMode>`, on purpose. The pages are `contrast-checker`, `wcag-contrast-analyzer`, `palette-studio` and `gradient-studio`. Palette Studio is opened with `openPaletteStudio()` from `~features/palette-studio/pending`, and takes `?domain=` or `?pending=1`, plus an optional `&view=colors|export|lint|compare`. Gradient Studio is opened with `openGradientStudio()` from `~features/gradient-studio/open`, and takes `?color=RRGGBB` (start from one color) or `?g=` (a gradient from `encodeGradient`, base64url JSON, checked with `normalizeGradient`), plus `&id=` for the saved gradient being edited. It keeps `?g=` up to date as you edit.
+- The manifest is generated from `manifest` in `wxt.config.ts`, so change permissions there. Version and description still come from `package.json`. Per CONTRIBUTING, permission or privacy changes also need a `README.md` update. `contextMenus` is used by the right-click menu (`~features/context-menu`), which the background registers on install and shows only on http(s) and file pages.
+- `.wxt/` and `dist/` are generated. Don't edit them.
+- The path alias `~` maps to `src/` (e.g. `~/utils/color-utils`). Images are imported normally (`import logo from "~/assets/color-hub-logo.png"` gives a URL). Icons are in `public/icon/`. `tsconfig.json` extends `.wxt/tsconfig.json` and turns off `noUncheckedIndexedAccess` for now. The code uses `chrome.*` directly, not `browser.*`. One directory name contains a space: `src/components/color hub/`.
 
 ### Page interaction: injected functions, no content scripts
 The extension has no content scripts. All work on the page goes through `chrome.scripting.executeScript({ func, args })`, called from the popup or the background script (see `src/features/webpage-color-analyzer/index.ts`).
-- **Injected functions are serialized**, so they must be self-contained: no imports, and no references to module-scope helpers. That is why `parseCssColor` (which resolves `oklch()`/`lab()`/`color()` through a 1×1 canvas, since computed styles keep those as written) and its helpers are copied inside each injected function. Don't refactor them to use `~utils/color-utils`. Pass inputs through `args`.
+- **Injected functions are serialized**, so they must be self-contained: no imports, and no references to module-scope helpers. That is why `parseCssColor` (which resolves `oklch()`/`lab()`/`color()` through a 1×1 canvas, since computed styles keep those as written) and its helpers are copied inside each injected function. Don't refactor them to use `~/utils/color-utils`. Pass inputs through `args`. Auto-imports are off (`imports: false`) on purpose: with them on, an injected function could use a `src/utils` helper with no type error, then throw a ReferenceError on the page.
 - Page-highlight overlays live under `#ecp-highlight-root` as `[data-ecp-highlight="true"]` nodes. Cleanup code in both `background.ts` and the analyzer depends on these markers, and the color scan skips them.
 - Page scans run in every frame (`runInAllFrames`, which falls back to the top frame if a frame can't be scripted) and walk into open and closed shadow roots. Each frame returns raw counts that `mergeColorScans` / `mergeContrastScans` add up, so ranking and limits are applied after merging.
 - CSS variables are matched to colors by value: `scanColorsInPage` reads custom property names from same-origin stylesheets (cross-origin ones throw and are skipped) and resolves them on `:root`, then `body`. Variables defined only on deeper elements aren't found.
@@ -47,7 +48,7 @@ The extension has no content scripts. All work on the page goes through `chrome.
 - `chrome://`, `edge://`, `about:` and similar pages can't be scripted (see `src/utils/restricted-urls.ts`). The popup disables page-based features on them.
 
 ### State: `chrome.storage.local` is the source of truth
-The code calls `chrome.storage.local` directly. `@plasmohq/storage` and `@plasmohq/messaging` are installed but unused. Hooks do an initial `get` and then subscribe with `chrome.storage.onChanged`, which keeps the popup, the tabs and the background script in sync. Storage keys:
+The code calls `chrome.storage.local` directly. Hooks do an initial `get` and then subscribe with `chrome.storage.onChanged`, which keeps the popup, the tabs and the background script in sync. Storage keys:
 
 | Key | Shape | Notes |
 |---|---|---|
@@ -78,8 +79,8 @@ Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING`
 - **WCAG analysis:**
   1. The popup calls `analyzeWebpageContrastPairs()`. It scans text elements and composites the text color over every ancestor's background color and `opacity` up to the root, on a white canvas, to get the colors actually rendered. On a gradient background, the text is judged by the gradient's lowest-contrast color behind it (`onGradient` on the pair): for a linear gradient, the stretch under the text's own bounds; for radial, conic and repeating ones, all of its colors. Gradient blends are taken in sRGB there, so `in oklch` gradients come out close, not exact. Other background images are ignored. The inspector does the same. Each pair is flagged `largeText` (≥ 24px, or ≥ 18.66px bold) and judged at 3:1 / 4.5:1. It resolves `null` and writes nothing when the page can't be scripted.
   2. It writes the result to `WCAG_ANALYSIS_PENDING`.
-  3. It opens `tabs/wcag-contrast-analyzer.html`.
-- **Contrast checker** (`tabs/contrast-checker.tsx`) reads `?fg=RRGGBB&bg=RRGGBB` (no `#`), plus `&large=1` to start at 24px so the pair is judged as large text. The WCAG analyzer links into it this way.
+  3. It opens `wcag-contrast-analyzer.html`.
+- **Contrast checker** (`src/entrypoints/contrast-checker/`) reads `?fg=RRGGBB&bg=RRGGBB` (no `#`), plus `&large=1` to start at 24px so the pair is judged as large text. The WCAG analyzer links into it this way.
 - **Color math** is in pure functions in `src/utils/color-utils.ts` (parsing, conversion including OKLab/OKLCH and CIE Lab, CIEDE2000 `deltaE2000`, alpha blending, relative luminance, contrast ratio), `src/utils/color-formats.ts` (writing a color as CSS or platform code), `src/utils/tailwind-match.ts` (nearest Tailwind color), `src/utils/apca.ts` (APCA Lc), `src/utils/wcag-utils.ts` (AA/AAA thresholds, the large-text rule, accessible-color suggestions) and `src/utils/gradient.ts` (gradients: parsing CSS, sampling as CSS Color 4 does, and writing CSS). Use them from extension pages, but not inside injected functions.
 - **Gradients** (`src/utils/gradient.ts`):
   - A `Gradient` is one linear, radial or conic layer with `#rrggbb(aa)` stops, an interpolation space (`srgb`, `oklab`, `oklch`), a hue method, an easing and grain. Easing and other platforms' sRGB-only blending are written as extra sampled stops (`srgbStops`, `gradientToCss`), added until straight blends match the curve.
@@ -88,7 +89,7 @@ Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING`
   - `parseGradient` needs the box the gradient paints (`box`, plus `viewport` for vw/vh) to resolve lengths, `calc()` and radial sizes. Computed styles keep those as written, apart from em/rem. The page scan and the inspector send the layer's `background-size` tile, and pasted CSS uses the preview's size. Radial gradients are always farthest-corner in the model, so a radial size is kept by scaling the stops.
 
 ### Popup
-- `src/popup.tsx` keeps all state (current color, picker, history, analyzer, vision mode, the highlight port) and shows one screen at a time: `home`, `adjust`, `history`, `results`, `saved` or `vision`. Every screen except home starts with `ScreenHeader` (Back plus a title).
+- `src/entrypoints/popup/App.tsx` keeps all state (current color, picker, history, analyzer, vision mode, the highlight port) and shows one screen at a time: `home`, `adjust`, `history`, `results`, `saved` or `vision`. Every screen except home starts with `ScreenHeader` (Back plus a title).
 - Leaving `results` calls `analyzer.cancel()`, which discards the results and clears the page highlights.
 - Shared popup pieces are in `src/features/popup/`: `HomeScreen`, `ColorHero` (the current-color band), `ScreenHeader`, `ColorSwatchButton` and `ConfirmDialog` (`useConfirm`). Each feature's screen lives in its feature folder (`PageColorsScreen`, `SavedPalettesScreen`, `HistoryScreen`, `AdjustScreen`, `VisionScreen`).
 - The gradient button next to Adjust opens Gradient Studio with the current color. It's icon-only because with a label, Pick from screen no longer fits on one line. Page gradients are listed at the bottom of `PageColorsScreen` (`PageGradientsSection`).
@@ -101,21 +102,23 @@ Backups (`~lib/backup`, in Settings) hold every key above except the `*_PENDING`
 - `src/features/<feature>/` holds a feature's components and its hooks.
 - `src/hooks/` holds hooks shared by the contrast checker tab.
 - **Background-safe modules:** the background imports the analyzer, inspector, vision, screenshot, context-menu, `~features/palette-studio/pending` and `~features/gradient-studio/open` modules, and the popup imports `~features/page-gradients`. Keep those free of React. Screenshot decoding uses `createImageBitmap` and `OffscreenCanvas` because the service worker has no DOM.
-- **Tailwind palettes** live in `src/lib/tailwind-palettes.ts`, which is generated. Regenerate it with `node scripts/gen-tailwind-palettes.mjs <v4 theme.css> <v4 version>` instead of editing it. v3 is read from the installed `tailwindcss`. v4 isn't installed, so download its `theme.css` from `https://unpkg.com/tailwindcss@<version>/theme.css`.
+- **Tailwind palettes** live in `src/lib/tailwind-palettes.ts`, which is generated. Regenerate it with `node scripts/gen-tailwind-palettes.mjs` instead of editing it. v4 is read from the installed `tailwindcss` (its `theme.css`), and v3 from `tailwindcss-v3`, a devDependency alias for the last v3 release.
 
 ## Conventions
 
 - **Prettier config** (`.prettierrc.mjs`):
   - No semicolons, double quotes, no trailing commas, `bracketSameLine`.
-  - Imports are sorted by `@ianvs/prettier-plugin-sort-imports` in this order: third-party → `@plasmo/*` → `@plasmohq/*` → `~*` → relative.
+  - Imports are sorted by `@ianvs/prettier-plugin-sort-imports` in this order: third-party → `~*` → relative.
 - **Tailwind:**
-  - `content` only scans `./src/**/*.{tsx,html}`, so class names written in `.ts` files are not generated.
-  - `darkMode: "media"`, used by the popup only.
-  - `animate-screen-in` and `animate-dialog-in` (in `tailwind.config.js`) are the popup's only transitions: a screen sliding in, and a confirmation dialog appearing. Use them with `motion-safe:`.
-  - Each entry point imports `~style.css`.
+  - Tailwind 4 runs through `@tailwindcss/vite` (in `wxt.config.ts`). There is no `tailwind.config.js` or PostCSS config: the theme is CSS in `src/style.css` (`@theme`).
+  - Classes are found by scanning everything under `src/` (`source(".")`), including `.ts` files.
+  - Dark mode follows `prefers-color-scheme` (`@custom-variant dark`), used by the popup only.
+  - `animate-screen-in` and `animate-dialog-in` (in `@theme`) are the popup's only transitions: a screen sliding in, and a confirmation dialog appearing. Use them with `motion-safe:`.
+  - `src/style.css` keeps v3 defaults that v4 dropped: gray-200 borders, a pointer cursor on buttons, gray placeholders and a centered `<dialog>`. Code relies on them, so remove one only after adding explicit classes where it's needed.
+  - Each entry point imports `~/style.css`.
 - **`cn`:** `~lib/cn` is a homegrown clsx without tailwind-merge. It does not resolve conflicting classes.
 - **Releases:**
   - Bump `version` in `package.json`.
   - Add an entry to `CHANGELOG.md` (Keep a Changelog format).
   - Add an entry to `RELEASE_NOTES.md` under a `## X.Y.Z (YYYY-MM-DD)` heading. The release workflow uses that section as the release description, falling back to GitHub's generated notes when it's missing.
-  - Merge to `main`. The release workflow then creates tag `vX.Y.Z` and a release with the built zip attached. Don't tag by hand, or the workflow skips that version.
+  - Merge to `main`. The release workflow then creates tag `vX.Y.Z` and a release with the zip from `pnpm zip` attached. Don't tag by hand, or the workflow skips that version.

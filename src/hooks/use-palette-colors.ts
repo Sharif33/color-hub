@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import type { PaletteSource } from "~lib/constants"
+import type { PaletteSource } from "~/lib/constants"
 
 import {
   getHistoryHexes,

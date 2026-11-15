@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { getHistoryHexes, uniqueNormalizedHexes } from "~utils/color-utils"
+import { getHistoryHexes, uniqueNormalizedHexes } from "~/utils/color-utils"
 
 export interface ColorSource {
   id: string
